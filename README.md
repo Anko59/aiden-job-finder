@@ -68,6 +68,7 @@ Thank you for your contribution!
 
 ## Future Features
 Here are some planned future features for the Aiden App:
+- Profile creation for new users
 - Improved front-end and back-end code quality
 - Cover letter templating functionality
 - Enhanced prompt engineering for better chat interactions
