@@ -82,7 +82,6 @@ class MistralAgentToolOnly(MistralAgent):
     def __init__(self, profile):
         super().__init__(profile)
         self.tool_aggregator.tools.append(TalkTool())
-        breakpoint()
 
     def _message_model(self):
         response = self.client.chat(
