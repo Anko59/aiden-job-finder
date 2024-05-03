@@ -1,0 +1,13 @@
+version: '1'
+services:
+  aiden_app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - '8000:8000'
+    volumes:
+      - '.:/app'
+    environment:
+      - MISTRAL-API-KEY=${MISTRAL_API_KEY}
+    command: python manage.py runserver 0.0.0.0:8000

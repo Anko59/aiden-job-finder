@@ -1,0 +1,8 @@
+selenium
+django
+pymupdf
+pypdf2
+chompjs
+jinja2
+mistralai
+pandas
