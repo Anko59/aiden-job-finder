@@ -8,16 +8,17 @@ ENV POETRY_NO_INTERACTION=1 \
 
 WORKDIR /app
 
-COPY pyproject.toml poetry.lock ./
-
-# install dependencies, not the project (no root)
-RUN poetry install --no-root && rm -rf $POETRY_CACHE_DIR
-
 # Install necessary packages for selenium
 RUN apt-get update && apt-get install -y \
     chromium \
     chromium-driver \
     && rm -rf /var/lib/apt/lists/*
+
+COPY pyproject.toml poetry.lock ./
+
+# install dependencies, not the project (no root)
+RUN poetry install --no-root && rm -rf $POETRY_CACHE_DIR
+
 
 COPY aiden_app ./
 COPY aiden_project ./
