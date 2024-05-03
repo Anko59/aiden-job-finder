@@ -1,0 +1,160 @@
+{
+    "first_name": "John",
+    "last_name": "Doe",
+    "photo_url": "john_doe.jpeg",
+    "cv_title": "Senior Baker Engineer",
+    "profile_description": "Senior Baker Engineer with a unique blend of baking and software engineering skills. Seeking to leverage my technical and professional expertise to innovate in the food industry. Proficient in baking, automation, software development, and machine maintenance.",
+    "email": "johndoe@bakerengineer.com",
+    "phone_number": "+1-123-456-7890",
+    "address": "1234 Baking Street, San Francisco, CA, USA",
+    "social_links": [
+        {
+            "icon": "Github",
+            "url": "https://github.com/johndoe",
+            "text": "github.com/johndoe"
+        },
+        {
+            "icon": "Linkedin",
+            "url": "https://www.linkedin.com/in/john-doe-bakerengineer",
+            "text": "linkedin.com/john-doe-bakerengineer"
+        },
+        {
+            "icon": "Twitter",
+            "url": "https://twitter.com/johndoe_baker",
+            "text": "twitter.com/johndoe_baker"
+        }
+    ],
+    "interests": [
+        {
+            "icon": "Cake",
+            "text": "Baking and pastry arts"
+        },
+        {
+            "icon": "Laptop",
+            "text": "Automation and software engineering"
+        },
+        {
+            "icon": "Gears",
+            "text": "Machine maintenance and engineering"
+        },
+        {
+            "icon": "Book",
+            "text": "Food science and culinary literature"
+        }
+    ],
+    "experiences": [
+        {
+            "title": "Senior Baker Engineer",
+            "company": "BakerBot Inc. (San Francisco, CA)",
+            "duration": "2020.01--pres.",
+            "details": [
+                "Development and maintenance of automated baking systems",
+                "Worked on improving baking processes through software optimization",
+                "Development of a pipeline for quality control using machine learning"
+            ]
+        },
+        {
+            "title": "Baker Engineer",
+            "company": "DoughTech (Seattle, WA)",
+            "duration": "2016.03--2019.12",
+            "details": [
+                "Product development: Design of baking machines and software",
+                "Client project management: Manage customer expectations, explain technical language, plan timelines, run tests, control product quality."
+            ]
+        },
+        {
+            "title": "Junior Baker Engineer",
+            "company": "BreadWorks (Portland, OR)",
+            "duration": "2014.06--2016.02",
+            "details": [
+                "Machine maintenance and troubleshooting",
+                "Software development for baking process automation"
+            ]
+        },
+        {
+            "title": "Baker Intern",
+            "company": "SweetTooth Bakery (Los Angeles, CA)",
+            "duration": "2013.05--2013.08",
+            "details": [
+                "Assisted in baking and decorating",
+                "Participated in the development of new recipes",
+                "Helped in the maintenance of baking equipment"
+            ]
+        }
+    ],
+    "educations": [
+        {
+            "degree": "Bachelor of Science",
+            "specialization": "Food Science and Technology",
+            "school": "University of California, Davis",
+            "duration": "2010--2014"
+        },
+        {
+            "degree": "Associate of Applied Science",
+            "specialization": "Baking and Pastry Arts",
+            "school": "Culinary Institute of America",
+            "duration": "2008--2010"
+        }
+    ],
+    "projects": [
+        {
+            "name": "BreadBot",
+            "description": "Automated bread baking machine",
+            "url": "https://github.com/johndoe/breadbot"
+        },
+        {
+            "name": "CakeCreator",
+            "description": "Software for custom cake design",
+            "url": "https://github.com/johndoe/cakecreator"
+        },
+        {
+            "name": "DoughDash",
+            "description": "Game about managing a bakery",
+            "url": "https://github.com/johndoe/doughdash"
+        }
+    ],
+    "skills": [
+        {
+            "name": "Baking",
+            "color": "cyan!40!black",
+            "level": "8.5",
+            "details": "Bread, pastries, cakes, decorating"
+        },
+        {
+            "name": "Automation",
+            "color": "cyan!42!black",
+            "level": "7.5",
+            "details": "PLC, SCADA, robotics"
+        },
+        {
+            "name": "Software Development",
+            "color": "cyan!44!black",
+            "level": "7",
+            "details": "Python, C++, Java, Git"
+        },
+        {
+            "name": "Machine Maintenance",
+            "color": "cyan!46!black",
+            "level": "6.5",
+            "details": "Troubleshooting, preventive maintenance, repair"
+        },
+        {
+            "name": "Food Science",
+            "color": "cyan!48!black",
+            "level": "6",
+            "details": "Food chemistry, microbiology, sensory analysis"
+        },
+        {
+            "name": "Project Management",
+            "color": "cyan!50!black",
+            "level": "5",
+            "details": "Planning, coordination, communication"
+        },
+        {
+            "name": "Other",
+            "color": "cyan!52!black",
+            "level": "3",
+            "details": "CAD, 3D printing, welding"
+        }
+    ]
+}
