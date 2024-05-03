@@ -1,0 +1,136 @@
+{% raw %}
+\documentclass[11pt, a4paper]{article}
+
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[british]{babel}
+\usepackage[left = 0mm, right = 0mm, top = 0mm, bottom = 0mm]{geometry}
+\usepackage[stretch = 25, shrink = 25]{microtype}
+\usepackage{graphicx}
+\usepackage{xcolor}
+\usepackage{marvosym}
+\usepackage{tikz}
+\usepackage{xcolor}
+\usepackage{fontawesome}
+\usepackage{anyfontsize}
+
+
+\newcommand{\progressbar}[2]{
+  \tikz\fill[#1] (0,0) rectangle (#2,0.2);
+}
+
+\usepackage{enumitem}
+\setlist{parsep = 0pt, topsep = 0pt, partopsep = 1pt, itemsep = 1pt, leftmargin = 6mm}
+
+\usepackage{FiraSans}
+\renewcommand{\familydefault}{\sfdefault}
+
+\definecolor{cvblue}{HTML}{304263}
+
+
+\newcommand{\dates}[1]{\hfill\mbox{\textbf{#1}}}
+\newcommand{\is}{\par\vskip.5ex plus .4ex}
+\newcommand{\smaller}[1]{{\small$\diamond$\ #1}}
+\newcommand{\headleft}[1]{\vspace*{3ex}\textsc{\textbf{#1}}\par%
+    \vspace*{-1.5ex}\hrulefill\par\vspace*{0.7ex}}
+\newcommand{\headright}[1]{\vspace*{2.5ex}\textsc{\Large\color{cvblue}#1}\par%
+     \vspace*{-2ex}{\color{cvblue}\hrulefill}\par}
+
+\usepackage[colorlinks = true, urlcolor = white, linkcolor = white]{hyperref}
+
+\begin{document}
+
+\setlength{\topskip}{0pt}
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{0pt}
+\setlength{\fboxsep}{0pt}
+\pagestyle{empty}
+\raggedbottom
+
+\begin{minipage}[t]{0.33\textwidth}
+\colorbox{cvblue}{\begin{minipage}[t][5mm][t]{\textwidth}\null\hfill\null\end{minipage}}
+
+\vspace{-.2ex}
+\colorbox{cvblue!90}{\color{white}
+\kern0.09\textwidth\relax
+\begin{minipage}[t][293mm][t]{0.82\textwidth}
+\raggedright
+\vspace*{2.5ex}
+{% endraw %}
+\Large {{ first_name }} \textbf{\textsc{ {{ last_name  }} } }
+\\
+\Large {{ cv_title }}
+\\
+\normalsize
+\null\hfill\includegraphics[width=0.75\textwidth]{ {{ photo_url }} }\hfill\null
+
+\vspace*{0.5ex}
+\\
+\headleft{Profile}
+
+{{ profile_description }}
+\\
+\headleft{Contact details}
+\small
+\MVAt\ {\small {{ email }}} \\[0.4ex]
+\Mobilefone\ {{ phone_number }} \\[0.5ex]
+{% for social in social_links %}
+\fa{{ social.icon }}\ \href{ {{ social.url }} }{ {{ social.text }} } \\[0.1ex]
+{% endfor %}
+\Letter\ {{ address }}
+\normalsize
+\\
+\headleft{Interests and Hobbies}
+\small
+{% for interest in interests %}
+\fa{{ interest.icon }}\ {\small {{ interest.text }}} \\[0.4ex]
+{% endfor %}
+{% raw %}
+\normalsize
+
+
+
+\end{minipage}%
+\kern0.09\textwidth\relax
+}
+\end{minipage}
+\hskip2.5em
+\begin{minipage}[t]{0.56\textwidth}
+\setlength{\parskip}{0.8ex}
+
+\vspace{2ex}
+
+\headright{Experience}
+
+{% endraw %}
+{% for experience in experiences %}
+\textsc{ {{ experience.title }} } at \textit{ {{ experience.company }} } \dates{ {{ experience.duration }} }\\
+{% for detail in experience.details %}
+\smaller{ {{ detail }} }\\
+{% endfor %}
+\is
+{% endfor %}
+\headright{Education}
+{% for education in educations %}
+\textsc{ {{ education.degree }} } { {{ education.specialization }} } \textit{ {{ education.school }} }\dates{ {{ education.duration }} }\\
+\is
+{% endfor %}
+
+\headright{Side projects}
+
+{% for project in projects %}
+\textsc{ {{ project.name }} }\smaller{ {{ project.description }} }\\
+\smaller{ {{ project.url }} }\\
+{% endfor %}
+\is
+\fontsize{8pt}{10pt}\selectfont
+\headright{Skills}
+\begin{tabular}{@{}l@{\hspace{1em}}l@{}}
+{% for skill in skills %}
+\textsc{ {{ skill.name }} }: & \progressbar{ {{ skill.color }} }{ {{ skill.level }} } \\
+& { {{ skill.details }} }\\
+{% endfor %}
+\end{tabular}
+\end{minipage}
+
+\end{document}

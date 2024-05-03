@@ -1,0 +1,221 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "Profile Schema",
+    "description": "A detailed schema for a profile JSON object",
+    "type": "object",
+    "properties": {
+        "first_name": {
+            "description": "The first name of the individual",
+            "type": "string"
+        },
+        "last_name": {
+            "description": "The last name of the individual",
+            "type": "string"
+        },
+        "photo_url": {
+            "description": "The URL of the profile picture",
+            "type": "string"
+        },
+        "cv_title": {
+            "description": "The professional title or headline for the CV",
+            "type": "string"
+        },
+        "profile_description": {
+            "description": "A summary of the individual's professional background and objectives",
+            "type": "string"
+        },
+        "email": {
+            "description": "The email address for contacting the individual",
+            "type": "string",
+            "format": "email"
+        },
+        "phone_number": {
+            "description": "The phone number for contacting the individual",
+            "type": "string"
+        },
+        "address": {
+            "description": "The address of the individual's residence",
+            "type": "string"
+        },
+        "social_links": {
+            "description": "A list of social media links associated with the individual",
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "icon": {
+                        "description": "The name or icon representing the social media platform",
+                        "type": "string"
+                    },
+                    "url": {
+                        "description": "The URL of the individual's profile on the social media platform",
+                        "type": "string"
+                    },
+                    "text": {
+                        "description": "A shortened or display version of the URL",
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "icon",
+                    "url",
+                    "text"
+                ]
+            }
+        },
+        "interests": {
+            "description": "A list of the individual's interests or hobbies",
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "icon": {
+                        "description": "An icon representing the interest, from font-awesome.",
+                        "type": "string"
+                    },
+                    "text": {
+                        "description": "A description of the interest",
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "icon",
+                    "text"
+                ]
+            }
+        },
+        "experiences": {
+            "description": "A list of the individual's professional experiences",
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "title": {
+                        "description": "The job title for the experience",
+                        "type": "string"
+                    },
+                    "company": {
+                        "description": "The name and location of the company",
+                        "type": "string"
+                    },
+                    "duration": {
+                        "description": "The duration of the experience in the format YYYY.MM--YYYY.MM",
+                        "type": "string"
+                    },
+                    "details": {
+                        "description": "A list of responsibilities or achievements during the experience",
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    }
+                },
+                "required": [
+                    "title",
+                    "company",
+                    "duration",
+                    "details"
+                ]
+            }
+        },
+        "educations": {
+            "description": "A list of the individual's educational background",
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "degree": {
+                        "description": "The degree obtained",
+                        "type": "string"
+                    },
+                    "specialization": {
+                        "description": "The specialization or major of the degree",
+                        "type": "string"
+                    },
+                    "school": {
+                        "description": "The name and location of the school",
+                        "type": "string"
+                    },
+                    "duration": {
+                        "description": "The duration of the education in the format YYYY--YYYY",
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "degree",
+                    "specialization",
+                    "school",
+                    "duration"
+                ]
+            }
+        },
+        "projects": {
+            "description": "A list of projects the individual has worked on",
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "name": {
+                        "description": "The name of the project",
+                        "type": "string"
+                    },
+                    "description": {
+                        "description": "A description of the project",
+                        "type": "string"
+                    },
+                    "url": {
+                        "description": "The URL of the project repository or website",
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "name",
+                    "description",
+                    "url"
+                ]
+            }
+        },
+        "skills": {
+            "description": "A list of the individual's skills",
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "name": {
+                        "description": "The name of the skill",
+                        "type": "string"
+                    },
+                    "color": {
+                        "description": "A color code associated with the skill",
+                        "type": "string"
+                    },
+                    "level": {
+                        "description": "The proficiency level in the skill",
+                        "type": "string"
+                    },
+                    "details": {
+                        "description": "Additional details or sub-skills related to the main skill",
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "name",
+                    "color",
+                    "level",
+                    "details"
+                ]
+            }
+        }
+    },
+    "required": [
+        "first_name",
+        "last_name",
+        "cv_title",
+        "profile_description",
+        "email",
+        "social_links",
+        "experiences",
+        "educations",
+        "skills"
+    ]
+}

@@ -1,0 +1,13 @@
+[tool.isort]
+profile = "black"
+line_length = 140
+honor_noqa = true
+src_paths = '*'
+known_first_party = ["dags", "scripts", "dedup"]
+
+[tool.black]
+line-length = 140
+skip-string-normalization = true
+
+[tool.pylint]
+max-line-length = 140

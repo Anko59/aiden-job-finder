@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aiden</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'css/styles.css' %}">
+    <script src="https://cdn.jsdelivr.net/npm/underscore@1.13.6/underscore-umd-min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="http://backbonejs.org/backbone.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <link rel="icon" type="image/png" href="{% static 'images/dog.png' %}">
+</head>
+
+<body>
+    <div class="container">
+        <div class="main">
+            <div id="profile-display"> </div>
+            <div id="chat-window"></div>
+            <form id="chat-form">
+                {% csrf_token %}
+                <input type="text" id="user_input" placeholder="Type your message...">
+                <button type="submit" id="send-button">Send</button>
+            </form>
+        </div>
+    </div>
+    <div class="token-counter" id="token-counter"> Mistral Total Tokens Used: 0</div>
+    <div class="total-price-counter" id="total-price-counter">Total Price Paid: $0</div>
+    <div class="profile-images">
+    </div>
+    <script src="{% static 'js/main.js' %}"></script>
+</body>
+
+</html>

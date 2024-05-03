@@ -1,0 +1,120 @@
+[
+    {
+        "type": "function",
+        "function": {
+            "name": "edit_user_profile",
+            "description": "Edit the profile (Information contained in the CV) of a user. The function will edit the default profile of the user that must have been read before. It will then generate a new CV with the new profile.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "new_profile_name": {
+                        "type": "string",
+                        "description": "The name of the new profile. Should reflect the changes made to the profile. And be unique"
+                    },
+                    "edits": {
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "path": {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "string"
+                                    },
+                                    "description": "The path to the field to edit in the profile. Should match the keys in the "
+                                },
+                                "operation": {
+                                    "type": "string",
+                                    "description": "The operation to apply to the field. Can be 'insert', 'replace', 'delete'"
+                                },
+                                "value": {
+                                    "type": "string",
+                                    "description": "The value to insert in the field. Only required for 'insert' and 'replace' operations"
+                                }
+                            }
+                        },
+                        "description": "The edits to apply to the profile"
+                    }
+                },
+                "required": [
+                    "new_profile_name",
+                    "edits"
+                ]
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "search_jobs",
+            "description": "Search the website Indeed for job offers. Ranked by newest first.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "search_query": {
+                        "type": "string",
+                        "description": "Any information helpful to find jobs to help the user"
+                    },
+                    "location": {
+                        "type": "string",
+                        "description": "The location where the jobs should be located. Example: Paris (75)"
+                    },
+                    "num_results": {
+                        "type": "string",
+                        "description": "Number of results that the query should return. Default to 15 (one request)"
+                    }
+                },
+                "required": [
+                    "search_query",
+                    "location"
+                ]
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "get_job_details",
+            "description": "Get additional information about a job offer. Such as the detailed description. And how to apply, and more",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "job_title": {
+                        "type": "string",
+                        "description": "Job title must be one of the titles of the jobs previously returned by the search_jobs function."
+                    }
+                },
+                "required": [
+                    "job_title"
+                ]
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "list_job_titles",
+            "description": "List the job titles available to look for additional details.",
+            "parameters": {}
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "talk",
+            "description": "Talk to the user. The user will respond to your messages.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "message": {
+                        "type": "string",
+                        "description": "The message to send to the user. Use Markdown to format the message."
+                    }
+                },
+                "required": [
+                    "message"
+                ]
+            }
+        }
+    }
+]
