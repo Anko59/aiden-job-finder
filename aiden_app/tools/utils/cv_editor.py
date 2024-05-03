@@ -21,7 +21,7 @@ class CVEditor:
         self.user_data_dir = os.path.join(os.path.dirname(__file__), '../../user_data/')
         self.static_image_dir = os.path.join(
             os.path.dirname(__file__),
-            '../../static/images/user_images/cv',
+            '../../static/images/user_images/',
         )
         self.env = Environment(
             loader=FileSystemLoader(self.user_data_dir),
@@ -36,7 +36,7 @@ class CVEditor:
         template = self._load_template('cv_template.tex')
         info = self._load_json_file(self.user_dir, profile_content_file)
         if 'photo_url' in info:
-            info['photo_url'] = os.path.join(self.static_image_dir, info['photo_url'])
+            info['photo_url'] = os.path.join(self.static_image_dir, 'profile', info['photo_url'])
         output = self._render_template(template, info)
         document_path = self._write_to_file(output, self.user_dir, f'CV_{self.first_name}_{self.last_name}_{cv_title}')
         self._compile_document(document_path)
@@ -47,6 +47,7 @@ class CVEditor:
             pdf_path,
             os.path.join(
                 self.static_image_dir,
+                'cv',
                 f'cv_{self.first_name}_{self.last_name}_{cv_title}.png',
             ),
         )

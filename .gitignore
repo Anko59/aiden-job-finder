@@ -136,6 +136,7 @@ aiden_app/static/images/user_images/profile/*
 
 # Exclude all folders in aiden_app/user_data except john_doe
 aiden_app/user_data/*/
+!aiden_app/user_data/john_doe
 !aiden_app/user_data/john_doe/*
 
 # Exclude all zip files
