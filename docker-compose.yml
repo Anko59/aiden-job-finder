@@ -1,0 +1,31 @@
+services:
+  aiden_app:
+    build: .
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.aiden.rule=Host(`aiden.dev.localhost`)"
+      - "traefik.http.services.aiden.loadbalancer.server.port=8000"
+    networks:
+      - aiden_network
+    volumes:
+      - ./aiden_app:/app/aiden_app
+      - ./aiden_project:/app/aiden_project
+      - ./manage.py:/app/manage.py
+    env_file:
+    - path: .env
+
+  traefik:
+    image: "traefik:v2.6"
+    command:
+      - "--api.insecure=true"   # Enable Traefik dashboard for debugging purposes
+      - "--providers.docker=true"
+      - "--entrypoints.web.address=:80"  # Expose Traefik on port 80
+    ports:
+      - "80:80"
+    networks:
+      - aiden_network
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock"
+networks:
+  aiden_network:
+    driver: bridge

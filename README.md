@@ -24,27 +24,27 @@ The `aiden_app/tools/utils/` directory contains utility functions and classes us
 
 ## Installation
 
-To install the application, you need to have Python and Django installed. Then, you can clone the repository and install the required packages using the `requirements.txt` file. The installation can also be done using Docker Compose:
+You need to modify the `.env` file to include your MISTRAL_API_KEY value:
 
+```
+MISTRAL_API_KEY=your_mistral_api_key
+```
+
+Once set you can lauch the app with
 ```bash
-git clone https://github.com/your_username/aiden_app.git
-cd aiden_app
-docker-compose run aiden_app
+make up
 ```
-
-Note that you need to modify the docker-compose.yaml file to include your MISTRAL_API_KEY value:
-
+If you apply changes locally you need to rebuild the app
 
 ```
-environment:
-  - MISTRAL_API_KEY=your_mistral_api_key
+make build
 ```
 
 ## Usage
 
 After successfully installing and starting the Aiden App, you can interact with it through your web browser. Here are the steps:
 
-1. Open your web browser and navigate to `localhost:8000`.
+1. Open your web browser and navigate to `aiden.dev.localhost`.
 2. Select a profile to start a chat session.
 3. You can now interact with the AI agent in the chat interface. The agent can perform various tasks based on your requests. For example, you can ask the agent to:
    - Search for job openings: "Search for data engineering jobs in Paris."
