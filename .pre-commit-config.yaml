@@ -24,6 +24,6 @@ repos:
       - id: forbid-new-submodules
       - id: check-merge-conflict
       - id: check-symlinks
-      - id: double-quote-string-fixer
       - id: end-of-file-fixer
       - id: check-json
+      - id: detect-private-key
