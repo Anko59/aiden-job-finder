@@ -5,9 +5,6 @@ from mistralai.client import MistralClient
 from mistralai.models.chat_completion import ChatMessage, FunctionCall
 from ..tools.talk_tool import TalkTool
 from .agent import Agent
-from logging import getLogger
-
-logger = getLogger(__name__)
 
 
 class MistralAgent(Agent):
@@ -65,6 +62,6 @@ class MistralAgent(Agent):
                 if not agent_speaks_next:
                     yield tool_message.model_dump(), True
                     return
-                yield tool_message, False
+                yield tool_message.model_dump(), False
             message = self._message_model()
             yield message.model_dump(), is_waiting_for_user_message()

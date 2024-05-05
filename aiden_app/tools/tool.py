@@ -13,11 +13,11 @@ class Tool(abc.ABC):
 
     def tool_function(func):
         @functools.wraps(func)
-        def wrapper(func_name, agent_speaks_next, args_json):
+        def wrapper(self, func_name, agent_speaks_next, args_json):
             function_params = json.loads(args_json)
             response = {"name": func_name, "arguments": str(function_params)}
             try:
-                result = func(**function_params)
+                result = func(self, **function_params)
                 response["result"] = result
                 return json.dumps(response), agent_speaks_next
             except Exception as e:
