@@ -17,6 +17,7 @@ RUN apt-get update && apt-get install -y \
 COPY pyproject.toml poetry.lock ./
 
 # install dependencies, not the project (no root)
+RUN poetry lock --no-update
 RUN poetry install --no-root && rm -rf $POETRY_CACHE_DIR
 
 
