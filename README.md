@@ -32,7 +32,7 @@ MISTRAL_API_KEY=your_mistral_api_key
 
 Once set you can lauch the app with
 ```bash
-make up
+make run
 ```
 If you apply changes locally you need to rebuild the app
 
