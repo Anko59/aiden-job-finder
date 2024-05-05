@@ -8,22 +8,26 @@ ENV POETRY_NO_INTERACTION=1 \
 
 WORKDIR /app
 
-# Install necessary packages for selenium
+# Install necessary packages for selenium and pdflatex
 RUN apt-get update && apt-get install -y \
     chromium \
     chromium-driver \
+    texlive-latex-base \
+    texlive-fonts-recommended \
+    texlive-fonts-extra \
+    texlive-latex-extra \
     && rm -rf /var/lib/apt/lists/*
 
 COPY pyproject.toml poetry.lock ./
 
 # install dependencies, not the project (no root)
-RUN poetry lock --no-update
 RUN poetry install --no-root && rm -rf $POETRY_CACHE_DIR
-
 
 COPY aiden_app ./
 COPY aiden_project ./
 COPY manage.py ./
 
 EXPOSE 8000
-CMD poetry run python manage.py runserver 0.0.0.0:8000
+CMD poetry run python manage.py makemigrations && \
+    poetry run python manage.py migrate && \
+    poetry run python manage.py runserver 0.0.0.0:8000

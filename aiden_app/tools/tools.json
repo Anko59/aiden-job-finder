@@ -21,7 +21,7 @@
                                     "items": {
                                         "type": "string"
                                     },
-                                    "description": "The path to the field to edit in the profile. Should match the keys in the "
+                                    "description": "The path to the field to edit in the profile. Should match the keys in the profile json."
                                 },
                                 "operation": {
                                     "type": "string",
