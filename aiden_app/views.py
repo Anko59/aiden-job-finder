@@ -5,7 +5,7 @@ from django.http import JsonResponse, StreamingHttpResponse
 from django.shortcuts import render
 from django.views import View
 
-from .agents.mistral_agent import MistralAgentToolOnly
+from .agents.mistral_agent import MistralAgent
 from .agents.prompts import START_CHAT_PROMPT
 
 # It's better to move these methods into a separate service or utils.py file.
@@ -61,7 +61,7 @@ class ChatView(View):
         user_input = body["user_input"]
         input_type = body["input_type"]
         if input_type == "question":
-            agent = MistralAgentToolOnly.from_json(request.session.get("agent"))
+            agent = MistralAgent.from_json(request.session.get("agent"))
             if agent is None:
                 return JsonResponse({"error": "Agent not initialized"})
             return self.chat_wrapper(agent, user_input)
@@ -80,15 +80,15 @@ class ChatView(View):
     def chat_wrapper(self, agent, user_input):
         def generate_responses():
             for message, is_last in agent.chat(user_input):
-                if message.content == "" and not is_last:
+                if message["content"] == "" and not is_last:
                     continue
                 response = {
-                    "role": message.role,
-                    "content": message.content,
+                    "role": message["role"],
+                    "content": message["content"],
                     "tokens_used": agent.tokens_used,
                     "is_last": is_last,
                 }
-                if message.role == "tool" and message.name == "edit_user_profile":
+                if message["role"] == "tool" and message["name"] == "edit_user_profile":
                     response["documents"], _ = get_documents(agent.profile)
 
                 yield json.dumps(response)
@@ -100,7 +100,7 @@ class ChatView(View):
         default_profile_file = os.path.join(user_dir, "default_profile.json")
         with open(default_profile_file, "r") as f:
             profile = json.load(f)
-        agent = MistralAgentToolOnly(profile)
+        agent = MistralAgent(profile)
         response = {
             "role": "assistant",
             "content": START_CHAT_PROMPT,

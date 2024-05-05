@@ -1,15 +1,11 @@
-import functools
-
 from .tool import Tool
 
 
 class TalkTool(Tool):
+    def __init__(self):
+        super().__init__("TalkTool")
+        self.add_tool("talk", self.talk, agent_speaks_next=False)
 
-    name = 'talkTool'
-
-    @property
-    def names_to_functions(self):
-        return {'talk': functools.partial(self.talk)}
-
+    @Tool.tool_function
     def talk(self, message):
         return message
