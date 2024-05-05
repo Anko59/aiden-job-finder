@@ -53,6 +53,8 @@ services:
       - DATABASE_READ_ONLY=true
     networks:
       - aiden_network
+    depends_on:
+      - db
 volumes:
   postgres_data:
 
