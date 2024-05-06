@@ -72,6 +72,8 @@ class ChatView(View):
         elif input_type == "get_profiles":
             return JsonResponse({"role": "get_profiles", "content": list(get_available_profiles())})
 
+        elif input_type == "create_profile":
+            return self.create_profile(user_input)
         return JsonResponse({"error": "Invalid input type"})
 
     def get(self, request):
@@ -104,8 +106,11 @@ class ChatView(View):
         response = {
             "role": "assistant",
             "content": START_CHAT_PROMPT,
-            "is_last": False,
+            "is_last": True,
             "documents": documents,
             "tokens_used": 0,
         }
         return response, agent
+
+    def create_profile(self, user_input):
+        pass

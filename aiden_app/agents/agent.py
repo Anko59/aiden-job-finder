@@ -9,23 +9,13 @@ from .prompts import START_CHAT_PROMPT, SYSTEM_PROMPT
 
 
 class Agent(ABC):
-    def __init__(self, profile: Dict[str, Any], message_class: Any):
-        self.tool_aggregator = ToolAggregator(
-            [
-                CVEditorTool(first_name=profile["first_name"], last_name=profile["last_name"]),
-                IndeedScraperTool(),
-            ]
-        )
-        start_messages = [
-            message_class(role="system", content=SYSTEM_PROMPT),
-            message_class(role="system", content=json.dumps(profile)),
-            message_class(role="assistant", content=START_CHAT_PROMPT),
-        ]
+    def __init__(self, message_class: Any):
+        self.tool_aggregator = ToolAggregator([])
         self.message_class = message_class
-        self.messages: List[Dict[str, Any]] = start_messages
+        self.messages: List[Dict[str, Any]] = []
+        self.profile: Dict[str, str] = {}
         self.tokens_used = 0
         self.max_tool_calls = 5
-        self.profile = profile
         self.client = None
 
     @abstractmethod
@@ -51,8 +41,32 @@ class Agent(ABC):
     @classmethod
     def from_json(cls, state: str) -> "Agent":
         state = json.loads(state)
-        self = cls(state["profile"])
+        self = cls.from_profile(state["profile"])
         self.unserialize_messages(state["messages"])
         del state["messages"]
         self.__dict__.update(state)
+        return self
+
+    @classmethod
+    def from_profile(cls, profile: dict[str, str], *args, **kwargs) -> "Agent":
+        self = cls(*args, **kwargs)
+        self.profile = profile
+        self.tool_aggregator.tools.append(CVEditorTool(first_name=profile["first_name"], last_name=profile["last_name"]))
+        self.tool_aggregator.tools.append(IndeedScraperTool())
+        start_messages = [
+            self.message_class(role="system", content=SYSTEM_PROMPT),
+            self.message_class(role="system", content=json.dumps(profile)),
+            self.message_class(role="assistant", content=START_CHAT_PROMPT),
+        ]
+        self.messages = start_messages
+        return self
+
+    @classmethod
+    def for_profile_creation(cls, profile_info: dict[str, str], *args, **kwargs) -> "Agent":
+        self = cls(*args, **kwargs)
+        start_messages = [
+            self.message_class(role="system", content=SYSTEM_PROMPT),
+            self.message_class(role="assistant", content=START_CHAT_PROMPT),
+        ]
+        self.messages = start_messages
         return self

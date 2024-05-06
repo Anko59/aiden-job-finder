@@ -279,6 +279,25 @@ button[type="submit"]:hover {
     border-color: lightgreen;
 }
 
+.plus-sign {
+    position: fixed;
+    top: 0;
+    left: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    margin: 10px;
+}
+
+.plus-sign img {
+    width: 75px;
+    height: 75px;
+    margin-bottom: 10px;
+    border: 2px solid white;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
 .big-image-container {
     position: fixed;
     top: 0;

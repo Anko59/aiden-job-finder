@@ -1,6 +1,5 @@
 import json
 import os
-from typing import Union
 from mistralai.client import MistralClient
 from mistralai.models.chat_completion import ChatMessage, FunctionCall
 from ..tools.talk_tool import TalkTool
@@ -8,9 +7,9 @@ from .agent import Agent
 
 
 class MistralAgent(Agent):
-    def __init__(self, profile: dict[str, Union[str, int]], model: str = "open-mixtral-8x22b", tool_only: bool = True):
+    def __init__(self, model: str = "open-mixtral-8x22b", tool_only: bool = True):
         self.model = model
-        super().__init__(profile, ChatMessage)
+        super().__init__(ChatMessage)
         self.client = MistralClient(api_key=os.environ.get("MISTRAL_API_KEY"))
         self.tool_choice = "auto"
         if tool_only:
