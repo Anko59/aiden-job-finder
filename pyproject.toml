@@ -17,6 +17,8 @@ pandas = "^2.2.2"
 mistralai = "^0.1.8"
 psycopg2-binary = "^2.9.9"
 dj-database-url = "^2.1.0"
+pydantic = "^2.7.1"
+requests = "^2.31.0"
 
 [tool.poetry.group.dev.dependencies]
 ipython = "^8.24.0"

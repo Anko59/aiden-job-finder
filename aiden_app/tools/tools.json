@@ -47,7 +47,7 @@
         "type": "function",
         "function": {
             "name": "search_jobs",
-            "description": "Search the website Indeed for job offers. Ranked by newest first.",
+            "description": "Search the the internet for job offers. Ranked by newest first.",
             "parameters": {
                 "type": "object",
                 "properties": {

@@ -1,6 +1,7 @@
 import abc
 import functools
 import json
+from typing import Self
 
 
 class Tool(abc.ABC):
@@ -11,7 +12,7 @@ class Tool(abc.ABC):
     def add_tool(self, name, function, agent_speaks_next=True):
         self.names_to_functions[name] = functools.partial(function, func_name=name, agent_speaks_next=agent_speaks_next)
 
-    def tool_function(func):
+    def tool_function(func: Self):
         @functools.wraps(func)
         def wrapper(self, func_name, agent_speaks_next, args_json):
             function_params = json.loads(args_json)
