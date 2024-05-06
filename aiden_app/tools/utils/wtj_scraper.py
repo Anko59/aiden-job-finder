@@ -93,7 +93,7 @@ class WelcomeToTheJungleScraper:
         )
 
         job_offers = [JobOffer(**offer) for offer in response.json()["results"][0]["hits"]]
-        return [job_offer.model_dump() for job_offer in job_offers]
+        return [job_offer.model_dump(exclude_none=True) for job_offer in job_offers]
 
     def search_jobs(self, search_query: str, location: str, num_results: int = 15, *args, **kwargs):
         return self._fetch_results(search_query, location)[:num_results]
