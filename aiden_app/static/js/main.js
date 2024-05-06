@@ -145,7 +145,7 @@ function handleResponse(data) {
         let tokens_used = data.tokens_used;
         updateCounters(tokens_used);
     } else if (message_role == 'tool') {
-        if (message_content.name == 'talk'){
+        if (message_content.name == 'talk') {
             apppendMessage('assistant', message_content.result, false);
         } else {
             appendMessage(message_role, message_content, false);
@@ -229,6 +229,30 @@ $(document).on('click', '.profile-image', function () {
     };
     sendChatRequest('', { 'user_input': profile, 'input_type': 'start_chat' });
 });
+
+
+$(document).on('click', '.plus-sign', function () {
+    let component = $('<div>').addClass('new-profile-container');
+    let firstNameInput = $('<input>').attr('type', 'text').attr('placeholder', 'First Name');
+    let lastNameInput = $('<input>').attr('type', 'text').attr('placeholder', 'Last Name');
+    let profileInfoInput = $('<textarea>').attr('placeholder', 'Profile Information');
+    let sendButton = $('<button>').text('Send').addClass('send-button');
+    component.append(firstNameInput, lastNameInput, profileInfoInput, sendButton);
+    $('#chat_window').append(component);
+
+    sendButton.on('click', function () {
+        let firstName = firstNameInput.val();
+        let lastName = lastNameInput.val();
+        let profileInfo = profileInfoInput.val();
+        let profile = {
+            first_name: firstName,
+            last_name: lastName,
+            profile_info: profileInfo
+        };
+        sendChatRequest('', { 'user_input': profile, 'input_type': 'create_profile' });
+    });
+});
+
 
 $(document).on('click', '.document img', function () {
     showBigImage($(this).attr('src'));

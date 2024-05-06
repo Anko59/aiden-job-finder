@@ -1,10 +1,12 @@
 import json
 from typing import List, Optional
-
+from urllib import parse
 import requests
 from pydantic import BaseModel
 
 from .chrome_driver import ChromeDriver
+from selenium.webdriver.common.by import By
+from chompjs import parse_js_object
 
 
 class Coordinates(BaseModel):
@@ -26,7 +28,7 @@ class Profession(BaseModel):
 
 class Organization(BaseModel):
     name: str
-    description: str
+    description: Optional[str]
     nb_employees: Optional[int]
 
 
@@ -67,29 +69,42 @@ class JobOffer(BaseModel):
 class WelcomeToTheJungleScraper:
     def __init__(self):
         self.driver = ChromeDriver()
-
-    def _fetch_results(self, search_query: str, location: str):
-        headers = {
-            "User-Agent": "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:123.0) Gecko/20100101 Firefox/123.0",
-            "Accept": "*/*",
-            "Accept-Language": "en-US,en;q=0.5",
+        self.driver.start()
+        self.driver.driver.get("https://www.welcometothejungle.com/")
+        script = self.driver.driver.find_element(By.XPATH, '//script[@type="text/javascript"]').get_attribute("innerHTML")
+        self.driver.quit()
+        script_dict = parse_js_object(script)
+        self.headers = {
             "Referer": "https://www.welcometothejungle.com/",
-            "x-algolia-api-key": "4bd8f6215d0cc52b26430765769e65a0",
-            "x-algolia-application-id": "CSEKHVMS53",
+            "x-algolia-api-key": script_dict["ALGOLIA_API_KEY_CLIENT"],
+            "x-algolia-application-id": script_dict["ALGOLIA_APPLICATION_ID"],
             "content-type": "application/x-www-form-urlencoded",
-            "Origin": "https://www.welcometothejungle.com",
-            "Connection": "keep-alive",
-            "Sec-Fetch-Dest": "empty",
-            "Sec-Fetch-Mode": "cors",
-            "Sec-Fetch-Site": "cross-site",
-            "Pragma": "no-cache",
-            "Cache-Control": "no-cache",
+        }
+        self.autocomplete_params = {
+            "apiKey": script_dict["HERE_API_KEY"],
+            "lang": "fr",
+            "limit": "10",
+        }
+        self.lookup_params = {
+            "apiKey": script_dict["HERE_API_KEY"],
+            "lang": "fr",
         }
 
+    def _get_algolia_params(self, search_query: str, latlng: str):
+        params = {"hitsPerPage": 300, "query": search_query, "aroundLatLng": latlng, "aroundRadius": 2000000}
+        return json.dumps({"requests": [{"indexName": "wttj_jobs_production_fr", "params": parse.urlencode(params)}]})
+
+    def _fetch_results(self, search_query: str, location: str):
+        self.autocomplete_params["q"] = location
+        response = requests.get("https://autocomplete.search.hereapi.com/v1/autocomplete", params=self.autocomplete_params)
+        self.lookup_params["id"] = response.json()["items"][0]["id"]
+        response = requests.get("https://lookup.search.hereapi.com/v1/lookup", params=self.lookup_params)
+        latlng = ",".join([str(x) for x in response.json()["position"].values()])
+        params = self._get_algolia_params(search_query, latlng)
         response = requests.post(
-            "https://csekhvms53-dsn.algolia.net/1/indexes/*/queries?x-algolia-agent=Algolia%20for%20JavaScript%20(4.20.0)%3B%20Browser&search_origin=job_search_client",
-            headers=headers,
-            data=json.dumps({"requests": [{"indexName": "wttj_jobs_production_fr", "params": f"hitsPerPage=300&query={search_query}"}]}),
+            "https://csekhvms53-dsn.algolia.net/1/indexes/*/queries?x-algolia-agent=Algolia%20for%20JavaScript%20(4.20.0)%3B%20Browser&search_origin=job_search_client",  # noqa
+            headers=self.headers,
+            data=params,
         )
 
         job_offers = [JobOffer(**offer) for offer in response.json()["results"][0]["hits"]]
