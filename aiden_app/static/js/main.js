@@ -145,7 +145,11 @@ function handleResponse(data) {
         let tokens_used = data.tokens_used;
         updateCounters(tokens_used);
     } else if (message_role == 'tool') {
-        appendMessage(message_role, message_content, false);
+        if (message_content.name == 'talk'){
+            apppendMessage('assistant', message_content.result, false);
+        } else {
+            appendMessage(message_role, message_content, false);
+        }
     } else if (message_role == 'get_profiles') {
         updateProfiles(message_content);
     }
