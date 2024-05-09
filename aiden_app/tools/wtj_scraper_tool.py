@@ -5,7 +5,7 @@ from .utils.wtj_scraper import WelcomeToTheJungleScraper
 class WelcomeToTheJungleScraperTool(Tool):
     def __init__(self):
         self.scraper = WelcomeToTheJungleScraper()
-        super().__init__("IndeedScraper")
+        super().__init__("WelcomeToTheJungleScraper")
         self.add_tool("search_jobs", self.search_jobs_wrapper)
 
     @Tool.tool_function
