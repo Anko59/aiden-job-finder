@@ -9,6 +9,6 @@ class WelcomeToTheJungleScraperTool(Tool):
         self.add_tool("search_jobs", self.search_jobs_wrapper)
 
     @Tool.tool_function
-    def search_jobs_wrapper(self, search_query: str, location: str, num_results: int = 15, start: int = 0):
+    def search_jobs_wrapper(self, search_query: str, location: str, num_results: int = 15, start: int = 0) -> list[str]:
         results = self.scraper.search_jobs(search_query, location, int(num_results), int(start))
-        return results
+        return [result.metadata_repr() for result in results]

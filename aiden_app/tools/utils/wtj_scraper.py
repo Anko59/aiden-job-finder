@@ -30,39 +30,40 @@ class Profession(BaseModel):
 
 
 class Organization(BaseModel):
-    name: str
     description: Optional[str] = None
+    name: str
     nb_employees: Optional[int] = None
 
 
 class JobOffer(BaseModel):
+    benefits: list[str]
+    contract_duration_maximum: Optional[int] = None
+    contract_duration_minimum: Optional[int] = None
+    contract_type: str
+    education_level: Optional[str] = None
+    experience_level_minimum: Optional[float] = None
+    has_contract_duration: Optional[bool] = None
+    has_education_level: Optional[bool] = None
+    has_experience_level_minimum: bool
+    has_remote: Optional[bool] = None
+    has_salary_yearly_minimum: Optional[bool] = None
+    language: str
+    name: str
+    new_profession: Optional[Profession] = None
+    offices: list[Office]
+    organization: Organization
+    profile: Optional[str] = None
+    published_at: str
     remote: Optional[str] = None
+    salary_currency: Optional[str] = None
+    salary_maximum: Optional[int] = None
+    salary_minimum: Optional[int] = None
     salary_period: Optional[str | dict] = None
     salary_yearly_minimum: Optional[int] = None
-    has_contract_duration: Optional[bool] = None
-    contract_duration_maximum: Optional[int] = None
-    published_at: str
-    _reference: str
-    name: str
-    _geoloc: list[Coordinates]
-    has_experience_level_minimum: bool
-    offices: list[Office]
-    new_profession: Optional[Profession] = None
-    has_education_level: Optional[bool] = None
     sectors: list[dict]
-    language: str
-    education_level: Optional[str] = None
-    has_salary_yearly_minimum: Optional[bool] = None
-    benefits: list[str]
-    profile: Optional[str] = None
-    has_remote: Optional[bool] = None
-    organization: Organization
-    salary_currency: Optional[str] = None
-    contract_duration_minimum: Optional[int] = None
-    salary_minimum: Optional[int] = None
-    experience_level_minimum: Optional[float] = None
-    contract_type: str
-    salary_maximum: Optional[int] = None
+
+    _geoloc: list[Coordinates]
+    _reference: str
     _slug: str
 
     def to_url(self) -> str:
@@ -71,15 +72,17 @@ class JobOffer(BaseModel):
     def metadata_repr(self) -> str:
         """Returns a language representation of the offer metadata (location, company, profile sought for etc...)."""
         published_date = datetime.strptime(self.published_at, "%Y-%m-%dT%H:%M:%SZ").strftime("%B %d, %Y")
+
         metadata = f"This job offer named '{self.name}' was published on {published_date}."
         if self.organization and self.organization.name:
-            metadata += f" It is from '{self.organization.name}'."
+            metadata += f" It is from the company '{self.organization.name}'."
         if self.offices:
             locations = ", ".join([f"{office.local_city}, {office.country}" for office in self.offices if office.local_city])
             if locations:
                 metadata += f" It is located in {locations}."
         if self.sectors:
-            sectors = ", ".join([sector["name"] for sector in self.sectors])
+            _sectors = [sector for sector in self.sectors if sector.get("name")]
+            sectors = ", ".join([sector["name"] for sector in _sectors])
             metadata += f" Sectors: {sectors}."
         if self.salary_period:
             metadata += f" Salary period: {self.salary_period}."
@@ -87,6 +90,7 @@ class JobOffer(BaseModel):
             metadata += f" Salary currency: {self.salary_currency}."
         if self.salary_minimum is not None and self.salary_maximum is not None:
             metadata += f" Salary range: {self.salary_minimum}-{self.salary_maximum} per {self.salary_period}."
+        metadata += f" It has the following benefits {', '.join(self.benefits)}" if self.benefits else ""
         return metadata
 
     def company_repr(self) -> str:
@@ -133,11 +137,11 @@ class WelcomeToTheJungleScraper:
         }
         logger.info("succesfully initialized WTJ scraper")
 
-    def _get_algolia_params(self, search_query: str, latlng: str, page: int):
-        params = {"hitsPerPage": 1000, "query": search_query, "aroundLatLng": latlng, "aroundRadius": 200000000000000, "page": page}
+    def _get_algolia_params(self, search_query: str, latlng: str) -> str:
+        params = {"hitsPerPage": 1000, "query": search_query, "aroundLatLng": latlng, "aroundRadius": 200000000000000}
         return json.dumps({"requests": [{"indexName": "wttj_jobs_production_fr", "params": parse.urlencode(params)}]})
 
-    def _fetch_results(self, search_query: str, location: str, page=0):
+    def _fetch_results(self, search_query: str, location: str) -> list[JobOffer]:
         # Query hereapi for location coordinates
         self.autocomplete_params["q"] = location
         response = requests.get("https://autocomplete.search.hereapi.com/v1/autocomplete", params=self.autocomplete_params)
@@ -146,7 +150,7 @@ class WelcomeToTheJungleScraper:
         latlng = ",".join([str(x) for x in response.json()["position"].values()])
 
         # Query algolia
-        params = self._get_algolia_params(search_query, latlng, page=page)
+        params = self._get_algolia_params(search_query, latlng)
         response = requests.post(
             "https://csekhvms53-dsn.algolia.net/1/indexes/*/queries?x-algolia-agent=Algolia%20for%20JavaScript%20(4.20.0)%3B%20Browser&search_origin=job_search_client",  # noqa
             headers=self.headers,
@@ -154,8 +158,7 @@ class WelcomeToTheJungleScraper:
         )
 
         response.raise_for_status()
-        job_offers = [JobOffer(**offer) for offer in response.json()["results"][0]["hits"]]
-        return [job_offer.model_dump(exclude_none=True) for job_offer in job_offers]
+        return [JobOffer(**offer) for offer in response.json()["results"][0]["hits"]]
 
-    def search_jobs(self, search_query: str, location: str, num_results: int = 15, *args, **kwargs):
+    def search_jobs(self, search_query: str, location: str, num_results: int = 15, *args, **kwargs) -> list[JobOffer]:
         return self._fetch_results(search_query, location)[:num_results]

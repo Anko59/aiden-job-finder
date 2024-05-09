@@ -13,11 +13,11 @@ services:
       - ./manage.py:/app/manage.py
     env_file:
       - .env
-    depends_on:
-      - db
     environment:
       - DATABASE_URL=postgres://${DATABASE_USER}:${DATABASE_PASSWORD}@${DATABASE_HOST}:${DATABASE_PORT}/${DATABASE_NAME}
-
+    depends_on:
+      db:
+        condition: service_healthy
   db:
     image: postgres
     environment:
@@ -28,6 +28,11 @@ services:
       - postgres_data:/var/lib/postgresql/data/
     networks:
       - aiden_network
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "${DATABASE_USER}", "-d", "${DATABASE_NAME}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   traefik:
     image: "traefik:v2.6"
@@ -54,7 +59,8 @@ services:
     networks:
       - aiden_network
     depends_on:
-      - db
+      db:
+        condition: service_healthy
 volumes:
   postgres_data:
 
