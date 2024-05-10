@@ -22,23 +22,23 @@ class MistralAgent(Agent):
     def unserialize_messages(self, messages: list[dict[str, str]]) -> None:
         self.messages = [ChatMessage(**message) for message in messages]
 
-    def _message_model(self) -> ChatMessage:
-        response = self.client.chat(
-            model=self.model,
-            messages=self.messages,
-            tools=self.tool_aggregator.get_tools(),
-            tool_choice=self.tool_choice,
-            temperature=0.4,
-        )
+    def _message_model(self, **kwargs) -> ChatMessage:
+        kwargs.setdefault("model", self.model)
+        kwargs.setdefault("messages", self.messages)
+        kwargs.setdefault("tools", self.tool_aggregator.get_tools())
+        kwargs.setdefault("tool_choice", self.tool_choice)
+        kwargs.setdefault("temperature", 0.4)
+        response = self.client.chat(**kwargs)
         message = response.choices[0].message
+        message = ChatMessage(**message.model_dump())
         try:
             calls = json.loads(message.content[message.content.index("[") : message.content.rindex("]") + 1])
             message.tool_calls = [FunctionCall(**call) for call in calls]
         except Exception:
             pass
-        print(message)
         self.messages.append(message)
         self.tokens_used += response.usage.total_tokens
+
         return message
 
     def chat(self, user_input: str):

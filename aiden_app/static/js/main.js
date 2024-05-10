@@ -61,7 +61,6 @@ function formatJson(obj, level = 0) {
 function appendMessage(role, message, isMarkdown = false) {
     let chatMessage;
     if (role == 'tool') {
-        message = JSON.parse(message);
         let name = message.name;
         let arguments = message.arguments;
         let formattedJson = formatJson(message.result);
@@ -108,6 +107,10 @@ function updateProfiles(profiles) {
         profileImageDiv.append(profileImage);
         profileImagesDiv.append(profileImageDiv);
     });
+    let plusSignDiv = $('<div>').addClass('plus-sign');
+    let plusSign = $('<img>').attr('src', 'static/images/plus-sign.png');
+    plusSignDiv.append(plusSign);
+    profileImagesDiv.append(plusSignDiv);
 }
 
 function updateUserDocuments(documents) {
@@ -145,8 +148,9 @@ function handleResponse(data) {
         let tokens_used = data.tokens_used;
         updateCounters(tokens_used);
     } else if (message_role == 'tool') {
+        message_content = JSON.parse(message_content);
         if (message_content.name == 'talk') {
-            apppendMessage('assistant', message_content.result, false);
+            appendMessage('assistant', message_content.result, true);
         } else {
             appendMessage(message_role, message_content, false);
         }
@@ -155,16 +159,22 @@ function handleResponse(data) {
     }
 }
 
-async function sendChatRequest(url, data) {
-    const response = await fetch(url, {
+async function sendChatRequest(url, data, hasFile = false) {
+    const fetchOptions = {
         method: 'POST',
         headers: {
-            'Content-Type': 'application/json',
             'X-CSRFToken': getCookie('csrftoken'),
         },
-        body: JSON.stringify(data),
-    });
+    };
 
+    if (hasFile) {
+        fetchOptions.body = data;
+    } else {
+        fetchOptions.headers['Content-Type'] = 'application/json';
+        fetchOptions.body = JSON.stringify(data);
+    }
+
+    const response = await fetch(url, fetchOptions);
     if (response.ok) {
         if (data.input_type === 'start_chat') {
             const jsonResponse = await response.json();
@@ -172,11 +182,9 @@ async function sendChatRequest(url, data) {
         } else {
             const reader = response.body.getReader();
             let done = false;
-
             while (!done) {
                 const { value, done: resultDone } = await reader.read();
                 done = resultDone;
-
                 if (value) {
                     const text = new TextDecoder('utf-8').decode(value);
                     const jsonResponse = JSON.parse(text);
@@ -188,6 +196,7 @@ async function sendChatRequest(url, data) {
         console.error('Error:', response.status, response.statusText);
     }
 }
+
 
 function showBigImage(src) {
     let bigImage = $('<img>').attr('src', src);
@@ -202,7 +211,7 @@ function showBigImage(src) {
 
 
 $(document).ready(function () {
-    sendChatRequest('', { 'user_input': '', 'input_type': 'get_profiles' });
+    sendChatRequest('/api/get_profiles', {});
 });
 
 $('#chat-form').on('submit', function (e) {
@@ -213,7 +222,7 @@ $('#chat-form').on('submit', function (e) {
     $('#send-button').css('display', 'none');
     if (user_input) {
         appendMessage('You', user_input);
-        sendChatRequest('', { 'user_input': user_input, 'input_type': 'question' });
+        sendChatRequest('/api/question', { 'question': user_input});
     }
 });
 
@@ -227,29 +236,63 @@ $(document).on('click', '.profile-image', function () {
         first_name: firstName,
         last_name: lastName
     };
-    sendChatRequest('', { 'user_input': profile, 'input_type': 'start_chat' });
+    sendChatRequest('/api/start_chat', { 'profile': profile });
 });
 
 
 $(document).on('click', '.plus-sign', function () {
+    console.log('plus sign clicked');
+    $(this).hide(); // Hide the plus sign as requested
+
     let component = $('<div>').addClass('new-profile-container');
-    let firstNameInput = $('<input>').attr('type', 'text').attr('placeholder', 'First Name');
-    let lastNameInput = $('<input>').attr('type', 'text').attr('placeholder', 'Last Name');
-    let profileInfoInput = $('<textarea>').attr('placeholder', 'Profile Information');
+    let firstNameInput = $('<input>').attr('type', 'text').attr('placeholder', 'First Name').prop('required', true);
+    let lastNameInput = $('<input>').attr('type', 'text').attr('placeholder', 'Last Name').prop('required', true);
+
+    let fileUploadLabel = $('<label>').attr('for', 'file-upload').addClass('custom-file-upload');
+    let fileUploadIcon = $('<i>').addClass('fa fa-cloud-upload');
+    fileUploadLabel.append(fileUploadIcon, "Profile photo");
+
+    let photoInput = $('<input>').attr('type', 'file').attr('id', 'file-upload').attr('accept', 'image/*').prop('required', true);
+    let imgPreview = $('<img>').attr('id', 'img-preview').css({width: '100px', height: '100px', display: 'none'});
+    fileUploadLabel.append(photoInput, imgPreview);
+
+    let profileInfoHeader = $('<h5>').text('Paste all the information needed for the generation of your CVs in raw format:');
+    let profileInfoInput = $('<textarea>').attr('placeholder', 'Profile Information').prop('required', true);
     let sendButton = $('<button>').text('Send').addClass('send-button');
-    component.append(firstNameInput, lastNameInput, profileInfoInput, sendButton);
-    $('#chat_window').append(component);
+    component.append(firstNameInput, lastNameInput, fileUploadLabel, profileInfoHeader, profileInfoInput, sendButton);
+    $('#chat-window').append(component);
+
+    photoInput.change(function() {
+        if (this.files && this.files[0]) {
+            var reader = new FileReader();
+
+            reader.onload = function (e) {
+                $('#img-preview').attr('src', e.target.result).css('display', 'block');
+            }
+
+            reader.readAsDataURL(this.files[0]);
+        }
+    });
 
     sendButton.on('click', function () {
-        let firstName = firstNameInput.val();
-        let lastName = lastNameInput.val();
-        let profileInfo = profileInfoInput.val();
-        let profile = {
-            first_name: firstName,
-            last_name: lastName,
-            profile_info: profileInfo
-        };
-        sendChatRequest('', { 'user_input': profile, 'input_type': 'create_profile' });
+        if (component.find(':invalid').length === 0) {
+            let firstName = firstNameInput.val();
+            let lastName = lastNameInput.val();
+            let profileInfo = profileInfoInput.val();
+            let photoFile = photoInput[0].files[0];
+
+            let formData = new FormData();
+            formData.append('first_name', firstName);
+            formData.append('last_name', lastName);
+            formData.append('profile_info', profileInfo);
+            formData.append('photo', photoFile);
+
+            sendChatRequest('/api/create_profile', formData, true);
+
+            $('.plus-sign').show();
+        } else {
+            alert('Please fill all the fields.');
+        }
     });
 });
 
@@ -260,5 +303,5 @@ $(document).on('click', '.document img', function () {
 
 $(document).on('click', '.delete-icon', function () {
     let documentName = $(this).siblings('p').text();
-    sendChatRequest('', { 'user_input': { 'name': documentName }, 'input_type': 'delete_profile' });
+    sendChatRequest('/api/delete_profile', { 'document_name': documentName });
 });
