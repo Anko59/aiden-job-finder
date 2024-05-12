@@ -30,7 +30,15 @@ services:
     networks:
       - aiden_network
     healthcheck:
-      test: ["CMD", "pg_isready", "-U", "${DATABASE_USER}", "-d", "${DATABASE_NAME}"]
+      test:
+        [
+          "CMD",
+          "pg_isready",
+          "-U",
+          "${DATABASE_USER}",
+          "-d",
+          "${DATABASE_NAME}",
+        ]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -74,8 +82,7 @@ services:
     networks:
       - aiden_network
     environment:
-      - QDRANT_STORAGE_DIR=/data  # Adjust path if needed
-
+      - QDRANT_STORAGE_DIR=/data # Adjust path if needed
 
   aiden-scraper:
     build: ./aiden-scraper
@@ -87,7 +94,18 @@ services:
       - aiden_network
     volumes:
       - ./aiden-scraper/aiden_scraper:/app/aiden_scraper
-    command: ["poetry", "run", "uvicorn", "aiden_scraper.main:app", "--host", "0.0.0.0", "--port", "8082"]
+    command:
+      [
+        "poetry",
+        "run",
+        "uvicorn",
+        "aiden_scraper.main:app",
+        "--host",
+        "0.0.0.0",
+        "--port",
+        "8082",
+        "--reload",
+      ]
     healthcheck:
       test: ["CMD-SHELL", "curl -f http://localhost:8082/health || exit 1"]
       interval: 10s
