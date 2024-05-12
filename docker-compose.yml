@@ -16,17 +16,17 @@ services:
     environment:
       - DATABASE_URL=postgres://${DATABASE_USER}:${DATABASE_PASSWORD}@${DATABASE_HOST}:${DATABASE_PORT}/${DATABASE_NAME}
     depends_on:
-      djangodb:
+      db:
         condition: service_healthy
 
-  djangodb:
+  db:
     image: postgres
     environment:
       - POSTGRES_DB=${DATABASE_NAME}
       - POSTGRES_USER=${DATABASE_USER}
       - POSTGRES_PASSWORD=${DATABASE_PASSWORD}
     volumes:
-      - django_postgres_data:/var/lib/postgresql/data/
+      - postgres_data:/var/lib/postgresql/data/
     networks:
       - aiden_network
     healthcheck:
@@ -35,34 +35,20 @@ services:
       timeout: 5s
       retries: 5
 
-  aidendb:
-    image: postgres
-    environment:
-      - POSTGRES_DB=${AIDEN_DATABASE_NAME}
-      - POSTGRES_USER=${AIDEN_DATABASE_USER}
-      - POSTGRES_PASSWORD=${AIDEN_DATABASE_PASSWORD}
-    volumes:
-      - aiden_postgres_data:/var/lib/postgresql/data/
-    networks:
-      - aiden_network
-    healthcheck:
-      test: ["CMD", "pg_isready", "-U", "${AIDEN_DATABASE_USER}", "-d", "${AIDEN_DATABASE_NAME}"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-
   traefik:
-    image: "traefik:v2.6"
+    image: "traefik:v2.9"
     command:
-      - "--api.insecure=true"
-      - "--providers.docker=true"
-      - "--entrypoints.web.address=:80"
+      - --entrypoints.web.address=:80
+      - --providers.docker=true
+      - --api.insecure # Don't do that in production
+      - --log
     ports:
       - "80:80"
+      - "8080:8080"
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock:ro"
     networks:
       - aiden_network
-    volumes:
-      - "/var/run/docker.sock:/var/run/docker.sock"
 
   pgweb:
     image: sosedoff/pgweb
@@ -71,12 +57,12 @@ services:
       - "traefik.http.routers.pgweb.rule=Host(`pgweb.dev.localhost`)"
       - "traefik.http.services.pgweb.loadbalancer.server.port=8081"
     environment:
-      - DATABASE_URL=postgres://${AIDEN_DATABASE_USER}:${AIDEN_DATABASE_PASSWORD}@db:5432/${DATABASE_NAME}?sslmode=disable
+      - PGWEB_DATABASE_URL=postgres://${DATABASE_USER}:${DATABASE_PASSWORD}@db:5432/${DATABASE_NAME}?sslmode=disable
       - DATABASE_READ_ONLY=true
     networks:
       - aiden_network
     depends_on:
-      aidendb:
+      db:
         condition: service_healthy
 
   qdrant:
@@ -95,16 +81,22 @@ services:
     build: ./aiden-scraper
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.aiden-scraper.rule=Host(`aiden-scraper.dev.localhost`)"
-      - "traefik.http.services.aiden-scraper.loadbalancer.server.port=8080"
+      - "traefik.http.routers.scraper.rule=Host(`scraper.dev.localhost`)"
+      - "traefik.http.services.scraper.loadbalancer.server.port=8082"
     networks:
       - aiden_network
-    depends_on:
-      aidendb:
-        condition: service_healthy
+    volumes:
+      - ./aiden-scraper/aiden_scraper:/app/aiden_scraper
+    command: ["poetry", "run", "uvicorn", "aiden_scraper.main:app", "--host", "0.0.0.0", "--port", "8082"]
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8082/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    deploy:
+      replicas: 1
 volumes:
-  aiden_postgres_data:
-  django_postgres_data:
+  postgres_data:
 
 networks:
   aiden_network:
