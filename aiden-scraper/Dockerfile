@@ -17,9 +17,3 @@ RUN apt-get update && apt-get install -y \
 COPY pyproject.toml poetry.lock ./
 
 RUN  poetry install --no-root
-
-# Copy the application code
-COPY aiden_scraper/ aiden_scraper/
-
-# Set the command to run the FastAPI server
-CMD ["uvicorn", "aiden_scraper.main:app", "--host", "0.0.0.0", "--port", "8080"]
