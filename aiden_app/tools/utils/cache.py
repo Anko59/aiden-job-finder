@@ -18,14 +18,14 @@ class Cache:
             if file_age > datetime.timedelta(days=1):
                 os.remove(file_path)
             else:
-                with open(file_path, 'rb') as f:
+                with open(file_path, "rb") as f:
                     cache_entry = pickle.load(f)
-                    self.cache[cache_entry['query']] = cache_entry
+                    self.cache[cache_entry["query"]] = cache_entry
 
     def save_cache(self):
         for query, cache_entry in self.cache.items():
-            cache_file_path = self.get_cache_file_path(*cache_entry['params'])
-            with open(cache_file_path, 'wb') as f:
+            cache_file_path = self.get_cache_file_path(*cache_entry["params"])
+            with open(cache_file_path, "wb") as f:
                 pickle.dump(cache_entry, f)
 
     def get_cache_file_path(self, *params: str) -> str:
@@ -40,10 +40,10 @@ class Cache:
 
     def add_cache_entry(self, query: str, params: List[str], results: List[Dict[str, Any]]):
         cache_entry = {
-            'query': query,
-            'params': params,
-            'results': results,
-            'timestamp': datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+            "query": query,
+            "params": params,
+            "results": results,
+            "timestamp": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
         }
         self.cache[query] = cache_entry
         self.save_cache()

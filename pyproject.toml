@@ -18,6 +18,7 @@ mistralai = "^0.1.8"
 psycopg2-binary = "^2.9.9"
 dj-database-url = "^2.1.0"
 djangorestframework = "^3.15.1"
+pillow = "^10.3.0"
 
 [tool.poetry.group.dev.dependencies]
 ipython = "^8.24.0"

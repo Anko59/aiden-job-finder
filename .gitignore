@@ -126,10 +126,12 @@ dmypy.json
 # Cython debug symbols
 cython_debug/
 
-media/*
+media/cv/*
 !media/cv/cv_schema.json
-!media/cv/template.tex
+!media/cv/cv_template.tex
 !media/cv/example_profile.json
+
+media/profile/*
 
 aiden_app/migrations/*
 

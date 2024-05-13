@@ -5,12 +5,17 @@ services:
       - "traefik.enable=true"
       - "traefik.http.routers.aiden.rule=Host(`aiden.dev.localhost`)"
       - "traefik.http.services.aiden.loadbalancer.server.port=8000"
+      - "traefik.http.routers.aiden-media.rule=Host(`aiden.dev.localhost`) && PathPrefix(`/media`)"
+      - "traefik.http.routers.aiden-media.middlewares=aiden-media-stripprefix"
+      - "traefik.http.middlewares.aiden-media-stripprefix.stripprefix.prefixes=/media"
+      - "traefik.http.routers.aiden-media.priority=10"
     networks:
       - aiden_network
     volumes:
       - ./aiden_app:/app/aiden_app
       - ./aiden_project:/app/aiden_project
       - ./manage.py:/app/manage.py
+      - ./media:/app/media
     env_file:
       - .env
     depends_on:

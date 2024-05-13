@@ -102,7 +102,7 @@ function updateProfiles(profiles) {
 
     profiles.forEach(profile => {
         let profileImageDiv = $('<div>').addClass('profile-image');
-        let profileImage = $('<img>').attr('src', 'static/images/user_images/profile/' + profile.photo_url).attr('alt', profile.first_name + ' ' + profile.last_name);
+        let profileImage = $('<img>').attr('src', 'media/profile/' + profile.photo_url).attr('alt', profile.first_name + ' ' + profile.last_name);
 
         profileImageDiv.append(profileImage);
         profileImagesDiv.append(profileImageDiv);

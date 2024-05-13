@@ -1,5 +1,4 @@
 import json
-import os
 
 from django.http import JsonResponse, StreamingHttpResponse
 
@@ -10,7 +9,11 @@ from django.views import View
 
 from .agents.mistral_agent import MistralAgent
 from .agents.prompts import START_CHAT_PROMPT
-from .utils import get_available_profiles, get_documents
+from .utils import get_available_profiles, get_documents_and_profile
+from django.views.decorators.csrf import csrf_protect
+from .tools.utils.cv_editor import CVEditor
+from .models import ProfileInfo, UserProfile
+from .forms import UserCreationForm, UserProfileForm
 
 
 class ChatView(View):
@@ -18,6 +21,7 @@ class ChatView(View):
         return render(request, "chat.html")
 
 
+@csrf_protect
 @api_view(["POST"])
 def handle_question(request):
     question = request.data.get("question")
@@ -31,9 +35,12 @@ def handle_question(request):
     return chat_wrapper(agent, question)
 
 
+@csrf_protect
 @api_view(["POST"])
 def handle_start_chat(request):
     profile = request.data.get("profile")
+    print("profile:", profile)
+    profile = UserProfile.objects.get(first_name=profile["first_name"], last_name=profile["last_name"])
     if not profile:
         return JsonResponse({"error": "Invalid profile parameter"}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -42,27 +49,39 @@ def handle_start_chat(request):
     return JsonResponse(response)
 
 
+@csrf_protect
 @api_view(["POST"])
 def handle_get_profiles(request):
     profiles = list(get_available_profiles())
-    if not profiles:
+
+    if profiles is None:
         return JsonResponse({"error": "No profiles available"}, status=status.HTTP_404_NOT_FOUND)
 
     return JsonResponse({"role": "get_profiles", "content": profiles})
 
 
+@csrf_protect
 @api_view(["POST"])
 def handle_create_profile(request):
-    first_name = request.POST.get("first_name")
-    last_name = request.POST.get("last_name")
-    profile_info = request.POST.get("profile_info")
-    photo = request.FILES.get("photo")
-    if not all([first_name, last_name, profile_info, photo]):
-        return JsonResponse({"error": "Missing data"}, status=status.HTTP_400_BAD_REQUEST)
+    form = UserCreationForm(request.POST, request.FILES)
+    if not form.is_valid():
+        return JsonResponse({"error": "Invalid form data"}, status=status.HTTP_400_BAD_REQUEST)
 
-    profile_data = {"first_name": first_name, "last_name": last_name, "profile_info": profile_info, "photo": photo}
+    profile_data = form.llm_input()
+    agent = MistralAgent()
+    profile_info = agent.create_profile(profile_data)
+    profile = form.cleaned_data
+    profile_info = ProfileInfo.from_json(profile_info)
+    profile["profile_info"] = profile_info
+    profile["profile_title"] = "default_profile"
+    profile_form = UserProfileForm(profile, request.FILES)
+    if profile_form.is_valid():
+        user_profile = profile_form.save()
 
-    return StreamingHttpResponse(create_profile(profile_data, request))
+    else:
+        return JsonResponse({"error": "Invalid profile data"}, status=status.HTTP_400_BAD_REQUEST)
+
+    return StreamingHttpResponse(respond_create_profile(user_profile, request))
 
 
 def chat_wrapper(agent, question):
@@ -77,17 +96,20 @@ def chat_wrapper(agent, question):
                 "is_last": is_last,
             }
             if message["role"] == "tool" and message["name"] == "edit_user_profile":
-                response["documents"], _ = get_documents(agent.profile)
+                response["documents"], _ = get_documents_and_profile(agent.profile)
             yield json.dumps(response)
 
     return StreamingHttpResponse(generate_responses())
 
 
-def start_chat(profile):
-    documents, user_dir = get_documents(profile)
-    default_profile_file = os.path.join(user_dir, "default_profile.json")
-    with open(default_profile_file, "r") as f:
-        profile = json.load(f)
+def start_chat(profile: UserProfile):
+    documents = [
+        {
+            "name": profile.profile_title,
+            "path": "media/cv/" + profile.cv_name,
+        }
+        for profile in UserProfile.objects.filter(first_name=profile.first_name, last_name=profile.last_name)
+    ]
     agent = MistralAgent.from_profile(profile)
     response = {
         "role": "assistant",
@@ -99,15 +121,8 @@ def start_chat(profile):
     return response, agent
 
 
-def create_profile(profile_info, request):
-    agent = MistralAgent()
-    user_photo = profile_info.pop("photo")
-    photo_filename = f"{profile_info['first_name']}_{profile_info['last_name']}.{user_photo.name.split('.')[-1]}"
-    user_photo_path = os.path.join(os.path.dirname(__file__), "static/images/user_images/profile", photo_filename)
-    with open(user_photo_path, "wb") as f:
-        f.write(user_photo.read())
-    profile_info["photo_url"] = photo_filename
-    profile = agent.create_profile(profile_info)
+def respond_create_profile(profile: UserProfile, request):
+    CVEditor().generate_cv(profile)
     profiles = list(get_available_profiles())
 
     yield json.dumps({"role": "get_profiles", "content": profiles})
