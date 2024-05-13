@@ -3,7 +3,7 @@ from typing import Any, Dict, List, Tuple
 from abc import ABC, abstractmethod
 
 from ..tools.cv_editor_tool import CVEditorTool
-from ..tools.indeed_scraper_tool import IndeedScraperTool
+from ..tools.scraper_tool import ScraperTool
 from ..tools.tool_aggregator import ToolAggregator
 from .prompts import START_CHAT_PROMPT, SYSTEM_PROMPT
 
@@ -13,7 +13,7 @@ class Agent(ABC):
         self.tool_aggregator = ToolAggregator(
             [
                 CVEditorTool(first_name=profile["first_name"], last_name=profile["last_name"]),
-                IndeedScraperTool(),
+                ScraperTool(),
             ]
         )
         start_messages = [

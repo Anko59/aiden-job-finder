@@ -13,11 +13,17 @@ services:
       - ./manage.py:/app/manage.py
     env_file:
       - .env
-    depends_on:
-      - db
     environment:
       - DATABASE_URL=postgres://${DATABASE_USER}:${DATABASE_PASSWORD}@${DATABASE_HOST}:${DATABASE_PORT}/${DATABASE_NAME}
-
+    depends_on:
+      db:
+        condition: service_healthy
+      aiden-scraper:
+        condition: service_healthy
+    deploy:
+      resources:
+        limits:
+          memory: 1g
   db:
     image: postgres
     environment:
@@ -28,19 +34,42 @@ services:
       - postgres_data:/var/lib/postgresql/data/
     networks:
       - aiden_network
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "pg_isready",
+          "-U",
+          "${DATABASE_USER}",
+          "-d",
+          "${DATABASE_NAME}",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    deploy:
+      resources:
+        limits:
+          memory: 512m
 
   traefik:
-    image: "traefik:v2.6"
+    image: "traefik:v2.9"
     command:
-      - "--api.insecure=true"
-      - "--providers.docker=true"
-      - "--entrypoints.web.address=:80"
+      - --entrypoints.web.address=:80
+      - --providers.docker=true
+      - --api.insecure # Don't do that in production
+      - --log
     ports:
       - "80:80"
+      - "8080:8080"
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock:ro"
     networks:
       - aiden_network
-    volumes:
-      - "/var/run/docker.sock:/var/run/docker.sock"
+    deploy:
+      resources:
+        limits:
+          memory: 512m
 
   pgweb:
     image: sosedoff/pgweb
@@ -49,12 +78,93 @@ services:
       - "traefik.http.routers.pgweb.rule=Host(`pgweb.dev.localhost`)"
       - "traefik.http.services.pgweb.loadbalancer.server.port=8081"
     environment:
-      - DATABASE_URL=postgres://${DATABASE_USER}:${DATABASE_PASSWORD}@db:5432/${DATABASE_NAME}?sslmode=disable
+      - PGWEB_DATABASE_URL=postgres://${DATABASE_USER}:${DATABASE_PASSWORD}@db:5432/${DATABASE_NAME}?sslmode=disable
       - DATABASE_READ_ONLY=true
     networks:
       - aiden_network
     depends_on:
-      - db
+      db:
+        condition: service_healthy
+    deploy:
+      resources:
+        limits:
+          memory: 512m
+
+  qdrant:
+    image: qdrant/qdrant
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.qdrant.rule=Host(`qdrant.dev.localhost`)"
+      - "traefik.http.services.qdrant.loadbalancer.server.port=6333" # Adjust port as needed
+    networks:
+      - aiden_network
+    environment:
+      - QDRANT_STORAGE_DIR=/data # Adjust path if needed
+    deploy:
+      resources:
+        limits:
+          memory: 4g
+  aiden-scraper:
+    build: ./aiden-scraper
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.scraper.rule=Host(`scraper.dev.localhost`)"
+      - "traefik.http.services.scraper.loadbalancer.server.port=8082"
+    environment:
+      - REDIS_URL=redis://redis:6379
+    networks:
+      - aiden_network
+    volumes:
+      - ./aiden-scraper/aiden_scraper:/app/aiden_scraper
+    command:
+      [
+        "poetry",
+        "run",
+        "uvicorn",
+        "aiden_scraper.main:app",
+        "--host",
+        "0.0.0.0",
+        "--port",
+        "8082",
+        "--reload",
+      ]
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8082/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    deploy:
+      replicas: 1
+      resources:
+        limits:
+          memory: 1g
+    depends_on:
+      redis:
+        condition: service_healthy
+  redis:
+    image: redis:alpine
+    command:
+      [
+        "redis-server",
+        "--appendonly",
+        "no",
+        "--maxmemory",
+        "118mb",
+        "--maxmemory-policy",
+        "allkeys-lru",
+      ]
+    networks:
+      - aiden_network
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    deploy:
+      replicas: 1
+      resources:
+        limits:
+          memory: 128M
 volumes:
   postgres_data:
 

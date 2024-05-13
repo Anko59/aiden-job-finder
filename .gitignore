@@ -143,3 +143,4 @@ aiden_app/user_data/*/
 *.zip
 
 .DS_Store
+.python_version

@@ -1,0 +1,22 @@
+[tool.poetry]
+name = "aiden-scraper"
+version = "0.1.0"
+description = ""
+authors = ["Your Name <you@example.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.10"
+pydantic = "^2.7.1"
+requests = "^2.31.0"
+selenium = "^4.20.0"
+loguru = "^0.7.2"
+chompjs = "^1.2.3"
+fastapi = "^0.111.0"
+uvicorn = "^0.29.0"
+redis = "^5.0.4"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
