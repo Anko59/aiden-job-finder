@@ -40,15 +40,15 @@ class WelcomeToTheJungleScraper:
         return json.dumps({"requests": [{"indexName": "wttj_jobs_production_fr", "params": urlencode(params)}]})
 
     def _fetch_results(self, search_query: str, location: str) -> list[JobOffer]:
-        # Query hereapi for location coordinates
+        # Query hereapi for location id
         self.autocomplete_params["q"] = location
         response = requests.get("https://autocomplete.search.hereapi.com/v1/autocomplete", params=self.autocomplete_params)
         response.raise_for_status()
-        print(response.json())
+
+        # Query hereapi for location coordinates
         self.lookup_params["id"] = response.json()["items"][0]["id"]
         response = requests.get("https://lookup.search.hereapi.com/v1/lookup", params=self.lookup_params)
         response.raise_for_status()
-        print(response.json())
         latlng = ",".join([str(x) for x in response.json()["position"].values()])
 
         # Query algolia
