@@ -18,7 +18,12 @@ services:
     depends_on:
       db:
         condition: service_healthy
-
+      aiden-scraper:
+        condition: service_healthy
+    deploy:
+      resources:
+        limits:
+          memory: 1g
   db:
     image: postgres
     environment:
@@ -42,6 +47,10 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    deploy:
+      resources:
+        limits:
+          memory: 512m
 
   traefik:
     image: "traefik:v2.9"
@@ -57,6 +66,10 @@ services:
       - "/var/run/docker.sock:/var/run/docker.sock:ro"
     networks:
       - aiden_network
+    deploy:
+      resources:
+        limits:
+          memory: 512m
 
   pgweb:
     image: sosedoff/pgweb
@@ -72,6 +85,10 @@ services:
     depends_on:
       db:
         condition: service_healthy
+    deploy:
+      resources:
+        limits:
+          memory: 512m
 
   qdrant:
     image: qdrant/qdrant
@@ -83,13 +100,18 @@ services:
       - aiden_network
     environment:
       - QDRANT_STORAGE_DIR=/data # Adjust path if needed
-
+    deploy:
+      resources:
+        limits:
+          memory: 4g
   aiden-scraper:
     build: ./aiden-scraper
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.scraper.rule=Host(`scraper.dev.localhost`)"
       - "traefik.http.services.scraper.loadbalancer.server.port=8082"
+    environment:
+      - REDIS_URL=redis://redis:6379
     networks:
       - aiden_network
     volumes:
@@ -113,6 +135,36 @@ services:
       retries: 5
     deploy:
       replicas: 1
+      resources:
+        limits:
+          memory: 1g
+    depends_on:
+      redis:
+        condition: service_healthy
+  redis:
+    image: redis:alpine
+    command:
+      [
+        "redis-server",
+        "--appendonly",
+        "no",
+        "--maxmemory",
+        "118mb",
+        "--maxmemory-policy",
+        "allkeys-lru",
+      ]
+    networks:
+      - aiden_network
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    deploy:
+      replicas: 1
+      resources:
+        limits:
+          memory: 128M
 volumes:
   postgres_data:
 

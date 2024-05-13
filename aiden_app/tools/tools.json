@@ -74,33 +74,6 @@
     {
         "type": "function",
         "function": {
-            "name": "get_job_details",
-            "description": "Get additional information about a job offer. Such as the detailed description. And how to apply, and more",
-            "parameters": {
-                "type": "object",
-                "properties": {
-                    "job_title": {
-                        "type": "string",
-                        "description": "Job title must be one of the titles of the jobs previously returned by the search_jobs function."
-                    }
-                },
-                "required": [
-                    "job_title"
-                ]
-            }
-        }
-    },
-    {
-        "type": "function",
-        "function": {
-            "name": "list_job_titles",
-            "description": "List the job titles available to look for additional details.",
-            "parameters": {}
-        }
-    },
-    {
-        "type": "function",
-        "function": {
             "name": "talk",
             "description": "Talk to the user. The user will respond to your messages.",
             "parameters": {

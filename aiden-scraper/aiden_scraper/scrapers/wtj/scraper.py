@@ -1,13 +1,12 @@
-from urllib.parse import urlencode
 import json
+from urllib.parse import urlencode
 
 import requests
+from aiden_scraper.scrapers.utils import ChromeDriver
+from aiden_scraper.scrapers.wtj.schemas import JobOffer
 from chompjs import parse_js_object
 from loguru import logger
 from selenium.webdriver.common.by import By
-
-from aiden_scraper.scrapers.wtj.schemas import JobOffer
-from aiden_scraper.scrapers.utils import ChromeDriver
 
 
 class WelcomeToTheJungleScraper:
@@ -46,6 +45,8 @@ class WelcomeToTheJungleScraper:
         response.raise_for_status()
 
         # Query hereapi for location coordinates
+        if not response.json()["items"]:
+            return []
         self.lookup_params["id"] = response.json()["items"][0]["id"]
         response = requests.get("https://lookup.search.hereapi.com/v1/lookup", params=self.lookup_params)
         response.raise_for_status()
