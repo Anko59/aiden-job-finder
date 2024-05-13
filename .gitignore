@@ -126,11 +126,10 @@ dmypy.json
 # Cython debug symbols
 cython_debug/
 
-# Keep only John Doe cv images
-aiden_app/media/*
-!aiden_app/media/cv/cv_schema.json
-!aiden_app/media/cv/template.tex
-!aiden_app/media/cv/example_profile.json
+media/*
+!media/cv/cv_schema.json
+!media/cv/template.tex
+!media/cv/example_profile.json
 
 aiden_app/migrations/*
 
