@@ -132,6 +132,7 @@ aiden_app/media/*
 !aiden_app/media/cv/template.tex
 !aiden_app/media/cv/example_profile.json
 
+aiden_app/migrations/*
 
 
 # Exclude all zip files
