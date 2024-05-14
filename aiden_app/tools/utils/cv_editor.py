@@ -31,7 +31,7 @@ class CVEditor:
     def generate_cv(self, profile: UserProfile):
         template = self.jinja_env.get_template("cv_template.tex")
         info = profile.profile_info.to_json()
-        info["photo_url"] = os.path.join(self.cv_images_path, profile.photo.url.split("/")[-1])
+        info["photo_url"] = "../profile/" + profile.photo.url.split("/")[-1]
 
         output = self._render_template(template, info)
         document_path = self._write_to_file(output, profile.cv_path.replace(".pdf", ".tex"))
