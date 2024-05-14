@@ -48,9 +48,15 @@
             "company": "BakerBot Inc. (San Francisco, CA)",
             "duration": "2020.01--pres.",
             "details": [
-                "Development and maintenance of automated baking systems",
-                "Worked on improving baking processes through software optimization",
-                "Development of a pipeline for quality control using machine learning"
+                {
+                    "description": "Development and maintenance of automated baking systems"
+                },
+                {
+                    "description": "Worked on improving baking processes through software optimization"
+                },
+                {
+                    "description": "Development of a pipeline for quality control using machine learning"
+                }
             ]
         },
         {
@@ -58,8 +64,12 @@
             "company": "DoughTech (Seattle, WA)",
             "duration": "2016.03--2019.12",
             "details": [
-                "Product development: Design of baking machines and software",
-                "Client project management: Manage customer expectations, explain technical language, plan timelines, run tests, control product quality."
+                {
+                    "description": "Product development: Design of baking machines and software"
+                },
+                {
+                    "description": "Client project management: Manage customer expectations, explain technical language, plan timelines, run tests, control product quality."
+                }
             ]
         },
         {
@@ -67,8 +77,12 @@
             "company": "BreadWorks (Portland, OR)",
             "duration": "2014.06--2016.02",
             "details": [
-                "Machine maintenance and troubleshooting",
-                "Software development for baking process automation"
+                {
+                    "description": "Machine maintenance and troubleshooting"
+                },
+                {
+                    "description": "Software development for baking process automation"
+                }
             ]
         },
         {
@@ -76,9 +90,15 @@
             "company": "SweetTooth Bakery (Los Angeles, CA)",
             "duration": "2013.05--2013.08",
             "details": [
-                "Assisted in baking and decorating",
-                "Participated in the development of new recipes",
-                "Helped in the maintenance of baking equipment"
+                {
+                    "description": "Assisted in baking and decorating"
+                },
+                {
+                    "description": "Participated in the development of new recipes"
+                },
+                {
+                    "description": "Helped in the maintenance of baking equipment"
+                }
             ]
         }
     ],

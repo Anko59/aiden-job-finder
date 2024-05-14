@@ -106,7 +106,7 @@
 {% for experience in experiences %}
 \textsc{ {{ experience.title }} } at \textit{ {{ experience.company }} } \dates{ {{ experience.duration }} }\\
 {% for detail in experience.details %}
-\smaller{ {{ detail }} }\\
+\smaller{ {{ detail.description }} }\\
 {% endfor %}
 \is
 {% endfor %}

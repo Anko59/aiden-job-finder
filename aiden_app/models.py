@@ -27,10 +27,8 @@ class BaseModel(models.Model):
                 del json_data[field.name]
 
         # Create the instance
-        if isinstance(json_data, str):
-            instance = cls.objects.create(description=json_data)
-        else:
-            instance = cls.objects.create(**json_data)
+
+        instance = cls.objects.create(**json_data)
 
         # Save ManyToManyField relationships
         for field, objs in related_objects.items():
