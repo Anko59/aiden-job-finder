@@ -126,21 +126,19 @@ dmypy.json
 # Cython debug symbols
 cython_debug/
 
-# Keep only John Doe cv images
-aiden_app/static/images/user_images/cv/*
-!aiden_app/static/images/user_images/cv/cv_John_Doe*
+media/cv/*
+!media/cv/cv_schema.json
+!media/cv/cv_template.tex
+!media/cv/example_profile.json
 
-# Exclude all user images profiles except John Doe
-aiden_app/static/images/user_images/profile/*
-!aiden_app/static/images/user_images/profile/john_doe*
+media/profile/*
 
-# Exclude all folders in aiden_app/user_data except john_doe
-aiden_app/user_data/*/
-!aiden_app/user_data/john_doe
-!aiden_app/user_data/john_doe/*
+aiden_app/migrations/*
+
 
 # Exclude all zip files
 *.zip
 
 .DS_Store
+.env
 .python_version

@@ -64,9 +64,11 @@ body {
     margin-right: auto;
 }
 
+#profile-display .document object,
+#profile-display .document embed,
 #profile-display .document img {
-    width: 20px;
-    height: 20px;
+    max-width: 20px;
+    max-height: 20px;
     margin-left: 5px;
     cursor: pointer;
 }
@@ -279,6 +281,15 @@ button[type="submit"]:hover {
     border-color: lightgreen;
 }
 
+.plus-sign img {
+    width: 75px;
+    height: 75px;
+    margin-bottom: 10px;
+    border: 2px solid white;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
 .big-image-container {
     position: fixed;
     top: 0;
@@ -306,4 +317,45 @@ button[type="submit"]:hover {
     border: none;
     font-size: 16px;
     cursor: pointer;
+}
+#chat-window .new-profile-container {
+    display: flex;
+    flex-direction: column;
+    margin: 10px;
+}
+
+#chat-window .new-profile-container input[type="text"],
+#chat-window .new-profile-container textarea {
+    margin-bottom: 10px;
+    padding: 5px;
+}
+#chat-window .new-profile-container input[type="text"]{
+    width: 30%;
+}
+
+#chat-window .new-profile-container textarea {
+    min-height: 200px;
+}
+
+#chat-window .new-profile-container .send-button {
+    padding: 5px 10px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    cursor: pointer;
+}
+
+input[type="file"] {
+    display: none;
+}
+.custom-file-upload {
+    border: 1px solid #ccc;
+    display: inline-block;
+    padding: 6px 5px;
+    cursor: pointer;
+    width: 30%;
+}
+
+.custom-file-upload .fa {
+    margin-right: 5px;
 }
