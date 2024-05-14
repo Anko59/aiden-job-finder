@@ -39,8 +39,7 @@ def handle_question(request):
 @api_view(["POST"])
 def handle_start_chat(request):
     profile = request.data.get("profile")
-    print("profile:", profile)
-    profile = UserProfile.objects.get(first_name=profile["first_name"], last_name=profile["last_name"])
+    profile = UserProfile.objects.get(first_name=profile["first_name"], last_name=profile["last_name"], profile_title="default_profile")
     if not profile:
         return JsonResponse({"error": "Invalid profile parameter"}, status=status.HTTP_400_BAD_REQUEST)
 
