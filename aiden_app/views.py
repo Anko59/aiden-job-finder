@@ -80,7 +80,10 @@ def handle_create_profile(request):
     else:
         return JsonResponse({"error": "Invalid profile data"}, status=status.HTTP_400_BAD_REQUEST)
 
-    return StreamingHttpResponse(respond_create_profile(user_profile, request))
+    response, agent = start_chat(user_profile)
+    request.session["agent"] = agent.to_json()
+
+    return StreamingHttpResponse(respond_create_profile(user_profile, response))
 
 
 def chat_wrapper(agent, question):
@@ -114,11 +117,10 @@ def start_chat(profile: UserProfile):
     return response, agent
 
 
-def respond_create_profile(profile: UserProfile, request):
+def respond_create_profile(profile: UserProfile, response):
     CVEditor().generate_cv(profile)
     profiles = list(get_available_profiles())
 
     yield json.dumps({"role": "get_profiles", "content": profiles})
-    response, agent = start_chat(profile)
-    request.session["agent"] = agent.to_json()
+
     yield json.dumps(response)
