@@ -8,20 +8,6 @@ Aiden (AI-Driven Employment Navigator) is a Django-based web application that us
 - CV editing tool
 - Job scraping tool from Indeed
 
-## File Structure
-
-Here's a brief overview of the main files in the project:
-
-- `aiden_app/agents/mistral_agent.py`: This file contains the `MistralAgent` class which handles the interaction with the Mistral AI model. It also includes the `MistralAgentToolOnly` class which is a variant of `MistralAgent`.
-
-- `aiden_app/views.py`: This file contains the Django views for the application. It includes the `chat_view` function which handles the chat interactions.
-
-- `aiden_app/templates/chat.html`: This is the main HTML template for the chat interface. It includes a form for user input and displays the chat messages.
-
-- `aiden_app/static/js/main.js`: This is the main JavaScript file for the application. It handles the client-side logic of the chat interface.
-
-The `aiden_app/tools/utils/` directory contains utility functions and classes used by the tools. For example, `aiden_app/tools/utils/cv_editor.py` contains the `CVEdit` and `CVEditor` classes used by `CVEditorTool`.
-
 ## Installation
 
 You need to modify the `.env` file to include your MISTRAL_API_KEY value:

@@ -1,6 +1,6 @@
 services:
   aiden_app:
-    build: .
+    build: ./aiden-web
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.aiden.rule=Host(`aiden.dev.localhost`)"
@@ -8,10 +8,10 @@ services:
     networks:
       - aiden_network
     volumes:
-      - ./aiden_app:/app/aiden_app
-      - ./aiden_project:/app/aiden_project
-      - ./manage.py:/app/manage.py
-      - ./media:/app/media
+      - ./aiden-web/aiden_app:/app/aiden_app
+      - ./aiden-web/aiden_project:/app/aiden_project
+      - ./aiden-web/manage.py:/app/manage.py
+      - ./aiden-web/media:/app/media
     env_file:
       - .env
     environment:
@@ -28,7 +28,7 @@ services:
   media_server:
     image: nginx:alpine
     volumes:
-      - ./media:/usr/share/nginx/html
+      - ./aiden-web/media:/usr/share/nginx/html
       - ./nginx.conf:/etc/nginx/conf.d/default.conf
     labels:
       - "traefik.enable=true"

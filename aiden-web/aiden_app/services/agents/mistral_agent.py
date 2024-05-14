@@ -2,7 +2,7 @@ import json
 import os
 from mistralai.client import MistralClient
 from mistralai.models.chat_completion import ChatMessage, FunctionCall
-from ..tools.talk_tool import TalkTool
+from aiden_app.services.tools.talk_tool import TalkTool
 from .agent import Agent
 
 

@@ -126,14 +126,14 @@ dmypy.json
 # Cython debug symbols
 cython_debug/
 
-media/cv/*
-!media/cv/cv_schema.json
-!media/cv/cv_template.tex
-!media/cv/example_profile.json
+aiden-web/media/cv/*
+!aiden-web/media/cv/cv_schema.json
+!aiden-web/media/cv/cv_template.tex
+!aiden-web/media/cv/example_profile.json
 
-media/profile/*
+aiden-web/media/profile/*
 
-aiden_app/migrations/*
+aiden-web/aiden_app/migrations/*
 
 
 # Exclude all zip files
