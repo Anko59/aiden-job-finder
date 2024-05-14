@@ -64,9 +64,11 @@ body {
     margin-right: auto;
 }
 
+#profile-display .document object,
+#profile-display .document embed,
 #profile-display .document img {
-    width: 20px;
-    height: 20px;
+    max-width: 20px;
+    max-height: 20px;
     margin-left: 5px;
     cursor: pointer;
 }

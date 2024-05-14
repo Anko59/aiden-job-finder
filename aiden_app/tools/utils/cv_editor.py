@@ -5,6 +5,7 @@ from typing import Any, List, Union
 from aiden_app.models import UserProfile, ProfileInfo
 from aiden_project.settings import MEDIA_ROOT
 
+import fitz  # PyMuPDF
 from jinja2 import Environment, FileSystemLoader
 from PyPDF2 import PdfReader, PdfWriter
 
@@ -38,6 +39,8 @@ class CVEditor:
         self._extract_most_content_page(document_path)
         self._clean_user_directory()
         pdf_path = document_path.replace(".tex", ".pdf")
+        png_path = pdf_path.replace(".pdf", ".png")
+        self._generate_cv_png(pdf_path, png_path)
         return pdf_path
 
     def _clean_user_directory(self):
@@ -45,6 +48,12 @@ class CVEditor:
             if file.endswith(".aux") or file.endswith(".log") or file.endswith(".tex") or file.endswith(".out"):
                 if file != "cv_template.tex":
                     os.remove(os.path.join(self.cv_images_path, file))
+
+    def _generate_cv_png(self, pdf_path: str, png_path: str):
+        doc = fitz.open(pdf_path)
+        page = doc[0]
+        pix = page.get_pixmap()
+        pix.save(png_path)
 
     def _render_template(self, template: Any, info: dict) -> str:
         output = template.render(**info)

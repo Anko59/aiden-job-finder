@@ -5,10 +5,6 @@ services:
       - "traefik.enable=true"
       - "traefik.http.routers.aiden.rule=Host(`aiden.dev.localhost`)"
       - "traefik.http.services.aiden.loadbalancer.server.port=8000"
-      - "traefik.http.routers.aiden-media.rule=Host(`aiden.dev.localhost`) && PathPrefix(`/media`)"
-      - "traefik.http.routers.aiden-media.middlewares=aiden-media-stripprefix"
-      - "traefik.http.middlewares.aiden-media-stripprefix.stripprefix.prefixes=/media"
-      - "traefik.http.routers.aiden-media.priority=10"
     networks:
       - aiden_network
     volumes:
@@ -22,7 +18,19 @@ services:
       - db
     environment:
       - DATABASE_URL=postgres://${DATABASE_USER}:${DATABASE_PASSWORD}@${DATABASE_HOST}:${DATABASE_PORT}/${DATABASE_NAME}
-
+  media_server:
+    image: nginx:alpine
+    volumes:
+      - ./media:/usr/share/nginx/html
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.media.rule=Host(`aiden.dev.localhost`) && PathPrefix(`/media`)"
+      - "traefik.http.middlewares.media-stripprefix.stripprefix.prefixes=/media"
+      - "traefik.http.routers.media.middlewares=media-stripprefix"
+      - "traefik.http.services.media.loadbalancer.server.port=80"
+    networks:
+      - aiden_network
   db:
     image: postgres
     environment:

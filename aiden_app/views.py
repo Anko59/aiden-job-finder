@@ -9,7 +9,7 @@ from django.views import View
 
 from .agents.mistral_agent import MistralAgent
 from .agents.prompts import START_CHAT_PROMPT
-from .utils import get_available_profiles, get_documents_and_profile
+from .utils import get_available_profiles, get_documents
 from django.views.decorators.csrf import csrf_protect
 from .tools.utils.cv_editor import CVEditor
 from .models import ProfileInfo, UserProfile
@@ -96,20 +96,14 @@ def chat_wrapper(agent, question):
                 "is_last": is_last,
             }
             if message["role"] == "tool" and message["name"] == "edit_user_profile":
-                response["documents"], _ = get_documents_and_profile(agent.profile)
+                response["documents"] = get_documents(agent.profile)
             yield json.dumps(response)
 
     return StreamingHttpResponse(generate_responses())
 
 
 def start_chat(profile: UserProfile):
-    documents = [
-        {
-            "name": profile.profile_title,
-            "path": "media/cv/" + profile.cv_name,
-        }
-        for profile in UserProfile.objects.filter(first_name=profile.first_name, last_name=profile.last_name)
-    ]
+    documents = get_documents(profile)
     agent = MistralAgent.from_profile(profile)
     response = {
         "role": "assistant",
