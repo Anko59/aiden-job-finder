@@ -3,9 +3,9 @@ import os
 from typing import Any, Dict, List, Tuple
 from abc import ABC, abstractmethod
 
-from ..tools.cv_editor_tool import CVEditorTool
-from ..tools.indeed_scraper_tool import IndeedScraperTool
-from ..tools.tool_aggregator import ToolAggregator
+from aiden_app.tools.cv_editor_tool import CVEditorTool
+from aiden_app.tools.scraper_tool import ScraperTool
+from aiden_app.tools.tool_aggregator import ToolAggregator
 from .prompts import START_CHAT_PROMPT, SYSTEM_PROMPT, PROFILE_CREATION_SYSTEM_PROMPT
 from aiden_project.settings import MEDIA_ROOT
 from aiden_app.models import UserProfile
@@ -63,7 +63,7 @@ class Agent(ABC):
         self = cls(*args, **kwargs)
         self.profile = user_profile
         self.tool_aggregator.tools.append(CVEditorTool(profile=user_profile))
-        self.tool_aggregator.tools.append(IndeedScraperTool())
+        self.tool_aggregator.tools.append(ScraperTool())
         profile_dict = user_profile.to_json()
         start_messages = [
             self.message_class(role="system", content=SYSTEM_PROMPT),

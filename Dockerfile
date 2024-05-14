@@ -10,8 +10,6 @@ WORKDIR /app
 
 # Install necessary packages for selenium and pdflatex
 RUN apt-get update && apt-get install -y \
-    chromium \
-    chromium-driver \
     texlive-latex-base \
     texlive-fonts-recommended \
     texlive-fonts-extra \

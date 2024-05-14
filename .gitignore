@@ -141,3 +141,4 @@ aiden_app/migrations/*
 
 .DS_Store
 .env
+.python_version
