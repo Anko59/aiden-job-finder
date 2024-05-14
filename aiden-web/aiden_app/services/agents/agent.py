@@ -3,9 +3,9 @@ import os
 from typing import Any, Dict, List, Tuple
 from abc import ABC, abstractmethod
 
-from aiden_app.tools.cv_editor_tool import CVEditorTool
-from aiden_app.tools.scraper_tool import ScraperTool
-from aiden_app.tools.tool_aggregator import ToolAggregator
+from aiden_app.services.tools.cv_editor_tool import CVEditorTool
+from aiden_app.services.tools.scraper_tool import ScraperTool
+from aiden_app.services.tools.tool_aggregator import ToolAggregator
 from .prompts import START_CHAT_PROMPT, SYSTEM_PROMPT, PROFILE_CREATION_SYSTEM_PROMPT
 from aiden_project.settings import MEDIA_ROOT
 from aiden_app.models import UserProfile

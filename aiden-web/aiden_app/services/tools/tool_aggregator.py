@@ -1,7 +1,7 @@
 import json
 import os
 
-with open(os.path.join(os.path.dirname(__file__), 'tools.json')) as f:
+with open(os.path.join(os.path.dirname(__file__), "tools.json")) as f:
     tools = json.load(f)
 
 
@@ -12,7 +12,7 @@ class ToolAggregator:
     def get_tools(self):
         _tools = []
         for func in tools:
-            if func['function']['name'] in self.names_to_functions():
+            if func["function"]["name"] in self.names_to_functions():
                 _tools.append(func)
         return _tools
 
