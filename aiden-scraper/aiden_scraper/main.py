@@ -34,4 +34,4 @@ def scrape(job_offer_request: Annotated[JobOfferRequest, Body()]) -> list[str]:
     # _ = indeed_scraper.search_jobs(
     #     search_query=job_offer_request.query, location=job_offer_request.location, num_results=job_offer_request.limit
     # )
-    return [r.metadata_repr() for r in wtj_results]
+    return wtj_results

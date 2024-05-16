@@ -1,3 +1,9 @@
+import hashlib
+import json
+from datetime import timedelta
+from functools import wraps
+
+from aiden_scraper import redis_client
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 
@@ -49,3 +55,34 @@ class ChromeDriver:
     def quit(self):
         if self.driver:
             self.driver.quit()
+
+
+def cache(retention_period: timedelta):
+    def decorator(func):
+        @wraps(func)
+        def wrapper(self, *args, **kwargs):
+            # Generate a unique cache key based on function name and arguments
+            key = _generate_cache_key(func, *args, **kwargs)
+
+            # Try to get the cached result
+            cached_result: str | None = redis_client.get(key)  # type: ignore
+            if cached_result is not None:
+                return json.loads(cached_result)
+
+            # Call the function and cache the result
+            result = func(self, *args, **kwargs)
+            redis_client.setex(key, retention_period, json.dumps(result))
+            return result
+
+        return wrapper
+
+    return decorator
+
+
+def _generate_cache_key(func, *args, **kwargs):
+    # Create a string representation of the function name and arguments
+    key_data = {"function": func.__name__, "args": args, "kwargs": kwargs}
+    key_string = json.dumps(key_data, sort_keys=True)
+
+    # Use a hash to ensure the key length is suitable for Redis
+    return hashlib.sha256(key_string.encode("utf-8")).hexdigest()

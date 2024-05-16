@@ -15,6 +15,7 @@ chompjs = "^1.2.3"
 fastapi = "^0.111.0"
 uvicorn = "^0.29.0"
 redis = "^5.0.4"
+qdrant-client = "^1.9.1"
 
 
 [build-system]
