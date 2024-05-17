@@ -1,0 +1,8 @@
+{
+    "requests": [
+        {
+            "indexName": "wttj_jobs_production_fr",
+            "params": "hitsPerPage=300&query=machine learning engineer"
+        }
+    ]
+}

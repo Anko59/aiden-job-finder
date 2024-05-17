@@ -1,0 +1,656 @@
+[
+    {
+        "attributesToHighlight": [
+            "[\"name\"]"
+        ],
+        "attributesToRetrieve": [
+            "[\"*\"]"
+        ],
+        "clickAnalytics": [
+            "true"
+        ],
+        "hitsPerPage": [
+            "30"
+        ],
+        "maxValuesPerFacet": [
+            "999"
+        ],
+        "analytics": [
+            "true"
+        ],
+        "enableABTest": [
+            "true"
+        ],
+        "userToken": [
+            "d6b03969-e13d-491a-bcc8-aa39c7e43425"
+        ],
+        "analyticsTags": [
+            "[\"page:jobs_index\",\"language:fr\"]"
+        ],
+        "facets": [
+            "[\"benefits\",\"contract_type\",\"contract_duration_minimum\",\"contract_duration_maximum\",\"has_contract_duration\",\"education_level\",\"has_education_level\",\"experience_level_minimum\",\"has_experience_level_minimum\",\"organization.nb_employees\",\"organization.labels\",\"salary_yearly_minimum\",\"has_salary_yearly_minimum\",\"salary_currency\",\"followedCompanies\",\"language\",\"new_profession.category_reference\",\"new_profession.sub_category_reference\",\"remote\",\"sectors.parent_reference\",\"sectors.reference\"]"
+        ],
+        "filters": [
+            "(\"offices.country_code\":\"FR\")"
+        ],
+        "page": [
+            "1"
+        ],
+        "query": [
+            "Machine Learning engineer"
+        ]
+    },
+    {
+        "attributesToHighlight": [
+            "[\"name\"]"
+        ],
+        "attributesToRetrieve": [
+            "[\"*\"]"
+        ],
+        "clickAnalytics": [
+            "true"
+        ],
+        "hitsPerPage": [
+            "200"
+        ],
+        "maxValuesPerFacet": [
+            "999"
+        ],
+        "analytics": [
+            "true"
+        ],
+        "enableABTest": [
+            "true"
+        ],
+        "userToken": [
+            "d6b03969-e13d-491a-bcc8-aa39c7e43425"
+        ],
+        "analyticsTags": [
+            "[\"page:jobs_index\",\"language:fr\"]"
+        ],
+        "facets": [
+            "[]"
+        ],
+        "filters": [
+            "(\"offices.country_code\":\"FR\") AND is_boosted:true"
+        ],
+        "page": [
+            "0"
+        ],
+        "query": [
+            "Machine Learning engineer"
+        ]
+    },
+    {
+        "analytics": [
+            "false"
+        ],
+        "facets": [
+            "[\"benefits\",\"contract_type\",\"contract_duration_minimum\",\"contract_duration_maximum\",\"has_contract_duration\",\"education_level\",\"has_education_level\",\"experience_level_minimum\",\"has_experience_level_minimum\",\"organization.nb_employees\",\"organization.labels\",\"salary_yearly_minimum\",\"has_salary_yearly_minimum\",\"salary_currency\",\"followedCompanies\",\"language\",\"new_profession.category_reference\",\"new_profession.sub_category_reference\",\"remote\",\"sectors.parent_reference\",\"sectors.reference\"]"
+        ],
+        "hitsPerPage": [
+            "0"
+        ]
+    },
+    {
+        "analytics": [
+            "false"
+        ],
+        "facets": [
+            "[\"benefits\"]"
+        ],
+        "filters": [
+            "(\"offices.country_code\":\"FR\")"
+        ],
+        "hitsPerPage": [
+            "0"
+        ],
+        "query": [
+            "Machine Learning engineer"
+        ]
+    },
+    {
+        "analytics": [
+            "false"
+        ],
+        "facets": [
+            "[\"contract_type\"]"
+        ],
+        "filters": [
+            "(\"offices.country_code\":\"FR\")"
+        ],
+        "hitsPerPage": [
+            "0"
+        ],
+        "query": [
+            "Machine Learning engineer"
+        ]
+    },
+    {
+        "analytics": [
+            "false"
+        ],
+        "facets": [
+            "[\"contract_duration_minimum\"]"
+        ],
+        "filters": [
+            "contract_duration_minimum:1 TO 3 OR contract_duration_maximum:1 TO 3 AND (\"offices.country_code\":\"FR\")"
+        ],
+        "hitsPerPage": [
+            "0"
+        ],
+        "query": [
+            "Machine Learning engineer"
+        ]
+    },
+    {
+        "analytics": [
+            "false"
+        ],
+        "facets": [
+            "[\"contract_duration_minimum\"]"
+        ],
+        "filters": [
+            "contract_duration_minimum:4 TO 6 OR contract_duration_maximum:4 TO 6 AND (\"offices.country_code\":\"FR\")"
+        ],
+        "hitsPerPage": [
+            "0"
+        ],
+        "query": [
+            "Machine Learning engineer"
+        ]
+    },
+    {
+        "analytics": [
+            "false"
+        ],
+        "facets": [
+            "[\"contract_duration_minimum\"]"
+        ],
+        "filters": [
+            "contract_duration_minimum:7 TO 12 OR contract_duration_maximum:7 TO 12 AND (\"offices.country_code\":\"FR\")"
+        ],
+        "hitsPerPage": [
+            "0"
+        ],
+        "query": [
+            "Machine Learning engineer"
+        ]
+    },
+    {
+        "analytics": [
+            "false"
+        ],
+        "facets": [
+            "[\"contract_duration_minimum\"]"
+        ],
+        "filters": [
+            "contract_duration_minimum:13 TO 24 OR contract_duration_maximum:13 TO 24 AND (\"offices.country_code\":\"FR\")"
+        ],
+        "hitsPerPage": [
+            "0"
+        ],
+        "query": [
+            "Machine Learning engineer"
+        ]
+    },
+    {
+        "analytics": [
+            "false"
+        ],
+        "facets": [
+            "[\"contract_duration_minimum\"]"
+        ],
+        "filters": [
+            "contract_duration_minimum:25 TO 36 OR contract_duration_maximum:25 TO 36 AND (\"offices.country_code\":\"FR\")"
+        ],
+        "hitsPerPage": [
+            "0"
+        ],
+        "query": [
+            "Machine Learning engineer"
+        ]
+    },
+    {
+        "analytics": [
+            "false"
+        ],
+        "facets": [
+            "[\"contract_duration_maximum\"]"
+        ],
+        "filters": [
+            "(\"offices.country_code\":\"FR\")"
+        ],
+        "hitsPerPage": [
+            "0"
+        ],
+        "query": [
+            "Machine Learning engineer"
+        ]
+    },
+    {
+        "analytics": [
+            "false"
+        ],
+        "facets": [
+            "[\"has_contract_duration\"]"
+        ],
+        "filters": [
+            "(\"offices.country_code\":\"FR\")"
+        ],
+        "hitsPerPage": [
+            "0"
+        ],
+        "query": [
+            "Machine Learning engineer"
+        ]
+    },
+    {
+        "analytics": [
+            "false"
+        ],
+        "facets": [
+            "[\"education_level\"]"
+        ],
+        "filters": [
+            "(\"offices.country_code\":\"FR\")"
+        ],
+        "hitsPerPage": [
+            "0"
+        ],
+        "query": [
+            "Machine Learning engineer"
+        ]
+    },
+    {
+        "analytics": [
+            "false"
+        ],
+        "facets": [
+            "[\"has_education_level\"]"
+        ],
+        "filters": [
+            "(\"offices.country_code\":\"FR\")"
+        ],
+        "hitsPerPage": [
+            "0"
+        ],
+        "query": [
+            "Machine Learning engineer"
+        ]
+    },
+    {
+        "analytics": [
+            "false"
+        ],
+        "facets": [
+            "[\"experience_level_minimum\"]"
+        ],
+        "filters": [
+            "experience_level_minimum:0 TO 1 AND (\"offices.country_code\":\"FR\")"
+        ],
+        "hitsPerPage": [
+            "0"
+        ],
+        "query": [
+            "Machine Learning engineer"
+        ]
+    },
+    {
+        "analytics": [
+            "false"
+        ],
+        "facets": [
+            "[\"experience_level_minimum\"]"
+        ],
+        "filters": [
+            "experience_level_minimum:1 TO 3 AND (\"offices.country_code\":\"FR\")"
+        ],
+        "hitsPerPage": [
+            "0"
+        ],
+        "query": [
+            "Machine Learning engineer"
+        ]
+    },
+    {
+        "analytics": [
+            "false"
+        ],
+        "facets": [
+            "[\"experience_level_minimum\"]"
+        ],
+        "filters": [
+            "experience_level_minimum:3 TO 5 AND (\"offices.country_code\":\"FR\")"
+        ],
+        "hitsPerPage": [
+            "0"
+        ],
+        "query": [
+            "Machine Learning engineer"
+        ]
+    },
+    {
+        "analytics": [
+            "false"
+        ],
+        "facets": [
+            "[\"experience_level_minimum\"]"
+        ],
+        "filters": [
+            "experience_level_minimum:5 TO 10 AND (\"offices.country_code\":\"FR\")"
+        ],
+        "hitsPerPage": [
+            "0"
+        ],
+        "query": [
+            "Machine Learning engineer"
+        ]
+    },
+    {
+        "analytics": [
+            "false"
+        ],
+        "facets": [
+            "[\"experience_level_minimum\"]"
+        ],
+        "filters": [
+            "experience_level_minimum >= 10 AND (\"offices.country_code\":\"FR\")"
+        ],
+        "hitsPerPage": [
+            "0"
+        ],
+        "query": [
+            "Machine Learning engineer"
+        ]
+    },
+    {
+        "analytics": [
+            "false"
+        ],
+        "facets": [
+            "[\"has_experience_level_minimum\"]"
+        ],
+        "filters": [
+            "(\"offices.country_code\":\"FR\")"
+        ],
+        "hitsPerPage": [
+            "0"
+        ],
+        "query": [
+            "Machine Learning engineer"
+        ]
+    },
+    {
+        "analytics": [
+            "false"
+        ],
+        "facets": [
+            "[\"organization.nb_employees\"]"
+        ],
+        "filters": [
+            "organization.nb_employees:0 TO 15 AND (\"offices.country_code\":\"FR\")"
+        ],
+        "hitsPerPage": [
+            "0"
+        ],
+        "query": [
+            "Machine Learning engineer"
+        ]
+    },
+    {
+        "analytics": [
+            "false"
+        ],
+        "facets": [
+            "[\"organization.nb_employees\"]"
+        ],
+        "filters": [
+            "organization.nb_employees:15 TO 50 AND (\"offices.country_code\":\"FR\")"
+        ],
+        "hitsPerPage": [
+            "0"
+        ],
+        "query": [
+            "Machine Learning engineer"
+        ]
+    },
+    {
+        "analytics": [
+            "false"
+        ],
+        "facets": [
+            "[\"organization.nb_employees\"]"
+        ],
+        "filters": [
+            "organization.nb_employees:50 TO 250 AND (\"offices.country_code\":\"FR\")"
+        ],
+        "hitsPerPage": [
+            "0"
+        ],
+        "query": [
+            "Machine Learning engineer"
+        ]
+    },
+    {
+        "analytics": [
+            "false"
+        ],
+        "facets": [
+            "[\"organization.nb_employees\"]"
+        ],
+        "filters": [
+            "organization.nb_employees:250 TO 2000 AND (\"offices.country_code\":\"FR\")"
+        ],
+        "hitsPerPage": [
+            "0"
+        ],
+        "query": [
+            "Machine Learning engineer"
+        ]
+    },
+    {
+        "analytics": [
+            "false"
+        ],
+        "facets": [
+            "[\"organization.nb_employees\"]"
+        ],
+        "filters": [
+            "organization.nb_employees >= 2000 AND (\"offices.country_code\":\"FR\")"
+        ],
+        "hitsPerPage": [
+            "0"
+        ],
+        "query": [
+            "Machine Learning engineer"
+        ]
+    },
+    {
+        "analytics": [
+            "false"
+        ],
+        "facets": [
+            "[\"organization.labels\"]"
+        ],
+        "filters": [
+            "(\"offices.country_code\":\"FR\")"
+        ],
+        "hitsPerPage": [
+            "0"
+        ],
+        "query": [
+            "Machine Learning engineer"
+        ]
+    },
+    {
+        "analytics": [
+            "false"
+        ],
+        "facets": [
+            "[\"salary_yearly_minimum\"]"
+        ],
+        "filters": [
+            "(\"offices.country_code\":\"FR\")"
+        ],
+        "hitsPerPage": [
+            "0"
+        ],
+        "query": [
+            "Machine Learning engineer"
+        ]
+    },
+    {
+        "analytics": [
+            "false"
+        ],
+        "facets": [
+            "[\"has_salary_yearly_minimum\"]"
+        ],
+        "filters": [
+            "(\"offices.country_code\":\"FR\")"
+        ],
+        "hitsPerPage": [
+            "0"
+        ],
+        "query": [
+            "Machine Learning engineer"
+        ]
+    },
+    {
+        "analytics": [
+            "false"
+        ],
+        "facets": [
+            "[\"salary_currency\"]"
+        ],
+        "filters": [
+            "(\"offices.country_code\":\"FR\")"
+        ],
+        "hitsPerPage": [
+            "0"
+        ],
+        "query": [
+            "Machine Learning engineer"
+        ]
+    },
+    {
+        "analytics": [
+            "false"
+        ],
+        "facets": [
+            "[\"followedCompanies\"]"
+        ],
+        "filters": [
+            "(\"offices.country_code\":\"FR\")"
+        ],
+        "hitsPerPage": [
+            "0"
+        ],
+        "query": [
+            "Machine Learning engineer"
+        ]
+    },
+    {
+        "analytics": [
+            "false"
+        ],
+        "facets": [
+            "[\"language\"]"
+        ],
+        "filters": [
+            "(\"offices.country_code\":\"FR\")"
+        ],
+        "hitsPerPage": [
+            "0"
+        ],
+        "query": [
+            "Machine Learning engineer"
+        ]
+    },
+    {
+        "analytics": [
+            "false"
+        ],
+        "facets": [
+            "[\"new_profession.category_reference\"]"
+        ],
+        "filters": [
+            "(\"offices.country_code\":\"FR\")"
+        ],
+        "hitsPerPage": [
+            "0"
+        ],
+        "query": [
+            "Machine Learning engineer"
+        ]
+    },
+    {
+        "analytics": [
+            "false"
+        ],
+        "facets": [
+            "[\"new_profession.sub_category_reference\"]"
+        ],
+        "filters": [
+            "(\"offices.country_code\":\"FR\")"
+        ],
+        "hitsPerPage": [
+            "0"
+        ],
+        "query": [
+            "Machine Learning engineer"
+        ]
+    },
+    {
+        "analytics": [
+            "false"
+        ],
+        "facets": [
+            "[\"remote\"]"
+        ],
+        "filters": [
+            "(\"offices.country_code\":\"FR\")"
+        ],
+        "hitsPerPage": [
+            "0"
+        ],
+        "query": [
+            "Machine Learning engineer"
+        ]
+    },
+    {
+        "analytics": [
+            "false"
+        ],
+        "facets": [
+            "[\"sectors.parent_reference\"]"
+        ],
+        "filters": [
+            "(\"offices.country_code\":\"FR\")"
+        ],
+        "hitsPerPage": [
+            "0"
+        ],
+        "query": [
+            "Machine Learning engineer"
+        ]
+    },
+    {
+        "analytics": [
+            "false"
+        ],
+        "facets": [
+            "[\"sectors.reference\"]"
+        ],
+        "filters": [
+            "(\"offices.country_code\":\"FR\")"
+        ],
+        "hitsPerPage": [
+            "0"
+        ],
+        "query": [
+            "Machine Learning engineer"
+        ]
+    }
+]
