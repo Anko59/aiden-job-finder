@@ -325,7 +325,7 @@ button[type="submit"]:hover {
 }
 
 #chat-window .new-profile-container input[type="text"],
-#chat-window .new-profile-container textarea {
+#chat-window .new-profile-container input[type="textarea"] {
     margin-bottom: 10px;
     padding: 5px;
 }
@@ -333,7 +333,7 @@ button[type="submit"]:hover {
     width: 30%;
 }
 
-#chat-window .new-profile-container textarea {
+#chat-window .new-profile-container input[type="textarea"] {
     min-height: 200px;
 }
 
