@@ -1,8 +1,12 @@
 import json
 import os
+
 from mistralai.client import MistralClient
 from mistralai.models.chat_completion import ChatMessage, FunctionCall
+from mistralai.models.embeddings import EmbeddingResponse
+
 from aiden_app.services.tools.talk_tool import TalkTool
+
 from .agent import Agent
 
 
@@ -40,6 +44,9 @@ class MistralAgent(Agent):
         self.tokens_used += response.usage.total_tokens
 
         return message
+
+    def embed(self, message: str) -> EmbeddingResponse:
+        return self.client.embeddings(model="mistral-embed", input=message)
 
     def chat(self, user_input: str):
         self.messages.append(ChatMessage(role="user", content=user_input))
