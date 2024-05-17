@@ -160,6 +160,8 @@ services:
         condition: service_started
       redis:
         condition: service_healthy
+      qdrant:
+        condition: service_healthy
   redis:
     image: redis:alpine
     command:

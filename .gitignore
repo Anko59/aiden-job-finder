@@ -133,8 +133,6 @@ aiden-web/media/cv/*
 
 aiden-web/media/profile/*
 
-aiden-web/aiden_app/migrations/*
-
 
 # Exclude all zip files
 *.zip
