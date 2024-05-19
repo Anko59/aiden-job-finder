@@ -48,6 +48,8 @@ services:
       - postgres_data:/var/lib/postgresql/data/
     networks:
       - aiden_network
+    expose:
+      - 5432:5432
     healthcheck:
       test:
         [
@@ -154,6 +156,8 @@ services:
         limits:
           memory: 1g
     depends_on:
+      qdrant:
+        condition: service_started
       redis:
         condition: service_healthy
 

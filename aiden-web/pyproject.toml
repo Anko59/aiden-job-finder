@@ -17,6 +17,8 @@ psycopg2-binary = "^2.9.9"
 dj-database-url = "^2.1.0"
 djangorestframework = "^3.15.1"
 pillow = "^10.3.0"
+qdrant-client = "^1.9.1"
+numpy = "^1.26.4"
 
 [tool.poetry.group.dev.dependencies]
 ipython = "^8.24.0"

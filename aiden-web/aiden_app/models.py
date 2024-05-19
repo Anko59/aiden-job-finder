@@ -2,6 +2,7 @@ from django.db import models
 from aiden_project.settings import MEDIA_ROOT
 
 import os
+import uuid
 
 
 class BaseModel(models.Model):
@@ -117,6 +118,7 @@ class ProfileInfo(BaseModel):
     educations = models.ManyToManyField(Education, related_name="profiles", help_text="A list of the individual's educational background")
     projects = models.ManyToManyField(Project, related_name="profiles", help_text="A list of projects the individual has worked on")
     skills = models.ManyToManyField(Skill, related_name="profiles", help_text="A list of the individual's skills")
+    embeddings_id = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
 
 
 class UserProfile(BaseModel):
