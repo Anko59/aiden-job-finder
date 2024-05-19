@@ -1,17 +1,14 @@
 import json
 import os
-from abc import ABC, abstractmethod
 from typing import Any, Dict, List, Tuple
+from abc import ABC, abstractmethod
 
-from aiden_project.settings import MEDIA_ROOT
-from django.core.serializers.json import DjangoJSONEncoder
-
-from aiden_app.models import UserProfile
 from aiden_app.services.tools.cv_editor_tool import CVEditorTool
 from aiden_app.services.tools.scraper_tool import ScraperTool
 from aiden_app.services.tools.tool_aggregator import ToolAggregator
-
-from .prompts import PROFILE_CREATION_SYSTEM_PROMPT, START_CHAT_PROMPT, SYSTEM_PROMPT
+from .prompts import START_CHAT_PROMPT, SYSTEM_PROMPT, PROFILE_CREATION_SYSTEM_PROMPT
+from aiden_project.settings import MEDIA_ROOT
+from aiden_app.models import UserProfile
 
 
 class Agent(ABC):
@@ -70,7 +67,7 @@ class Agent(ABC):
         profile_dict = user_profile.profile_info.to_json()
         start_messages = [
             self.message_class(role="system", content=SYSTEM_PROMPT),
-            self.message_class(role="system", content=json.dumps(profile_dict, cls=DjangoJSONEncoder)),
+            self.message_class(role="system", content=json.dumps(profile_dict)),
             self.message_class(role="assistant", content=START_CHAT_PROMPT),
         ]
         self.messages = start_messages
