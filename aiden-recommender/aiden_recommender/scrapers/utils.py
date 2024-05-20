@@ -2,10 +2,16 @@ import hashlib
 import json
 from datetime import timedelta
 from functools import wraps
+from typing import Type, TypeVar
 
-from aiden_scraper import redis_client
+from aiden_recommender import redis_client
+from loguru import logger
+from pydantic import BaseModel
+from pydantic_core import from_json
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
+
+T = TypeVar("T", bound="BaseModel")
 
 
 class ChromeDriver:
@@ -57,7 +63,7 @@ class ChromeDriver:
             self.driver.quit()
 
 
-def cache(retention_period: timedelta):
+def cache(retention_period: timedelta, model: Type[T]):
     def decorator(func):
         @wraps(func)
         def wrapper(self, *args, **kwargs):
@@ -67,11 +73,21 @@ def cache(retention_period: timedelta):
             # Try to get the cached result
             cached_result: str | None = redis_client.get(key)  # type: ignore
             if cached_result is not None:
-                return json.loads(cached_result)
+                logger.info("Cache HIT")
+                if isinstance(results := json.loads(cached_result), list):
+                    return [model.model_validate(from_json(r)) for r in results]
+                else:
+                    return model.model_validate(results)
 
             # Call the function and cache the result
-            result = func(self, *args, **kwargs)
-            redis_client.setex(key, retention_period, json.dumps(result))
+            result: model | list[model] = func(self, *args, **kwargs)
+            if isinstance(result, list):
+                redis_client.setex(
+                    key, retention_period, json.dumps([model.model_dump_json() for model in result])
+                ) if model else json.dumps(result)
+            else:
+                redis_client.setex(key, retention_period, model.model_dump_json() if model else json.dumps(result))  # type: ignore
+
             return result
 
         return wrapper

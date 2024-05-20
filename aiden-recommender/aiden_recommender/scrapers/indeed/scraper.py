@@ -2,8 +2,8 @@ import json
 import re
 from typing import Any, Dict, List, Optional
 
-from aiden_scraper import redis_client
-from aiden_scraper.scrapers.utils import ChromeDriver
+from aiden_recommender import redis_client
+from aiden_recommender.scrapers.utils import ChromeDriver
 from chompjs import parse_js_object
 from loguru import logger
 from selenium.webdriver.common.by import By

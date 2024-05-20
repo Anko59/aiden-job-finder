@@ -1,13 +1,12 @@
 from django.http import JsonResponse
-
 from django.shortcuts import render
-from rest_framework.decorators import api_view
-from rest_framework import status
 from django.views import View
-
 from django.views.decorators.csrf import csrf_protect
-from aiden_app.models import UserProfile
+from rest_framework import status
+from rest_framework.decorators import api_view
+
 from aiden_app.forms import UserCreationForm
+from aiden_app.models import UserProfile
 from aiden_app.services.chat_service import ChatService
 
 
