@@ -12,4 +12,5 @@ urlpatterns = [
     path("api/start_chat", views.handle_start_chat, name="start_chat"),
     path("api/get_profiles", views.handle_get_profiles, name="get_profiles"),
     path("api/create_profile", views.handle_create_profile, name="create_profile"),
+    path("api/get_profile_creation_form", views.get_profile_creation_form, name="get_profile_creation_form"),
 ]

@@ -5,6 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/htmx.org@1.9.12" integrity="sha384-ujb1lZYygJmzgSwoxRggbCHcjc0rB2XoQrxeTUQyRjrOnlCoYta87iKBWq3EsdM2" crossorigin="anonymous"></script>
     <title>Aiden</title>
     {% load static %}
     <link rel="icon" type="image/png" href="{% static 'images/dog.png' %}">
@@ -21,7 +22,7 @@
         </div>
 
         <!-- Prompt container -->
-        <div class="flex-1 bg-gray-50 overflow-auto">
+        <div class="flex-1 bg-gray-50 overflow-auto" id="chat-container">
             {% include 'langui/prompt-container.html' %}
         </div>
     </div>
@@ -29,3 +30,10 @@
 </body>
 
 </html>
+<style>
+@media (prefers-color-scheme: dark) {
+    #chat-container{
+        background-color: rgb(30 41 59 / var(--tw-bg-opacity));
+    }
+}
+</style>

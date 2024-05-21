@@ -17,7 +17,7 @@ class ChatView(View):
 
 class LanguiView(View):
     def get(self, request):
-        return render(request, "langui-chat.html", {"text": "hello how are u", "role": "user"})
+        return render(request, "langui-chat.html", {"text": "hello how are u", "role": "assistant"})
 
 
 @csrf_protect
@@ -48,14 +48,20 @@ def handle_start_chat(request):
 
 
 @csrf_protect
-@api_view(["POST"])
+@api_view(["GET"])
 def handle_get_profiles(request):
     profiles = list(ChatService.get_available_profiles())
 
     if profiles is None:
         return JsonResponse({"error": "No profiles available"}, status=status.HTTP_404_NOT_FOUND)
 
-    return JsonResponse({"role": "get_profiles", "content": profiles})
+    return render(request, "langui/profile-icons.html", {"items": profiles})
+
+
+@csrf_protect
+@api_view(["GET"])
+def get_profile_creation_form(request):
+    return render(request, "langui/create-profile.html")
 
 
 @csrf_protect
