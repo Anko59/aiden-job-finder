@@ -1,7 +1,7 @@
-import json
 from uuid import uuid4
 
 from django.http import JsonResponse, StreamingHttpResponse
+from django.template.loader import render_to_string
 from qdrant_client.models import PointStruct
 from rest_framework import status
 
@@ -9,7 +9,6 @@ from aiden_app import USER_COLLECTION, qdrant_client
 from aiden_app.forms import UserProfileForm
 from aiden_app.models import ProfileInfo, UserProfile
 from aiden_app.services.agents.mistral_agent import MistralAgent
-from aiden_app.services.agents.prompts import START_CHAT_PROMPT
 from aiden_app.services.tools.utils.cv_editor import CVEditor
 
 
@@ -24,30 +23,27 @@ class ChatService:
     @classmethod
     def chat_wrapper(cls, agent, question):
         def generate_responses():
+            yield render_to_string("langui/message.html", {"role": "user", "content": question})
             for message, is_last in agent.chat(question):
                 if message["content"] == "" and not is_last:
                     continue
                 response = {
                     "role": message["role"],
                     "content": message["content"],
-                    "tokens_used": agent.tokens_used,
-                    "is_last": is_last,
                 }
                 if message["role"] == "tool" and message["name"] == "edit_user_profile":
                     response["documents"] = cls.get_documents(agent.profile)
-                yield json.dumps(response)
+                yield render_to_string("langui/message.html", response)
 
         return StreamingHttpResponse(generate_responses())
 
     @classmethod
     def start_chat(cls, profile):
-        documents = cls.get_documents(profile)
         agent = MistralAgent.from_profile(profile)
         response = {
             "role": "assistant",
             "content": "Hello! How can I assist you today?",
             "is_last": True,
-            "documents": documents,
             "tokens_used": 0,
         }
         return agent, response
@@ -86,24 +82,8 @@ class ChatService:
 
         agent = MistralAgent.from_profile(user_profile)
         request.session["agent"] = agent.to_json()
-
-        return StreamingHttpResponse(cls._respond_create_profile(user_profile))
-
-    @classmethod
-    def _respond_create_profile(cls, profile: UserProfile):
-        CVEditor().generate_cv(profile)
-        profiles = list(cls.get_available_profiles())
-
-        yield json.dumps({"role": "get_profiles", "content": profiles})
-        documents = cls.get_documents(profile)
-        response = {
-            "role": "assistant",
-            "content": START_CHAT_PROMPT,
-            "is_last": True,
-            "documents": documents,
-            "tokens_used": 0,
-        }
-        yield json.dumps(response)
+        CVEditor().generate_cv(user_profile)
+        return JsonResponse({"success": "Profile created successfully"})
 
     @staticmethod
     def get_documents(profile):

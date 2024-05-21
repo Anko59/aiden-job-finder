@@ -17,7 +17,7 @@ class ChatView(View):
 
 class LanguiView(View):
     def get(self, request):
-        return render(request, "langui-chat.html", {"text": "hello how are u", "role": "assistant"})
+        return render(request, "langui-chat.html")
 
 
 @csrf_protect
@@ -37,14 +37,16 @@ def handle_question(request):
 @csrf_protect
 @api_view(["POST"])
 def handle_start_chat(request):
-    profile = request.data.get("profile")
-    profile = UserProfile.objects.get(first_name=profile["first_name"], last_name=profile["last_name"], profile_title="default_profile")
+    profile = request.data
+    profile = UserProfile.objects.get(
+        first_name=profile.get("first_name"), last_name=profile.get("last_name"), profile_title="default_profile"
+    )
     if not profile:
         return JsonResponse({"error": "Invalid profile parameter"}, status=status.HTTP_400_BAD_REQUEST)
 
     agent, response = ChatService.start_chat(profile)
     request.session["agent"] = agent.to_json()
-    return JsonResponse(response)
+    return render(request, "langui/message.html", response)
 
 
 @csrf_protect
@@ -62,6 +64,19 @@ def handle_get_profiles(request):
 @api_view(["GET"])
 def get_profile_creation_form(request):
     return render(request, "langui/create-profile.html")
+
+
+@csrf_protect
+@api_view(["POST"])
+def get_user_documents(request):
+    profile = request.data
+    profile = UserProfile.objects.get(
+        first_name=profile.get("first_name"), last_name=profile.get("last_name"), profile_title="default_profile"
+    )
+    if not profile:
+        return JsonResponse({"error": "Invalid profile parameter"}, status=status.HTTP_400_BAD_REQUEST)
+    documents = ChatService.get_documents(profile)
+    return render(request, "langui/document-display.html", {"documents": documents})
 
 
 @csrf_protect

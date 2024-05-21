@@ -32,6 +32,7 @@ class MistralAgent(Agent):
         kwargs.setdefault("tools", self.tool_aggregator.get_tools())
         kwargs.setdefault("tool_choice", self.tool_choice)
         kwargs.setdefault("temperature", 0.4)
+        print(kwargs)
         response = self.client.chat(**kwargs)
         message = response.choices[0].message
         message = ChatMessage(**message.model_dump())

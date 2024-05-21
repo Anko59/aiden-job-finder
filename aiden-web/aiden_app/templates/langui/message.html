@@ -8,7 +8,7 @@
 
   <div class="flex w-full flex-col items-start lg:flex-row lg:justify-between">
     <p class="max-w-3xl">
-      {{ text }}
+      {{ content }}
     </p>
     <div class="mt-4 flex flex-row gap-x-2 text-slate-500 lg:mt-0">
       <button class="hover:text-blue-600">
@@ -73,7 +73,7 @@
   <img class="mr-2 flex h-8 w-8 rounded-full sm:mr-4" src="{% static 'images/user-image.png' %}" />
 
   <div class="flex max-w-3xl items-center">
-      <p>{{ text}}</p>
+      <p>{{ content }}</p>
   </div>
 </div>
 {% endif %}

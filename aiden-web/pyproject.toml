@@ -20,6 +20,7 @@ pillow = "^10.3.0"
 qdrant-client = "^1.9.1"
 numpy = "^1.26.4"
 channels = "^4.1.0"
+channels-redis = "^4.2.0"
 
 [tool.poetry.group.dev.dependencies]
 ipython = "^8.24.0"

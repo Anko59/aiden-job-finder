@@ -13,4 +13,5 @@ urlpatterns = [
     path("api/get_profiles", views.handle_get_profiles, name="get_profiles"),
     path("api/create_profile", views.handle_create_profile, name="create_profile"),
     path("api/get_profile_creation_form", views.get_profile_creation_form, name="get_profile_creation_form"),
+    path("api/get_documents", views.get_user_documents, name="get_documents"),
 ]

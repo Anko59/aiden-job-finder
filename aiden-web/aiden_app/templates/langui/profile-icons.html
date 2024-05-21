@@ -1,16 +1,21 @@
 {% load static %}
 {% for item in items %}
-<a href="#" class="mb-1">
-    <img src="{{ item.photo_url }}" class="h-7 w-7 text-blue-600" fill="currentColor" stroke-width="1"
-        viewBox="0 0 24 24" first_name="{{ item.first_name }}" last_name="{{ item.last_name }}">
+<a class="mb-1">
+    <img src="{{ item.photo_url }}" class="h-7 w-7 rounded-full text-blue-600 cursor-pointer profile-img" fill="currentColor" stroke-width="1"
+        viewBox="0 0 32 32" first_name="{{ item.first_name }}" last_name="{{ item.last_name }}">
 </a>
 {% endfor %}
-<a class="mb-1" id="plus-sign" hx-get="/api/get_profile_creation_form" hx-trigger="click"
-    hx-target="#message-container" hx-swap="beforeend">
-    <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7 text-blue-600" fill="currentColor" stroke-width="1"
+<a class="mb-1" id="plus-sign">
+    <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7 text-blue-600 cursor-pointer" fill="currentColor" stroke-width="1"
         viewBox="0 0 24 24">
         <path
             d="M12 0c-6.627 0-12 5.373-12 12s5.373 12 12 12 12-5.373 12-12-5.373-12-12-12zm7 14h-5v5h-4v-5h-5v-4h5v-5h4v5h5v4z">
         </path>
     </svg>
 </a>
+
+<style>
+    .profile-img .highlighted {
+        border: 2px solid lightgreen;
+    }
+</style>

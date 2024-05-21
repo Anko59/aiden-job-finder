@@ -5,8 +5,7 @@
     <!-- First Column -->
     <div
         class="flex h-screen w-12 flex-col items-center space-y-8 border-r border-slate-300 bg-slate-50 py-8 dark:border-slate-700 dark:bg-slate-900 sm:w-16"
-        hx-ws="connect:ws://aiden.dev.localhost/ws/get_profiles/"
-        hx-ws-receive="innerHTML">
+        id="profile-container">
     </div>
     <!-- Second Column -->
     <div class="h-screen w-52 overflow-y-auto bg-slate-50 py-8 dark:bg-slate-900 sm:w-60">
@@ -16,7 +15,12 @@
             </h2>
         </div>
 
-        <div class="mx-2 mt-8 space-y-4" id="">
+        <div class="mx-2 mt-8 space-y-4" id="documents-display">
         </div>
     </div>
 </aside>
+
+<script type="module">
+    import { getProfiles } from "{% static 'js/langui/utils.js' %}";
+    getProfiles();
+</script>
