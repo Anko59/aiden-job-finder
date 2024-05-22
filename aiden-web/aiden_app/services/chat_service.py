@@ -1,4 +1,6 @@
 from uuid import uuid4
+import markdown2
+import json
 
 from django.http import JsonResponse, StreamingHttpResponse
 from django.template.loader import render_to_string
@@ -10,6 +12,7 @@ from aiden_app.forms import UserProfileForm
 from aiden_app.models import ProfileInfo, UserProfile
 from aiden_app.services.agents.mistral_agent import MistralAgent
 from aiden_app.services.tools.utils.cv_editor import CVEditor
+from pygments import highlight, lexers, formatters
 
 
 class ChatService:
@@ -24,15 +27,19 @@ class ChatService:
     def chat_wrapper(cls, agent, question):
         def generate_responses():
             yield render_to_string("langui/message.html", {"role": "user", "content": question})
-            for message, is_last in agent.chat(question):
-                if message["content"] == "" and not is_last:
-                    continue
+            for message in agent.chat(question):
+                role = message["role"]
+                content = message["content"]
+
+                if role == "assistant":
+                    content = markdown2.markdown(content)
+                elif role == "tool":
+                    content = highlight(json.dumps(content, indent=4), lexers.JsonLexer(), formatters.HtmlFormatter())
+
                 response = {
-                    "role": message["role"],
-                    "content": message["content"],
+                    "role": role,
+                    "content": content,
                 }
-                if message["role"] == "tool" and message["name"] == "edit_user_profile":
-                    response["documents"] = cls.get_documents(agent.profile)
                 yield render_to_string("langui/message.html", response)
 
         return StreamingHttpResponse(generate_responses())

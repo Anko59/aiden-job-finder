@@ -6,3 +6,13 @@
   </div>
   {% include 'langui/search-input.html' %}
 </div>
+<script>
+  document.addEventListener("DOMContentLoaded", function() {
+    const jsonContent = document.getElementById("json-content");
+    if (jsonContent) {
+      const formatter = new JSONFormatter(JSON.parse(jsonContent.textContent), 2);
+      jsonContent.innerHTML = '';
+      jsonContent.appendChild(formatter.render());
+    }
+  });
+</script>
