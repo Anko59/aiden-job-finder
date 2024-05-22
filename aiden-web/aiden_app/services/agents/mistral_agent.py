@@ -1,8 +1,9 @@
 import json
 import os
+from uuid import uuid4
 
 from mistralai.client import MistralClient
-from mistralai.models.chat_completion import ChatMessage, FunctionCall
+from mistralai.models.chat_completion import ChatMessage, FunctionCall, ToolCall
 from mistralai.models.embeddings import EmbeddingResponse
 
 from aiden_app.services.tools.talk_tool import TalkTool
@@ -37,8 +38,19 @@ class MistralAgent(Agent):
         message = response.choices[0].message
         message = ChatMessage(**message.model_dump())
         try:
-            calls = json.loads(message.content[message.content.index("[") : message.content.rindex("]") + 1])
-            message.tool_calls = [FunctionCall(**call) for call in calls]
+            # Sometimes the tool calls are not properly parsed by the API
+            # This is a workaround to parse the tool calls from the message content
+            json_string = message.content[message.content.index("[") : message.content.rindex("]") + 1]
+            json_string = json_string.replace("\n", "")
+            calls = json.loads(json_string)
+            message.tool_calls = [
+                ToolCall(
+                    id=uuid4().hex,
+                    function=FunctionCall(name=call["name"], arguments=json.dumps(call["arguments"])),
+                )
+                for call in calls
+            ]
+            message.content = ""
         except Exception:
             pass
         self.messages.append(message)
@@ -60,10 +72,18 @@ class MistralAgent(Agent):
         yield message.model_dump(), is_waiting_for_user_message()
         while not is_waiting_for_user_message() and len(message.tool_calls) > 0:
             for tool_call in message.tool_calls:
-                function_result, agent_speaks_next = self.tool_aggregator.names_to_functions()[tool_call.function.name](
-                    args_json=tool_call.function.arguments
-                )
-                tool_message = ChatMessage(role="tool", name=tool_call.function.name, content=function_result)
+                (
+                    function_result,
+                    agent_speaks_next,
+                ) = self.tool_aggregator.names_to_functions()[tool_call.function.name](args_json=tool_call.function.arguments)
+                if tool_call.function.name == "talk":
+                    tool_message = ChatMessage(role="assistant", content=function_result)
+                else:
+                    tool_message = ChatMessage(
+                        role="tool",
+                        name=tool_call.function.name,
+                        content=function_result,
+                    )
                 self.messages.append(tool_message)
                 tool_calls += 1
                 if not agent_speaks_next:
