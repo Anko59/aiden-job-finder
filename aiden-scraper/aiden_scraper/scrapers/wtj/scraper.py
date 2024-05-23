@@ -8,6 +8,7 @@ from aiden_scraper.scrapers.wtj.schemas import JobOffer
 from chompjs import parse_js_object
 from loguru import logger
 from selenium.webdriver.common.by import By
+import urllib
 
 
 class WelcomeToTheJungleScraper:
@@ -40,21 +41,15 @@ class WelcomeToTheJungleScraper:
         return json.dumps({"requests": [{"indexName": "wttj_jobs_production_fr", "params": urlencode(params)}]})
 
     def _fetch_results(self, search_query: str, location: str) -> list[JobOffer]:
-        # Query hereapi for location id
-        self.autocomplete_params["q"] = location
-        response = requests.get("https://autocomplete.search.hereapi.com/v1/autocomplete", params=self.autocomplete_params)
-        response.raise_for_status()
-
-        # Query hereapi for location coordinates
-        if not response.json()["items"]:
+        base_url = "https://geocode.search.hereapi.com/v1/geocode"
+        address = urllib.parse.quote_plus(location)
+        url = base_url + "?apiKey=3YHjVgEYjuwUatQAtD-wTX8lmNXEsULPzC8m59VMGDw&q=" + address
+        geocode = json.loads(requests.get(url, headers=self.headers).text)
+        if not geocode["items"]:
             return []
-        self.lookup_params["id"] = response.json()["items"][0]["id"]
-        response = requests.get("https://lookup.search.hereapi.com/v1/lookup", params=self.lookup_params)
-        response.raise_for_status()
-        latlng = ",".join([str(x) for x in response.json()["position"].values()])
-
+        pos = geocode["items"][0]["position"]
         # Query algolia
-        params = self._get_algolia_params(search_query, latlng)
+        params = self._get_algolia_params(search_query, f"{pos['lat']},{pos['lng']}")
         response = requests.post(
             "https://csekhvms53-dsn.algolia.net/1/indexes/*/queries?x-algolia-agent=Algolia%20for%20JavaScript%20(4.20.0)%3B%20Browser&search_origin=job_search_client",  # noqa
             headers=self.headers,
@@ -67,4 +62,4 @@ class WelcomeToTheJungleScraper:
     @cache(retention_period=timedelta(hours=12))
     def search_jobs(self, search_query: str, location: str, num_results: int = 15) -> list[str]:
         jobs = self._fetch_results(search_query, location)[:num_results]
-        return [job.metadata_repr() for job in jobs]
+        return json.dumps([job.model_dump() for job in jobs])

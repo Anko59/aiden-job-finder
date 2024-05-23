@@ -4,6 +4,7 @@ import json
 
 from django.http import JsonResponse, StreamingHttpResponse
 from django.template.loader import render_to_string
+from chompjs import parse_js_object
 from qdrant_client.models import PointStruct
 from rest_framework import status
 
@@ -11,8 +12,8 @@ from aiden_app import USER_COLLECTION, qdrant_client
 from aiden_app.forms import UserProfileForm
 from aiden_app.models import ProfileInfo, UserProfile
 from aiden_app.services.agents.mistral_agent import MistralAgent
+from aiden_app.services.agents.agent import Agent
 from aiden_app.services.tools.utils.cv_editor import CVEditor
-from pygments import highlight, lexers, formatters
 
 
 class ChatService:
@@ -24,18 +25,32 @@ class ChatService:
         return MistralAgent.from_json(agent_json)
 
     @classmethod
-    def chat_wrapper(cls, agent, question):
+    def chat_wrapper(cls, agent: Agent, question):
         def generate_responses():
             yield render_to_string("langui/message.html", {"role": "user", "content": question})
             for message in agent.chat(question):
                 role = message["role"]
                 content = message["content"]
-
                 if role == "assistant":
                     content = markdown2.markdown(content)
                 elif role == "tool":
-                    content = highlight(json.dumps(content, indent=4), lexers.JsonLexer(), formatters.HtmlFormatter())
-
+                    content = parse_js_object(content)
+                    try:
+                        content["result"] = json.loads(content["result"])
+                        for i in range(len(content["result"])):
+                            try:
+                                content["result"][i]["profile"] = markdown2.markdown(content["result"][i]["profile"])
+                            except Exception:
+                                pass
+                        for i in range(len(content["result"])):
+                            try:
+                                content["result"][i]["organization"]["description"] = markdown2.markdown(
+                                    content["result"][i]["organization"]["description"]
+                                )
+                            except Exception:
+                                pass
+                    except Exception:
+                        pass
                 response = {
                     "role": role,
                     "content": content,

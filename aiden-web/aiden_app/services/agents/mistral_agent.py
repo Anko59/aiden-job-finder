@@ -1,3 +1,4 @@
+from chompjs import parse_js_object
 import json
 import os
 from uuid import uuid4
@@ -12,7 +13,7 @@ from .agent import Agent
 
 
 class MistralAgent(Agent):
-    def __init__(self, model: str = "mistral-large-latest", tool_only: bool = True):
+    def __init__(self, model: str = "open-mixtral-8x22b", tool_only: bool = True):
         self.model = model
         super().__init__(ChatMessage)
         self.client = MistralClient(api_key=os.environ.get("MISTRAL_API_KEY"))
@@ -34,12 +35,10 @@ class MistralAgent(Agent):
         try:
             # Sometimes the tool calls are not properly parsed by the API
             # This is a workaround to parse the tool calls from the message content
-            json_string = message.content[message.content.index("[") : message.content.rindex("]") + 1]
-            json_string = json_string.replace("\n", "")
-            calls = json.loads(json_string)
+            calls = parse_js_object(message.content)
             message.tool_calls = [
                 ToolCall(
-                    id=uuid4().hex,
+                    id=uuid4().hex[0:9],
                     function=FunctionCall(name=call["name"], arguments=json.dumps(call["arguments"])),
                 )
                 for call in calls

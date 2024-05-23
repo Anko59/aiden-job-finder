@@ -13,10 +13,13 @@
 {% elif role == 'tool' %}
 <div class="flex flex-row px-4 py-8 sm:px-6">
   <img class="mr-2 flex h-8 w-8 rounded-full sm:mr-4" src="{% static 'images/tools.png' %}" />
-
-  <div class="flex max-w-3xl items-center">
-    <div id="json-content">{{ content|safe }}</div>
-  </div>
+  {% if content.name == 'search_jobs' %}
+    {% include 'langui/job-offer.html' %}
+  {% else %}
+    <div class="flex max-w-3xl items-center">
+      <div id="json-content">{{ content|safe }}</div>
+    </div>
+  {% endif %}
 </div>
 {% else %}
 <div class="flex flex-row px-4 py-8 sm:px-6">

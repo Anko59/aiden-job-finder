@@ -1,14 +1,14 @@
 import { getCookie } from '../utils/cookies.js';
 
 function initializeProfileEvents() {
-    document.getElementById('plus-sign').addEventListener('click', function() {
+    document.getElementById('plus-sign').addEventListener('click', function () {
         console.log('clicked');
         getProfileCreationForm();
     });
 
     let profileIcons = document.getElementsByClassName('profile-img');
-    for(let i = 0; i < profileIcons.length; i++) {
-        profileIcons[i].addEventListener('click', function() {
+    for (let i = 0; i < profileIcons.length; i++) {
+        profileIcons[i].addEventListener('click', function () {
             const first_name = this.getAttribute('first_name');
             const last_name = this.getAttribute('last_name');
             let profile = {
@@ -21,7 +21,7 @@ function initializeProfileEvents() {
 };
 
 function initializeProfileCreationEvents() {
-    document.getElementById('create-profile').addEventListener('click', function(event) {
+    document.getElementById('create-profile').addEventListener('click', function (event) {
         event.preventDefault();
         let firstName = document.getElementById('first_name').value;
         let lastName = document.getElementById('last_name').value;
@@ -35,6 +35,34 @@ function initializeProfileCreationEvents() {
         createProfile(formData);
     });
 };
+
+function initializeDocumentEvents() {
+    let documentImages = document.getElementsByClassName('document-img');
+    for (let i = 0; i < documentImages.length; i++) {
+        documentImages[i].addEventListener('click', function () {
+            let img = documentImages[i].querySelector('img');
+            let src = img.getAttribute('src');
+
+            let bigImage = document.createElement('img');
+            bigImage.setAttribute('src', src);
+
+            let bigImageContainer = document.createElement('div');
+            bigImageContainer.classList.add('big-image-container');
+            bigImageContainer.appendChild(bigImage);
+
+            let closeButton = document.createElement('button');
+            closeButton.textContent = 'Close';
+            closeButton.classList.add('close-button');
+            bigImageContainer.appendChild(closeButton);
+
+            document.body.appendChild(bigImageContainer);
+
+            closeButton.addEventListener('click', function () {
+                bigImageContainer.remove();
+            });
+        });
+    }
+}
 
 export function getProfiles() {
     const fetchOptions = {
@@ -105,6 +133,7 @@ export function getDocuments(profile) {
         .then(response => response.text())
         .then(data => {
             document.getElementById('documents-display').innerHTML = data;
+            initializeDocumentEvents();
         })
         .catch(error => {
             console.error('Error:', error);

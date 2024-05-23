@@ -58,6 +58,7 @@ class JobOffer(BaseModel):
     _reference: str
     _slug: str
 
+    @property
     def to_url(self) -> str:
         return f"https://www.welcometothejungle.com/fr/companies/{self.organization.name.lower()}/jobs/{self._slug}?&o={self._reference}"
 
