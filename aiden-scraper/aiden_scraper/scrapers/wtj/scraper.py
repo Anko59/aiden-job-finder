@@ -1,9 +1,8 @@
 import json
-from datetime import timedelta
 from urllib.parse import urlencode
 
 import requests
-from aiden_scraper.scrapers.utils import ChromeDriver, cache
+from aiden_scraper.scrapers.utils import ChromeDriver
 from aiden_scraper.scrapers.wtj.schemas import JobOffer
 from chompjs import parse_js_object
 from loguru import logger
@@ -59,7 +58,6 @@ class WelcomeToTheJungleScraper:
         response.raise_for_status()
         return [JobOffer(**offer) for offer in response.json()["results"][0]["hits"]]
 
-    @cache(retention_period=timedelta(hours=12))
     def search_jobs(self, search_query: str, location: str, num_results: int = 15) -> list[str]:
         jobs = self._fetch_results(search_query, location)[:num_results]
         return json.dumps([job.model_dump() for job in jobs])

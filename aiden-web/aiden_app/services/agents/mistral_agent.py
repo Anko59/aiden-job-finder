@@ -35,7 +35,7 @@ class MistralAgent(Agent):
         try:
             # Sometimes the tool calls are not properly parsed by the API
             # This is a workaround to parse the tool calls from the message content
-            calls = parse_js_object(message.content)
+            calls = parse_js_object(message.content.replace("\n", "\\n"))
             message.tool_calls = [
                 ToolCall(
                     id=uuid4().hex[0:9],
@@ -89,6 +89,18 @@ class MistralAgent(Agent):
                 content=json.dumps({"error": str(e)}),
             )
             agent_speaks_next = False
+
+        if tool_call.function.name == "search_jobs":
+            content = json.loads(message.content)
+            if "error" not in content:
+                result = json.loads(content["result"])
+                short_message = ChatMessage(
+                    role="tool", name=tool_call.function.name, content=json.dumps({"result": [job["metadata_repr"] for job in result]})
+                )
+                self.messages.append(short_message)
+                return message, agent_speaks_next
+
+        self.messages.append(message)
         return message, agent_speaks_next
 
     def chat(self, user_input: str):
@@ -99,7 +111,6 @@ class MistralAgent(Agent):
         while len(message.tool_calls) > 0 and tool_calls < self.max_tool_calls:
             for tool_call in message.tool_calls:
                 tool_message, agent_speaks_next = self._parse_tool_call(tool_call)
-                self.messages.append(tool_message)
                 tool_calls += 1
                 yield tool_message.model_dump()
             if agent_speaks_next:

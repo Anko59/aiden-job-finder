@@ -64,6 +64,40 @@ function initializeDocumentEvents() {
     }
 }
 
+function initializeMessageEvents() {
+    let jobOffers = document.getElementsByClassName('job-offer');
+    for (let i = 0; i < jobOffers.length; i++) {
+        jobOffers[i].addEventListener('click', function () {
+            let compactView = jobOffers[i].querySelector('.compact-view');
+            let detailedView = jobOffers[i].querySelector('.detailed-view');
+
+            if (compactView.classList.contains('hidden')) {
+                // Switching from detailed view to compact view
+                showAllJobOffers(jobOffers);
+            } else {
+                // Switching from compact view to detailed view
+                hideOtherJobOffers(jobOffers, jobOffers[i]);
+            }
+
+            compactView.classList.toggle('hidden');
+            detailedView.classList.toggle('hidden');
+        });
+    }
+}
+
+function hideOtherJobOffers(jobOffers, currentOffer) {
+    for (let i = 0; i < jobOffers.length; i++) {
+        if (jobOffers[i] !== currentOffer) {
+            jobOffers[i].style.display = 'none';
+        }
+    }
+}
+
+function showAllJobOffers(jobOffers) {
+    for (let i = 0; i < jobOffers.length; i++) {
+        jobOffers[i].style.display = '';
+    }
+}
 export function getProfiles() {
     const fetchOptions = {
         method: 'GET',
@@ -185,6 +219,7 @@ export async function sendQuestion(question) {
         if (value) {
             const text = new TextDecoder('utf-8').decode(value);
             document.getElementById('message-container').innerHTML += text;
+            initializeMessageEvents();
         }
     }
 }

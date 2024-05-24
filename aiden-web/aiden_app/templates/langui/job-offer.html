@@ -1,84 +1,45 @@
+
 <div class="container mx-auto p-4">
-    {% for job_offer in content.result %}
-    <div class="bg-slate-100 dark:bg-slate-900 rounded-lg shadow-sm p-4 mb-4">
-        <h1 class="text-xl font-bold mb-2">{{ job_offer.name|safe }}</h1>
-        <p class="text-slate-700 dark:text-slate-300 mb-1"><strong>Organization:</strong> {{ job_offer.organization.name|safe }}</p>
-        {% if job_offer.organization.description %}
-        <div class="text-slate-600 dark:text-slate-400 mb-1">{{ job_offer.organization.description|safe }}</div>
-        {% endif %}
-        {% if job_offer.profile %}
-        <h2 class="text-lg font-semibold mb-1">Job Description</h2>
-        <div class="text-slate-600 dark:text-slate-400 mb-1">{{ job_offer.profile|safe }}</div>
-        {% endif %}
-        {% if job_offer.organization.nb_employees %}
-        <p class="text-slate-700 dark:text-slate-300 mb-1"><strong>Number of Employees:</strong> {{ job_offer.organization.nb_employees|safe }}</p>
-        {% endif %}
+    <div class="job-offer-grid">
+        {% for job_offer in content.result %}
+        <div class="job-offer bg-slate-100 dark:bg-slate-900 rounded-lg shadow-sm p-4 mb-4">
+            <div class="compact-view">
+                <h1 class="text-xl font-bold mb-2">{{ job_offer.name|safe }}</h1>
+                <p class="text-slate-700 dark:text-slate-300 mb-1"><strong>Organization:</strong> {{ job_offer.organization.name|safe }}</p>
+            </div>
+            <div class="detailed-view hidden">
+                <!-- All the detailed information here -->
+                <img src="{{ job_offer.organization.logo.url|safe }}" alt="{{ job_offer.organization.name|safe }}" class="w-10 h-10 mb-2">
+                <div class="mb-4">
+                    <img src="{{ job_offer.organization.cover_image.medium.url|safe }}" alt="{{ job_offer.organization.name|safe }}" class="rounded-lg w-full">
+                </div>
 
-        <div class="my-2">
-            <h2 class="text-lg font-semibold mb-1">Job Details</h2>
-            <p class="text-slate-700 dark:text-slate-300 mb-1"><strong>Contract Type:</strong> {{ job_offer.contract_type|safe }}</p>
-            {% if job_offer.contract_duration_minimum is not none and job_offer.contract_duration_maximum is not none %}
-            <p class="text-slate-700 dark:text-slate-300 mb-1"><strong>Contract Duration:</strong> {{ job_offer.contract_duration_minimum|safe }} - {{ job_offer.contract_duration_maximum|safe }} months</p>
-            {% endif %}
-            {% if job_offer.experience_level_minimum is not none %}
-            <p class="text-slate-700 dark:text-slate-300 mb-1"><strong>Minimum Experience Level:</strong> {{ job_offer.experience_level_minimum|safe }} years</p>
-            {% endif %}
-            {% if job_offer.education_level %}
-            <p class="text-slate-700 dark:text-slate-300 mb-1"><strong>Education Level:</strong> {{ job_offer.education_level|safe }}</p>
-            {% endif %}
-            {% if job_offer.salary_minimum is not none and job_offer.salary_maximum is not none %}
-            <p class="text-slate-700 dark:text-slate-300 mb-1"><strong>Salary Range:</strong> {{ job_offer.salary_minimum|safe }} - {{ job_offer.salary_maximum|safe }} {{ job_offer.salary_currency|safe }}</p>
-            {% endif %}
-            {% if job_offer.has_remote %}
-            <p class="text-slate-700 dark:text-slate-300 mb-1"><strong>Remote:</strong> {{ job_offer.remote|safe }}</p>
-            {% endif %}
+                {% if job_offer.organization.description %}
+                <div class="text-slate-600 dark:text-slate-400 mb-1">{{ job_offer.organization.description|safe }}</div>
+                {% endif %}
+                {% if job_offer.profile %}
+                <h2 class="text-lg font-semibold mb-1">Job Description</h2>
+                <div class="text-slate-600 dark:text-slate-400 mb-1">{{ job_offer.profile|safe }}</div>
+                {% endif %}
+                {% if job_offer.organization.nb_employees %}
+                <p class="text-slate-700 dark:text-slate-300 mb-1"><strong>Number of Employees:</strong> {{ job_offer.organization.nb_employees|safe }}</p>
+                {% endif %}
+
+
+                {% if job_offer.benefits %}
+                <div class="my-2">
+                    <h2 class="text-lg font-semibold mb-1">Benefits</h2>
+                    <ul class="list-disc list-inside">
+                        {% for benefit in job_offer.benefits %}
+                        <li class="text-slate-700 dark:text-slate-300">{{ benefit|safe }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+                {% endif %}
+
+                <p class="text-slate-500 dark:text-slate-400 text-xs mt-2"><strong>Published at:</strong> {{ job_offer.published_at|safe }}</p>
+            </div>
         </div>
-
-        {% if job_offer.new_profession %}
-        <div class="my-2">
-            <h2 class="text-lg font-semibold mb-1">Profession</h2>
-            <p class="text-slate-700 dark:text-slate-300 mb-1"><strong>Category:</strong> {{ job_offer.new_profession.category_name|safe }}</p>
-            {% if job_offer.new_profession.sub_category_name %}
-            <p class="text-slate-700 dark:text-slate-300 mb-1"><strong>Sub-Category:</strong> {{ job_offer.new_profession.sub_category_name|safe }}</p>
-            {% endif %}
-            {% if job_offer.new_profession.sub_category_reference %}
-            <p class="text-slate-700 dark:text-slate-300 mb-1"><strong>Reference:</strong> {{ job_offer.new_profession.sub_category_reference|safe }}</p>
-            {% endif %}
-        </div>
-        {% endif %}
-
-        {% if job_offer.offices %}
-        <div class="my-2">
-            <h2 class="text-lg font-semibold mb-1">Offices</h2>
-            <ul class="list-disc list-inside">
-                {% for office in job_offer.offices %}
-                <li class="text-slate-700 dark:text-slate-300">{{ office.country|safe }}
-                    {% if office.local_city or office.local_state %}
-                    {% if office.local_city %}
-                    {{ office.local_city|safe }},
-                    {% endif %}
-                    {% if office.local_state %}
-                    {{ office.local_state|safe }}
-                    {% endif %}
-                    {% endif %}
-                </li>
-                {% endfor %}
-            </ul>
-        </div>
-        {% endif %}
-
-        {% if job_offer.benefits %}
-        <div class="my-2">
-            <h2 class="text-lg font-semibold mb-1">Benefits</h2>
-            <ul class="list-disc list-inside">
-                {% for benefit in job_offer.benefits %}
-                <li class="text-slate-700 dark:text-slate-300">{{ benefit|safe }}</li>
-                {% endfor %}
-            </ul>
-        </div>
-        {% endif %}
-
-        <p class="text-slate-500 dark:text-slate-400 text-xs mt-2"><strong>Published at:</strong> {{ job_offer.published_at|safe }}</p>
+        {% endfor %}
     </div>
-    {% endfor %}
 </div>
