@@ -1,8 +1,8 @@
-from chompjs import parse_js_object
 import json
 import os
 from uuid import uuid4
 
+from chompjs import parse_js_object
 from mistralai.client import MistralClient
 from mistralai.models.chat_completion import ChatMessage, FunctionCall, ToolCall
 from mistralai.models.embeddings import EmbeddingResponse
