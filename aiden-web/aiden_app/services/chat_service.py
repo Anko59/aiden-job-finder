@@ -1,15 +1,18 @@
 import json
 from uuid import uuid4
 
+import markdown2
+from chompjs import parse_js_object
 from django.http import JsonResponse, StreamingHttpResponse
+from django.template.loader import render_to_string
 from qdrant_client.models import PointStruct
 from rest_framework import status
 
 from aiden_app import USER_COLLECTION, qdrant_client
 from aiden_app.forms import UserProfileForm
 from aiden_app.models import ProfileInfo, UserProfile
+from aiden_app.services.agents.agent import Agent
 from aiden_app.services.agents.mistral_agent import MistralAgent
-from aiden_app.services.agents.prompts import START_CHAT_PROMPT
 from aiden_app.services.tools.utils.cv_editor import CVEditor
 
 
@@ -22,32 +25,47 @@ class ChatService:
         return MistralAgent.from_json(agent_json)
 
     @classmethod
-    def chat_wrapper(cls, agent, question):
+    def chat_wrapper(cls, agent: Agent, question):
         def generate_responses():
-            for message, is_last in agent.chat(question):
-                if message["content"] == "" and not is_last:
-                    continue
+            yield render_to_string("langui/message.html", {"role": "user", "content": question})
+            for message in agent.chat(question):
+                role = message["role"]
+                content = message["content"]
+                if role == "assistant":
+                    content = markdown2.markdown(content)
+                elif role == "tool":
+                    content = parse_js_object(content)
+                    try:
+                        content["result"] = json.loads(content["result"])
+                        for i in range(len(content["result"])):
+                            try:
+                                content["result"][i]["profile"] = markdown2.markdown(content["result"][i]["profile"])
+                            except Exception:
+                                pass
+                        for i in range(len(content["result"])):
+                            try:
+                                content["result"][i]["organization"]["description"] = markdown2.markdown(
+                                    content["result"][i]["organization"]["description"]
+                                )
+                            except Exception:
+                                pass
+                    except Exception:
+                        pass
                 response = {
-                    "role": message["role"],
-                    "content": message["content"],
-                    "tokens_used": agent.tokens_used,
-                    "is_last": is_last,
+                    "role": role,
+                    "content": content,
                 }
-                if message["role"] == "tool" and message["name"] == "edit_user_profile":
-                    response["documents"] = cls.get_documents(agent.profile)
-                yield json.dumps(response)
+                yield render_to_string("langui/message.html", response)
 
-        return StreamingHttpResponse(generate_responses())
+        return StreamingHttpResponse(generate_responses())  # type: ignore
 
     @classmethod
     def start_chat(cls, profile):
-        documents = cls.get_documents(profile)
         agent = MistralAgent.from_profile(profile)
         response = {
             "role": "assistant",
             "content": "Hello! How can I assist you today?",
             "is_last": True,
-            "documents": documents,
             "tokens_used": 0,
         }
         return agent, response
@@ -74,6 +92,14 @@ class ChatService:
             points=[PointStruct(id=profile_embeddings_uuid, vector=embeddings_vector, payload={"profile_info": profile["profile_info"]})],
         )
         profile_info.update({"embeddings_id": profile_embeddings_uuid})
+        embeddings = agent.embed(profile_data["profile_info"])
+        embeddings_vector = embeddings.data[0].embedding
+        profile_embeddings_uuid = str(uuid4())
+        qdrant_client.upload_points(
+            collection_name=USER_COLLECTION,
+            points=[PointStruct(id=profile_embeddings_uuid, vector=embeddings_vector, payload={"profile_info": profile["profile_info"]})],
+        )
+        profile_info.update({"embeddings_id": profile_embeddings_uuid})
         profile_info = ProfileInfo.from_json(profile_info)
         profile["profile_info"] = profile_info
         profile["profile_title"] = "default_profile"
@@ -86,24 +112,8 @@ class ChatService:
 
         agent = MistralAgent.from_profile(user_profile)
         request.session["agent"] = agent.to_json()
-
-        return StreamingHttpResponse(cls._respond_create_profile(user_profile))
-
-    @classmethod
-    def _respond_create_profile(cls, profile: UserProfile):
-        CVEditor().generate_cv(profile)
-        profiles = list(cls.get_available_profiles())
-
-        yield json.dumps({"role": "get_profiles", "content": profiles})
-        documents = cls.get_documents(profile)
-        response = {
-            "role": "assistant",
-            "content": START_CHAT_PROMPT,
-            "is_last": True,
-            "documents": documents,
-            "tokens_used": 0,
-        }
-        yield json.dumps(response)
+        CVEditor().generate_cv(user_profile)
+        return JsonResponse({"success": "Profile created successfully"})
 
     @staticmethod
     def get_documents(profile):

@@ -1,0 +1,44 @@
+<!-- Prompt Messages Container - Modify the height according to your need -->
+<div class="flex h-full w-full flex-col">
+  <div
+    class="flex-1 overflow-y-auto bg-slate-300 text-sm leading-6 text-slate-900 shadow-md dark:bg-slate-800 dark:text-slate-300 sm:text-base sm:leading-7"
+    id="message-container">
+  </div>
+  {% include 'langui/search-input.html' %}
+</div>
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const jsonContent = document.getElementById("json-content");
+    if (jsonContent) {
+      const formatter = new JSONFormatter(JSON.parse(jsonContent.textContent), 2);
+      jsonContent.innerHTML = '';
+      jsonContent.appendChild(formatter.render());
+    }
+  });
+</script>
+<style>
+  .job-offer {
+    margin-right: 20px;
+    margin-bottom: 20px;
+    float: left;
+  }
+
+  .job-offer:nth-child(3n) {
+    margin-right: 0;
+  }
+
+  .job-offer-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    /* Adjust the minimum size of a grid item (250px in this case) as needed */
+    gap: 20px;
+  }
+
+  .job-offer {
+    cursor: pointer;
+  }
+
+  .hidden {
+    display: none;
+  }
+</style>

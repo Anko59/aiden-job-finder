@@ -26,7 +26,7 @@ def healthcheck() -> dict[str, str]:
     return {"status": "healthy"}
 
 
-@app.post("/scrape", response_model=list[str])
+@app.post("/scrape", response_model=str)
 def scrape(job_offer_request: Annotated[JobOfferRequest, Body()]) -> list[str]:
     wtj_results = wtj_scraper.search_jobs(
         search_query=job_offer_request.query, location=job_offer_request.location, num_results=job_offer_request.limit

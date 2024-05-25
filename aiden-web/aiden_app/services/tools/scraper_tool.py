@@ -13,7 +13,7 @@ class ScraperTool(Tool):
     @Tool.tool_function  # type: ignore
     def search_jobs_wrapper(self, search_query: str, location: str, num_results: int = 15, *args, **kwargs) -> list[str]:
         url = f"{os.environ.get('SCRAPER_API_URL')}/scrape"
-        payload = {"location": "".join(filter(str.isalpha, location)), "query": search_query, "limit": num_results}
+        payload = {"location": location, "query": search_query, "limit": num_results}
         response = httpx.post(url=url, json=payload)
         response.raise_for_status()
 

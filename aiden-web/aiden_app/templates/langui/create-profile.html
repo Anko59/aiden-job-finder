@@ -1,0 +1,56 @@
+<div class="flex flex-row px-4 py-8 sm:px-6">
+    <form class="w-full">
+        <div class="flex max-w-3xl gap-x-2 py-2">
+            <!-- First name input field -->
+            <input id="first_name" type="search"
+                class="w-full rounded-lg border border-slate-300 bg-slate-50 p-3 text-sm text-slate-800 focus:border-blue-600 focus:outline-none focus:ring-1 focus:ring-blue-600 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:focus:border-blue-600 sm:text-base"
+                placeholder="First name" rows="1" required />
+        </div>
+        <div class="flex max-w-3xl gap-x-2 py-2">
+            <!-- Last name input field -->
+            <input id="last_name" type="search"
+                class="w-full rounded-lg border border-slate-300 bg-slate-50 p-3 text-sm text-slate-800 focus:border-blue-600 focus:outline-none focus:ring-1 focus:ring-blue-600 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:focus:border-blue-600 sm:text-base"
+                placeholder="Last name" rows="1" required />
+        </div>
+        <section class="max-w-3xl rounded-3xl shadow-xl dark:shadow-none py-2">
+            <!--User photo -->
+            <label for="file-input"
+                class="flex w-full cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-slate-300 bg-slate-100 py-16 text-slate-500 hover:bg-slate-200 dark:border-slate-300/20 dark:bg-slate-900 dark:text-slate-400 dark:hover:bg-slate-800">
+                <div class="flex flex-col items-center justify-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="mb-3 h-10 w-10" viewBox="0 0 24 24" stroke-width="2"
+                        stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                        <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                        <path d="M7 18a4.6 4.4 0 0 1 0 -9a5 4.5 0 0 1 11 2h1a3.5 3.5 0 0 1 0 7h-1"></path>
+                        <path d="M9 15l3 -3l3 3"></path>
+                        <path d="M12 12l0 9"></path>
+                    </svg>
+                    <p class="mb-2 text-sm">
+                        User photo
+                    </p>
+                    <p class="mb-2 text-sm">
+                        <span class="font-semibold text-blue-600">Click to browse</span> or drag
+                        & drop
+                    </p>
+                    <p class="text-xs">JPG or PNG only. Max size: 25 MB</p>
+                </div>
+                <input id="file-input" type="file" class="hidden" />
+            </label>
+        </section>
+        <!-- Profile Info field -->
+        <div class="mb-4 w-full rounded-lg py-2">
+            <div
+                class="rounded-lg rounded-b-none border border-slate-300 bg-slate-50 px-2 py-2 dark:border-slate-700 dark:bg-slate-900">
+                <textarea id="prompt-input" rows="4"
+                    class="w-full border-0 bg-slate-50 px-0 text-base text-slate-900 focus:outline-none dark:bg-slate-900 dark:text-slate-200 dark:placeholder-slate-400"
+                    placeholder="Any information about your profile in raw format" required></textarea>
+            </div>
+        </div>
+        <button
+            type="button"
+            class="inline-flex items-center gap-x-2 rounded-lg bg-blue-600 px-3.5 py-2.5 text-center text-sm font-medium text-slate-50 hover:bg-blue-800 focus:outline-none focus:ring focus:ring-blue-300"
+            id="create-profile">
+            Create Profile
+        </button>
+
+    </form>
+</div>

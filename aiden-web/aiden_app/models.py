@@ -27,8 +27,12 @@ class BaseModel(models.Model):
             if field.name in json_data:
                 del json_data[field.name]
 
-        # Create the instance
+        # Remove unusable fields
+        for key in list(json_data.keys()):
+            if key not in [field.name for field in cls._meta.get_fields()]:
+                del json_data[key]
 
+        # Create the instance
         instance = cls.objects.create(**json_data)
 
         # Save ManyToManyField relationships
