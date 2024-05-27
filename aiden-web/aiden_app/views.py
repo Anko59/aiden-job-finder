@@ -10,14 +10,9 @@ from aiden_app.models import UserProfile
 from aiden_app.services.chat_service import ChatService
 
 
-class ChatView(View):
-    def get(self, request):
-        return render(request, "chat.html")
-
-
 class LanguiView(View):
     def get(self, request):
-        return render(request, "langui-chat.html")
+        return render(request, "chat.html")
 
 
 @csrf_protect
