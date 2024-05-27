@@ -57,7 +57,7 @@ class ChatService:
                 }
                 yield render_to_string("langui/message.html", response)
 
-        return StreamingHttpResponse(generate_responses())
+        return StreamingHttpResponse(generate_responses())  # type: ignore
 
     @classmethod
     def start_chat(cls, profile):

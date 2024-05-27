@@ -617,17 +617,17 @@ traitlets = "*"
 
 [[package]]
 name = "mistralai"
-version = "0.1.8"
+version = "0.2.0"
 description = ""
 optional = false
 python-versions = "<4.0,>=3.9"
 files = [
-    {file = "mistralai-0.1.8-py3-none-any.whl", hash = "sha256:3d74146d26ce0e93333614a5c591d407867c78a09855d4550c94a51c1775a1a6"},
-    {file = "mistralai-0.1.8.tar.gz", hash = "sha256:c2e645f1cd26b35c728de9ef954927384d190f439a165a041bd935937fbc3f04"},
+    {file = "mistralai-0.2.0-py3-none-any.whl", hash = "sha256:756c373ac77f36a4a65092e72ccfbeddb50771d18f490013c7877e4e7efd46a1"},
+    {file = "mistralai-0.2.0.tar.gz", hash = "sha256:dba8c8ec142f0a9612d0d3787f8b05e321089d1b8563280c7a5f2b46964e69e5"},
 ]
 
 [package.dependencies]
-httpx = ">=0.25.2,<0.26.0"
+httpx = ">=0.25.2,<1"
 orjson = ">=3.9.10,<4.0.0"
 pydantic = ">=2.5.2,<3.0.0"
 
@@ -1534,13 +1534,13 @@ test = ["argcomplete (>=3.0.3)", "mypy (>=1.7.0)", "pre-commit", "pytest (>=7.0,
 
 [[package]]
 name = "typing-extensions"
-version = "4.11.0"
+version = "4.12.0"
 description = "Backported and Experimental Type Hints for Python 3.8+"
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "typing_extensions-4.11.0-py3-none-any.whl", hash = "sha256:c1f94d72897edaf4ce775bb7558d5b79d8126906a14ea5ed1635921406c0387a"},
-    {file = "typing_extensions-4.11.0.tar.gz", hash = "sha256:83f085bd5ca59c80295fc2a82ab5dac679cbe02b9f33f7d83af68e241bea51b0"},
+    {file = "typing_extensions-4.12.0-py3-none-any.whl", hash = "sha256:b349c66bea9016ac22978d800cfff206d5f9816951f12a7d0ec5578b0a819594"},
+    {file = "typing_extensions-4.12.0.tar.gz", hash = "sha256:8cbcdc8606ebcb0d95453ad7dc5065e6237b6aa230a31e81d0f440c30fed5fd8"},
 ]
 
 [[package]]
