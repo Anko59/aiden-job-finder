@@ -15,11 +15,6 @@ class LanguiView(View):
         return render(request, "chat.html")
 
 
-class LanguiView(View):
-    def get(self, request):
-        return render(request, "langui-chat.html")
-
-
 @csrf_protect
 @api_view(["POST"])
 def handle_question(request):
