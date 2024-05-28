@@ -4,7 +4,6 @@ import json
 
 from django.http import JsonResponse, StreamingHttpResponse
 from django.template.loader import render_to_string
-from chompjs import parse_js_object
 from qdrant_client.models import PointStruct
 from rest_framework import status
 
@@ -34,7 +33,7 @@ class ChatService:
                 if role == "assistant":
                     content = markdown2.markdown(content)
                 elif role == "tool":
-                    content = parse_js_object(content)
+                    content = json.loads(content)
                     try:
                         content["result"] = json.loads(content["result"])
                         for i in range(len(content["result"])):

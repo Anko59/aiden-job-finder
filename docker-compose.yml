@@ -19,7 +19,7 @@ services:
     depends_on:
       db:
         condition: service_healthy
-      aiden-scraper:
+      recommender:
         condition: service_healthy
     deploy:
       resources:
@@ -58,7 +58,7 @@ services:
           "-U",
           "${DATABASE_USER}",
           "-d",
-          "${DATABASE_NAME}",
+          "${DATABASE_NAME}"
         ]
       interval: 10s
       timeout: 5s
@@ -120,33 +120,37 @@ services:
       resources:
         limits:
           memory: 4g
-  aiden-scraper:
-    build: ./aiden-scraper
+  recommender:
+    build: ./aiden-recommender
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.scraper.rule=Host(`scraper.dev.localhost`)"
-      - "traefik.http.services.scraper.loadbalancer.server.port=8082"
-    environment:
-      - REDIS_URL=redis://redis:6379
-      - QDRANT_URL=http://qdrant:6333
+      - "traefik.http.routers.recommender.rule=Host(`recommender.dev.localhost`)"
+      - "traefik.http.services.recommender.loadbalancer.server.port=8082"
     networks:
       - aiden_network
+    env_file:
+      - aiden-recommender/.env
     volumes:
-      - ./aiden-scraper/aiden_scraper:/app/aiden_scraper
+      - ./aiden-recommender/aiden_recommender:/app/aiden_recommender
+      - ./aiden-recommender/.env:/app/.env
     command:
       [
         "poetry",
         "run",
         "uvicorn",
-        "aiden_scraper.main:app",
+        "aiden_recommender.main:app",
         "--host",
         "0.0.0.0",
         "--port",
         "8082",
-        "--reload",
+        "--reload"
       ]
     healthcheck:
-      test: ["CMD-SHELL", "curl -f http://localhost:8082/health || exit 1"]
+      test:
+        [
+          "CMD-SHELL",
+          "curl -f http://localhost:8082/health || exit 1"
+        ]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -171,12 +175,12 @@ services:
         "--maxmemory",
         "118mb",
         "--maxmemory-policy",
-        "allkeys-lru",
+        "allkeys-lru"
       ]
     networks:
       - aiden_network
     healthcheck:
-      test: ["CMD-SHELL", "redis-cli ping"]
+      test: [ "CMD-SHELL", "redis-cli ping" ]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -187,6 +191,7 @@ services:
           memory: 128M
 volumes:
   postgres_data:
+
 
 networks:
   aiden_network:

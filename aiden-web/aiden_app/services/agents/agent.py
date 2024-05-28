@@ -66,7 +66,7 @@ class Agent(ABC):
         self = cls(*args, **kwargs)
         self.profile = user_profile
         self.tool_aggregator.tools.append(CVEditorTool(profile=user_profile))
-        self.tool_aggregator.tools.append(ScraperTool())
+        self.tool_aggregator.tools.append(ScraperTool(profile_embedding_id=user_profile.profile_info.embeddings_id))
         profile_dict = user_profile.profile_info.to_json()
         start_messages = [
             self.message_class(role="system", content=SYSTEM_PROMPT),
