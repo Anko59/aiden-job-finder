@@ -16,6 +16,14 @@ function initializeProfileEvents() {
                 last_name: last_name
             };
             startChat(profile);
+
+            this.classList.add('highlighted');
+
+            for (let j = 0; j < profileIcons.length; j++) {
+                if (j !== i) {
+                    profileIcons[j].classList.remove('highlighted');
+                }
+            }
         });
     }
 };
@@ -68,36 +76,23 @@ function initializeMessageEvents() {
     let jobOffers = document.getElementsByClassName('job-offer');
     for (let i = 0; i < jobOffers.length; i++) {
         jobOffers[i].addEventListener('click', function () {
-            let compactView = jobOffers[i].querySelector('.compact-view');
             let detailedView = jobOffers[i].querySelector('.detailed-view');
-
-            if (compactView.classList.contains('hidden')) {
-                // Switching from detailed view to compact view
-                showAllJobOffers(jobOffers);
-            } else {
-                // Switching from compact view to detailed view
-                hideOtherJobOffers(jobOffers, jobOffers[i]);
-            }
-
-            compactView.classList.toggle('hidden');
+            toggleJobOffersInGrid(jobOffers[i]);
             detailedView.classList.toggle('hidden');
         });
     }
 }
 
-function hideOtherJobOffers(jobOffers, currentOffer) {
-    for (let i = 0; i < jobOffers.length; i++) {
-        if (jobOffers[i] !== currentOffer) {
-            jobOffers[i].style.display = 'none';
+function toggleJobOffersInGrid(currentOffer) {
+    let grid = currentOffer.closest('.job-offer-grid');
+    let jobOffersInGrid = grid.getElementsByClassName('job-offer');
+    for (let i = 0; i < jobOffersInGrid.length; i++) {
+        if (jobOffersInGrid[i] !== currentOffer) {
+            jobOffersInGrid[i].classList.toggle('hidden');
         }
     }
 }
 
-function showAllJobOffers(jobOffers) {
-    for (let i = 0; i < jobOffers.length; i++) {
-        jobOffers[i].style.display = '';
-    }
-}
 export function getProfiles() {
     const fetchOptions = {
         method: 'GET',
@@ -146,8 +141,10 @@ export function startChat(profile) {
     fetch('/api/start_chat', fetchOptions)
         .then(response => response.text())
         .then(data => {
+            emptyMessageContainer();
             document.getElementById('message-container').innerHTML += data;
             getDocuments(profile);
+            showChatForm();
         })
         .catch(error => {
             console.error('Error:', error);
@@ -201,7 +198,20 @@ export function createProfile(formData) {
         });
 };
 
+function showChatForm(){
+    document.getElementById('chat-form').classList.remove('hidden');
+}
+
+function hideChatForm(){
+    document.getElementById('chat-form').classList.add('hidden');
+}
+
+function emptyMessageContainer(){
+    document.getElementById('message-container').innerHTML = '';
+}
+
 export async function sendQuestion(question) {
+    hideChatForm();
     const fetchOptions = {
         method: 'POST',
         headers: {
@@ -222,4 +232,5 @@ export async function sendQuestion(question) {
             initializeMessageEvents();
         }
     }
+    showChatForm();
 }
