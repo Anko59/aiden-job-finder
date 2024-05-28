@@ -10,7 +10,7 @@ from aiden_app.models import UserProfile
 from aiden_app.services.chat_service import ChatService
 
 
-class ChatView(View):
+class LanguiView(View):
     def get(self, request):
         return render(request, "chat.html")
 
@@ -32,25 +32,46 @@ def handle_question(request):
 @csrf_protect
 @api_view(["POST"])
 def handle_start_chat(request):
-    profile = request.data.get("profile")
-    profile = UserProfile.objects.get(first_name=profile["first_name"], last_name=profile["last_name"], profile_title="default_profile")
+    profile = request.data
+    profile = UserProfile.objects.get(
+        first_name=profile.get("first_name"), last_name=profile.get("last_name"), profile_title="default_profile"
+    )
     if not profile:
         return JsonResponse({"error": "Invalid profile parameter"}, status=status.HTTP_400_BAD_REQUEST)
 
     agent, response = ChatService.start_chat(profile)
     request.session["agent"] = agent.to_json()
-    return JsonResponse(response)
+    return render(request, "langui/message.html", response)
 
 
 @csrf_protect
-@api_view(["POST"])
+@api_view(["GET"])
 def handle_get_profiles(request):
     profiles = list(ChatService.get_available_profiles())
 
     if profiles is None:
         return JsonResponse({"error": "No profiles available"}, status=status.HTTP_404_NOT_FOUND)
 
-    return JsonResponse({"role": "get_profiles", "content": profiles})
+    return render(request, "langui/profile-icons.html", {"items": profiles})
+
+
+@csrf_protect
+@api_view(["GET"])
+def get_profile_creation_form(request):
+    return render(request, "langui/create-profile.html")
+
+
+@csrf_protect
+@api_view(["POST"])
+def get_user_documents(request):
+    profile = request.data
+    profile = UserProfile.objects.get(
+        first_name=profile.get("first_name"), last_name=profile.get("last_name"), profile_title="default_profile"
+    )
+    if not profile:
+        return JsonResponse({"error": "Invalid profile parameter"}, status=status.HTTP_400_BAD_REQUEST)
+    documents = ChatService.get_documents(profile)
+    return render(request, "langui/document-display.html", {"documents": documents})
 
 
 @csrf_protect

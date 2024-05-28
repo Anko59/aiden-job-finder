@@ -13,6 +13,7 @@ from loguru import logger
 from mistralai.client import MistralClient
 from qdrant_client.models import PointStruct
 from selenium.webdriver.common.by import By
+import urllib
 
 
 def chunk_list(lst, n):
@@ -51,21 +52,15 @@ class WelcomeToTheJungleScraper:
 
     @cache(retention_period=timedelta(hours=12), model=JobOffer)
     def _fetch_results(self, search_query: str, location: str) -> list[JobOffer]:
-        # Query hereapi for location id
-        self.autocomplete_params["q"] = location
-        response = requests.get("https://autocomplete.search.hereapi.com/v1/autocomplete", params=self.autocomplete_params)
-        response.raise_for_status()
-
-        # Query hereapi for location coordinates
-        if not response.json()["items"]:
+        base_url = "https://geocode.search.hereapi.com/v1/geocode"
+        address = urllib.parse.quote_plus(location)
+        url = base_url + "?apiKey=3YHjVgEYjuwUatQAtD-wTX8lmNXEsULPzC8m59VMGDw&q=" + address
+        geocode = json.loads(requests.get(url, headers=self.headers).text)
+        if not geocode["items"]:
             return []
-        self.lookup_params["id"] = response.json()["items"][0]["id"]
-        response = requests.get("https://lookup.search.hereapi.com/v1/lookup", params=self.lookup_params)
-        response.raise_for_status()
-        latlng = ",".join([str(x) for x in response.json()["position"].values()])
-
+        pos = geocode["items"][0]["position"]
         # Query algolia
-        params = self._get_algolia_params(search_query, latlng)
+        params = self._get_algolia_params(search_query, f"{pos['lat']},{pos['lng']}")
         response = requests.post(
             "https://csekhvms53-dsn.algolia.net/1/indexes/*/queries?x-algolia-agent=Algolia%20for%20JavaScript%20(4.20.0)%3B%20Browser&search_origin=job_search_client",  # noqa
             headers=self.headers,
@@ -110,4 +105,4 @@ class WelcomeToTheJungleScraper:
             with_payload=True,
             limit=num_results,
         )
-        return [JobOffer(**result.payload).metadata_repr() for result in search_result]  # type: ignore
+        return json.dumps([JobOffer(**result.payload).model_dump() for result in search_result])

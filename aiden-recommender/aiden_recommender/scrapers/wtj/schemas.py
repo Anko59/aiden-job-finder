@@ -21,10 +21,20 @@ class Profession(BaseModel):
     sub_category_reference: str
 
 
+class Logo(BaseModel):
+    url: str
+
+
+class CoverImage(BaseModel):
+    medium: Logo
+
+
 class Organization(BaseModel):
     description: Optional[str] = None
     name: str
     nb_employees: Optional[int] = None
+    logo: Logo
+    cover_image: CoverImage
 
 
 class JobOffer(BaseModel):
@@ -58,8 +68,11 @@ class JobOffer(BaseModel):
     slug: str
     geoloc: list[Coordinates] = Field(..., validation_alias=AliasChoices("_geoloc", "geoloc"))
 
-    def to_url(self) -> str:
-        return f"https://www.welcometothejungle.com/fr/companies/{self.organization.name.lower()}/jobs/{self.slug}?&o={self.reference}"
+    def model_dump(self, *args, **kwargs):
+        data = super().model_dump(*args, **kwargs)
+        data["to_url"] = self.to_url()
+        data["metadata_repr"] = self.metadata_repr()
+        return data
 
     def metadata_repr(self) -> str:
         """Returns a language representation of the offer metadata (location, company, profile sought for etc...)."""

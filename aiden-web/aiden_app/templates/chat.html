@@ -4,36 +4,42 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Aiden</title>
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
-    {% load static %}
-    <link rel="stylesheet" href="{% static 'css/styles.css' %}">
-    <script src="https://cdn.jsdelivr.net/npm/underscore@1.13.6/underscore-umd-min.js"></script>
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="http://backbonejs.org/backbone.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Include Markdown-it for rendering markdown -->
+    <script src="https://cdn.jsdelivr.net/npm/markdown-it/dist/markdown-it.min.js"></script>
 
+    <!-- Include json-formatter-js for displaying JSON -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/json-formatter-js/dist/json-formatter.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/json-formatter-js/2.3.3/json-formatter.min.js"></script>
+
+    <title>Aiden</title>
+    {% load static %}
     <link rel="icon" type="image/png" href="{% static 'images/dog.png' %}">
 </head>
 
-<body>
-    <div class="container">
-        <div class="main">
-            <div id="profile-display"> </div>
-            <div id="chat-window"></div>
-            <form id="chat-form">
-                {% csrf_token %}
-                <input type="text" id="user_input" placeholder="Type your message...">
-                <button type="submit" id="send-button">Send</button>
-            </form>
+<body class="bg-gray-100">
+
+    <!-- Main container with flex layout -->
+    <div class="flex h-screen overflow-hidden">
+
+        <!-- Sidebar container -->
+        <div class="w-64 bg-white shadow-md flex-shrink-0" id="sidebar">
+            {% include 'langui/sidebar.html' %}
+        </div>
+
+        <!-- Prompt container -->
+        <div class="flex-1 bg-gray-50 overflow-auto" id="chat-container">
+            {% include 'langui/prompt-container.html' %}
         </div>
     </div>
-    <div class="token-counter" id="token-counter"> Mistral Total Tokens Used: 0</div>
-    <div class="total-price-counter" id="total-price-counter">Total Price Paid: $0</div>
-    <div class="profile-images"></div>
 
-    <script src="{% static 'js/main.js' %}" type="module"></script>
 </body>
 
 </html>
+<style>
+@media (prefers-color-scheme: dark) {
+    #chat-container{
+        background-color: rgb(30 41 59 / var(--tw-bg-opacity));
+    }
+}
+</style>
