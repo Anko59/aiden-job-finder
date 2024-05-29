@@ -93,12 +93,15 @@ class MistralAgent(Agent):
         if tool_call.function.name == "search_jobs":
             content = json.loads(message.content)
             if "error" not in content:
-                result = json.loads(content["result"])
-                short_message = ChatMessage(
-                    role="tool", name=tool_call.function.name, content=json.dumps({"result": [job["metadata_repr"] for job in result]})
-                )
-                self.messages.append(short_message)
-                return message, agent_speaks_next
+                try:
+                    result = json.loads(content["result"])
+                    short_message = ChatMessage(
+                        role="tool", name=tool_call.function.name, content=json.dumps({"result": [job["metadata_repr"] for job in result]})
+                    )
+                    self.messages.append(short_message)
+                    return message, agent_speaks_next
+                except Exception:
+                    pass
 
         self.messages.append(message)
         return message, agent_speaks_next

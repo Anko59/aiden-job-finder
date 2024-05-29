@@ -17,6 +17,7 @@ uvicorn = "^0.29.0"
 redis = "^5.0.4"
 qdrant-client = "^1.9.1"
 mistralai = "^0.1.8"
+api-offres-emploi = "^0.0.2"
 
 
 [build-system]

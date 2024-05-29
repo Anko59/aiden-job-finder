@@ -66,7 +66,7 @@ class JobOffer(BaseModel):
 
     reference: str
     slug: str
-    geoloc: list[Coordinates] = Field(..., validation_alias=AliasChoices("_geoloc", "geoloc"))
+    geoloc: Optional[list[Coordinates]] = Field(..., validation_alias=AliasChoices("_geoloc", "geoloc"))
 
     def to_url(self) -> str:
         return f"https://www.welcometothejungle.com/fr/companies/{self.organization.name.lower()}/jobs/{self.slug}?&o={self.reference}"

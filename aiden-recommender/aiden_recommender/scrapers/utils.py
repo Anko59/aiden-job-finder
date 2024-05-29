@@ -63,12 +63,12 @@ class ChromeDriver:
             self.driver.quit()
 
 
-def cache(retention_period: timedelta, model: Type[T]):
+def cache(retention_period: timedelta, model: Type[T], source: str):
     def decorator(func):
         @wraps(func)
         def wrapper(self, *args, **kwargs):
             # Generate a unique cache key based on function name and arguments
-            key = _generate_cache_key(func, *args, **kwargs)
+            key = _generate_cache_key(func, source, *args, **kwargs)
 
             # Try to get the cached result
             cached_result: str | None = redis_client.get(key)  # type: ignore
@@ -95,9 +95,9 @@ def cache(retention_period: timedelta, model: Type[T]):
     return decorator
 
 
-def _generate_cache_key(func, *args, **kwargs):
+def _generate_cache_key(func, source, *args, **kwargs):
     # Create a string representation of the function name and arguments
-    key_data = {"function": func.__name__, "args": args, "kwargs": kwargs}
+    key_data = {"function": func.__name__, "args": args, "kwargs": kwargs, "source": source}
     key_string = json.dumps(key_data, sort_keys=True)
 
     # Use a hash to ensure the key length is suitable for Redis
