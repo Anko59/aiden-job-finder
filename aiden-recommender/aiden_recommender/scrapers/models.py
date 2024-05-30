@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import Optional
 
-from pydantic import BaseModel, Field, AliasChoices
+from pydantic import AliasChoices, BaseModel, Field
 
 
 class Coordinates(BaseModel):
@@ -66,7 +66,7 @@ class JobOffer(BaseModel):
 
     reference: str
     slug: str
-    geoloc: Optional[list[Coordinates]] = Field(..., validation_alias=AliasChoices("_geoloc", "geoloc"))
+    geoloc: Optional[list[Coordinates]] = Field(None, validation_alias=AliasChoices("_geoloc", "geoloc"))
 
     def to_url(self) -> str:
         return f"https://www.welcometothejungle.com/fr/companies/{self.organization.name.lower()}/jobs/{self.slug}?&o={self.reference}"

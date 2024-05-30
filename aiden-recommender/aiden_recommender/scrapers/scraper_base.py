@@ -1,10 +1,13 @@
-from abc import ABC, abstractmethod
-from qdrant_client.models import PointStruct
-from aiden_recommender import JOB_COLLECTION, qdrant_client, redis_client
-from aiden_recommender.scrapers.models import JobOffer
-from mistralai.client import MistralClient
 import os
+from abc import ABC, abstractmethod
 from uuid import uuid4
+
+from mistralai.client import MistralClient
+from qdrant_client.models import PointStruct
+
+from aiden_recommender.constants import JOB_COLLECTION
+from aiden_recommender.scrapers.models import JobOffer
+from aiden_recommender.tools import qdrant_client, redis_client
 
 
 def chunk_list(lst, n):
@@ -35,15 +38,10 @@ class ScraperBase(ABC):
 
         return ids
 
-    def _get_embedding_ids(self, job_offers: list[JobOffer]) -> list[str]:
-        return [redis_client.get(offer.reference).decode() for offer in job_offers]
-
     @abstractmethod
     def _fetch_results(self, search_query: str, location: str) -> list[JobOffer]:
         pass
 
     def search_jobs(self, search_query: str, location: str, num_results: int = 15) -> list[str]:
         jobs = self._fetch_results(search_query, location)[:num_results]
-        self._embed_offers(jobs)
-        embedding_ids = self._get_embedding_ids(jobs)
-        return embedding_ids
+        return self._embed_offers(jobs)
