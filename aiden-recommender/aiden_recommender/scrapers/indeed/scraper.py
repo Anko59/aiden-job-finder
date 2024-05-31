@@ -1,18 +1,15 @@
 import json
 import re
 from typing import Any
-from aiden_recommender.scrapers.utils import ChromeDriver, cache
+from aiden_recommender.scrapers.utils import chrome_driver, cache
 from aiden_recommender.scrapers.models import JobOffer, Coordinates, Logo, CoverImage, Organization, Office
 from aiden_recommender.scrapers.scraper_base import ScraperBase
 from chompjs import parse_js_object
-from unidecode import unidecode
 from datetime import datetime, timedelta
 
 
 class IndeedScraper(ScraperBase):
-    def __init__(self):
-        self.base_url = "https://fr.indeed.com"
-        super().__init__()
+    base_url = "https://fr.indeed.com"
 
     def _extract_results(self, script: str) -> list[dict[str, Any]]:
         data = {}
@@ -24,34 +21,10 @@ class IndeedScraper(ScraperBase):
                 key = re.findall(r'"(.*?)"', key)
                 if len(key):
                     data[key[0]] = parse_js_object(value)
-        return data["mosaic-provider-jobcards"]["metaData"]["mosaicProviderJobCardsModel"]["results"]
-
-    @staticmethod
-    def parse_salary(salary_str: str):
-        # Extract numeric values using regex
-        salary_values = re.findall(r"\d+(?:\s\d+)*", salary_str)
-        salary_values = [float(unidecode(value).replace(",", ".").replace(" ", "")) for value in salary_values]
-
-        # Determine the period multiplier (default is yearly)
-        if "heure" in salary_str:
-            salary_period = "hour"
-        elif "mois" in salary_str:
-            salary_period = "month"
-        elif "an" in salary_str:
-            salary_period = "year"
-        else:
-            salary_period = "year"
-
-        # Parse the minimum and maximum salary values
-        if len(salary_values) == 1:
-            min_salary = max_salary = int(salary_values[0])
-        elif len(salary_values) >= 2:
-            min_salary = int(salary_values[0])
-            max_salary = int(salary_values[1])
-        else:
-            min_salary = max_salary = None
-
-        return min_salary, max_salary, salary_period
+        try:
+            return data["mosaic-provider-jobcards"]["metaData"]["mosaicProviderJobCardsModel"]["results"]
+        except KeyError:
+            return []
 
     @classmethod
     def transform_to_job_offer(cls, data: dict) -> JobOffer:
@@ -65,8 +38,7 @@ class IndeedScraper(ScraperBase):
         )
         office = Office(country=data["jobLocationCity"], local_state=data["jobLocationState"])
         args = {
-            "benefits": data["taxonomyAttributes"][3]["attributes"],
-            "contract_type": data["jobTypes"][0],
+            "benefits": [x["label"] for x in data["taxonomyAttributes"][3]["attributes"]],
             "experience_level_minimum": data.get("rankingScoresModel", {}).get("bid"),
             "has_experience_level_minimum": True,
             "language": "French",
@@ -80,17 +52,26 @@ class IndeedScraper(ScraperBase):
             "profile": data.get("jobDescription"),
             "url": f"{cls.base_url}/viewjob?jk={data['jobkey']}",
         }
-        if (salary_text := data["salarySnippet"].get("text")) is not None:
-            min_salary, max_salary, salary_period = cls.parse_salary(salary_text)
-            args.update({"salary_minimum": min_salary, "salary_maximum": max_salary, "salary_period": salary_period})
+        if (salary_info := data.get("extractedSalary")) is not None:
+            args.update(
+                {
+                    "salary_minimum": salary_info.get("min"),
+                    "salary_maximum": salary_info.get("max"),
+                    "salary_period": salary_info.get("type"),
+                }
+            )
+
+        if len(data["jobTypes"]) > 0:
+            args["contract_type"] = data["jobTypes"][0]
+
         job_offer = JobOffer(**args)
         return job_offer
 
-    @cache(retention_period=timedelta(hours=12), model=JobOffer, source="indeed")
+    @cache(retention_period=timedelta(days=1), model=JobOffer, source="indeed")
     def _fetch_results(self, search_query: str, location: str, start=0) -> list[dict[str, Any]]:
         url = f"{self.base_url}/jobs?q={search_query}&l={location}&from=searchOnHP&vjk=fa2409e45b11ca41&start={start}"
 
-        soup = ChromeDriver.fetch_page(url)
+        soup = chrome_driver.fetch_page(url)
 
         script = soup.find("script", {"id": "mosaic-data"}).string
 
@@ -101,15 +82,17 @@ class IndeedScraper(ScraperBase):
         return [self.transform_to_job_offer(result) for result in results]
 
     def _extract_job_descriptions(self, results: list[dict[str, Any]]) -> list[str]:
-        urls = [f"{self.base_url}{result['jobCardUrl']}" for result in results]
-        soups = ChromeDriver.fetch_pages(urls)
+        urls = [f"{self.base_url}{result['link']}" for result in results]
+        soups = chrome_driver.fetch_pages(urls)
         return [self._extract_description(soup) for soup in soups]
 
     @staticmethod
     def _extract_description(soup) -> str:
+        if soup is not None:
+            return ""
         script = soup.find("script", {"type": "application/ld+json"})
-        if script is not None:
-            job_data = json.loads(script.string)
-            description = job_data["description"]
-            return description
-        return ""
+        if script is None:
+            return ""
+        job_data = json.loads(script.string)
+        description = job_data["description"]
+        return description

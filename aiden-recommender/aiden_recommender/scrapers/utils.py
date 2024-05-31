@@ -49,45 +49,44 @@ def get_chrome_options() -> Options:
 
 
 class ChromeDriver:
-    options = get_chrome_options()
-    drivers = []
-    max_drivers = 5
-    idle_timeout = 30
-    lock = threading.Lock()
+    def __init__(self):
+        self.options = get_chrome_options()
+        self.drivers = []
+        self.max_drivers = 5
+        self.idle_timeout = 30
+        self.lock = threading.Lock()
 
-    @classmethod
-    def close_idle_drivers(cls):
+    def close_idle_drivers(self):
         while True:
-            time.sleep(cls.idle_timeout)
-            with cls.lock:
-                for driver in cls.drivers[:]:
+            time.sleep(self.idle_timeout)
+            with self.lock:
+                for driver in self.drivers[:]:
                     if not getattr(driver, "current_task", None):
                         driver.quit()
-                        cls.drivers.remove(driver)
+                        self.drivers.remove(driver)
 
-    @classmethod
-    def start(cls):
-        threading.Thread(target=cls.close_idle_drivers, daemon=True).start()
+    def start(self):
+        threading.Thread(target=self.close_idle_drivers, daemon=True).start()
 
-    @classmethod
-    def get_available_driver(cls):
-        with cls.lock:
-            for driver in cls.drivers:
-                if not getattr(driver, "current_task", None):
+    def get_available_driver(self):
+        for _ in range(10):
+            with self.lock:
+                for driver in self.drivers:
+                    if not getattr(driver, "current_task", None):
+                        return driver
+                if len(self.drivers) < self.max_drivers:
+                    driver = webdriver.Chrome(options=self.options)
+                    self.drivers.append(driver)
                     return driver
-            if len(cls.drivers) < cls.max_drivers:
-                driver = webdriver.Chrome(options=cls.options)
-                cls.drivers.append(driver)
-                return driver
+                time.sleep(0.5)
         raise RuntimeError("All drivers are busy")
 
-    @classmethod
-    def get(cls, url):
-        driver = cls.get_available_driver()
+    def get(self, url):
+        driver = self.get_available_driver()
         driver.current_task = threading.current_thread()
         try:
             driver.get(url)
-            html = cls.wait_for_page_load(driver)
+            html = self.wait_for_page_load(driver)
             return BeautifulSoup(html, "html.parser")
         finally:
             driver.current_task = None
@@ -100,10 +99,9 @@ class ChromeDriver:
                 return driver.page_source
             time.sleep(1)
 
-    @classmethod
-    def fetch_pages(cls, urls):
+    def fetch_pages(self, urls):
         def _fetch_page(url):
-            return cls.get(url)
+            return self.get(url)
 
         threads = []
         results = [None] * len(urls)
@@ -118,12 +116,12 @@ class ChromeDriver:
 
         return results
 
-    @classmethod
-    def fetch_page(cls, url):
-        return cls.get(url)
+    def fetch_page(self, url):
+        return self.get(url)
 
 
-ChromeDriver.start()
+chrome_driver = ChromeDriver()
+chrome_driver.start()
 
 
 def cache(retention_period: timedelta, model: Type[T], source: str):

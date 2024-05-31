@@ -8,12 +8,12 @@ from loguru import logger
 
 from aiden_recommender.scrapers.models import JobOffer
 from aiden_recommender.scrapers.scraper_base import ScraperBase
-from aiden_recommender.scrapers.utils import ChromeDriver, cache
+from aiden_recommender.scrapers.utils import chrome_driver, cache
 
 
 class WelcomeToTheJungleScraper(ScraperBase):
     def __init__(self):
-        soup = ChromeDriver.get("https://www.welcometothejungle.com/")
+        soup = chrome_driver.get("https://www.welcometothejungle.com/")
         script = soup.find("script", {"type": "text/javascript"}).get_text()
         script_dict = parse_js_object(script)
         self.algolia_app_id = script_dict["ALGOLIA_APPLICATION_ID"]

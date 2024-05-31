@@ -22,7 +22,7 @@ class ScraperTool(Tool):
             "profile_id": str(self.profile_embedding_id),
         }
         print("profile_id", self.profile_embedding_id)
-        response = httpx.post(url=url, json=payload)
+        response = httpx.post(url=url, json=payload, timeout=30)
         response.raise_for_status()
 
         results = response.json()

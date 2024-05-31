@@ -41,7 +41,7 @@ class JobOffer(BaseModel):
     benefits: list[str]
     contract_duration_maximum: Optional[int] = None
     contract_duration_minimum: Optional[int] = None
-    contract_type: str
+    contract_type: Optional[str] = None
     education_level: Optional[str] = None
     experience_level_minimum: Optional[float] = None
     has_contract_duration: Optional[bool] = None
