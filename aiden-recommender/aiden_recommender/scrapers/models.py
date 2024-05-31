@@ -62,18 +62,15 @@ class JobOffer(BaseModel):
     salary_minimum: Optional[int] = None
     salary_period: Optional[str | dict] = None
     salary_yearly_minimum: Optional[int] = None
-    sectors: list[dict]
+    sectors: Optional[list[dict]] = None
+    url: Optional[str] = None
 
     reference: str
     slug: str
     geoloc: Optional[list[Coordinates]] = Field(..., validation_alias=AliasChoices("_geoloc", "geoloc"))
 
-    def to_url(self) -> str:
-        return f"https://www.welcometothejungle.com/fr/companies/{self.organization.name.lower()}/jobs/{self.slug}?&o={self.reference}"
-
     def model_dump(self, *args, **kwargs):
         data = super().model_dump(*args, **kwargs)
-        data["to_url"] = self.to_url()
         data["metadata_repr"] = self.metadata_repr()
         return data
 

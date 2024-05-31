@@ -113,6 +113,7 @@ class FranceTravailScraper(ScraperBase):
             _geoloc=coordinates,
             reference=data["id"],
             slug=data["origineOffre"]["urlOrigine"].split("/")[-1],
+            url=data["origineOffre"]["urlOrigine"],
         )
 
         return job_offer

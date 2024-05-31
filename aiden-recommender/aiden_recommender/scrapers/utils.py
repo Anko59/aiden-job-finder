@@ -1,8 +1,11 @@
 import hashlib
 import json
+import threading
+import time
 from datetime import timedelta
 from functools import wraps
 from typing import Type, TypeVar
+
 
 from aiden_recommender import redis_client
 from loguru import logger
@@ -10,57 +13,118 @@ from pydantic import BaseModel
 from pydantic_core import from_json
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
+from bs4 import BeautifulSoup
 
 T = TypeVar("T", bound="BaseModel")
 
 
+def get_chrome_options() -> Options:
+    options = Options()
+    options.add_argument("--disable-blink-features=AutomationControlled")
+    options.add_argument("--disable-infobars")
+    options.add_argument("--disable-extensions")
+    options.add_argument("--disable-gpu")
+    options.add_argument("--no-sandbox")
+    options.add_argument("--headless")
+    options.add_argument("--disable-dev-shm-usage")
+
+    user_agent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
+    options.add_argument(f"user-agent={user_agent}")
+
+    options.add_argument("--start-maximized")
+    options.add_experimental_option(
+        "prefs",
+        {
+            "profile.default_content_setting_values.cookies": 2,
+            "profile.default_content_setting_values.notifications": 2,
+            "profile.default_content_setting_values.popups": 2,
+            "profile.default_content_setting_values.geolocation": 2,
+            "profile.default_content_setting_values.automatic_downloads": 1,
+            "download.default_directory": r"C:\temp",
+            "download.prompt_for_download": False,
+            "download.directory_upgrade": True,
+            "safebrowsing.enabled": False,
+        },
+    )
+    return options
+
+
 class ChromeDriver:
-    def setup_chrome_options(self) -> Options:
-        options = Options()
-        options.add_argument("--disable-blink-features=AutomationControlled")
-        options.add_argument("--disable-infobars")
-        options.add_argument("--disable-extensions")
-        options.add_argument("--disable-gpu")
-        options.add_argument("--no-sandbox")
-        options.add_argument("--headless")
-        options.add_argument("--disable-dev-shm-usage")
+    options = get_chrome_options()
+    drivers = []
+    max_drivers = 5
+    idle_timeout = 30
+    lock = threading.Lock()
 
-        user_agent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
-        options.add_argument(f"user-agent={user_agent}")
+    @classmethod
+    def close_idle_drivers(cls):
+        while True:
+            time.sleep(cls.idle_timeout)
+            with cls.lock:
+                for driver in cls.drivers[:]:
+                    if not getattr(driver, "current_task", None):
+                        driver.quit()
+                        cls.drivers.remove(driver)
 
-        options.add_argument("--start-maximized")
-        options.add_experimental_option(
-            "prefs",
-            {
-                "profile.default_content_setting_values.cookies": 2,
-                "profile.default_content_setting_values.notifications": 2,
-                "profile.default_content_setting_values.popups": 2,
-                "profile.default_content_setting_values.geolocation": 2,
-                "profile.default_content_setting_values.automatic_downloads": 1,
-                "download.default_directory": r"C:\temp",
-                "download.prompt_for_download": False,
-                "download.directory_upgrade": True,
-                "safebrowsing.enabled": False,
-            },
-        )
-        return options
+    @classmethod
+    def start(cls):
+        threading.Thread(target=cls.close_idle_drivers, daemon=True).start()
 
-    def __init__(self):
-        self.options = self.setup_chrome_options()
-        self.driver = None
+    @classmethod
+    def get_available_driver(cls):
+        with cls.lock:
+            for driver in cls.drivers:
+                if not getattr(driver, "current_task", None):
+                    return driver
+            if len(cls.drivers) < cls.max_drivers:
+                driver = webdriver.Chrome(options=cls.options)
+                cls.drivers.append(driver)
+                return driver
+        raise RuntimeError("All drivers are busy")
 
-    def start(self):
-        if self.driver is None or not self.driver.session_id:
-            self.driver = webdriver.Chrome(options=self.options)
+    @classmethod
+    def get(cls, url):
+        driver = cls.get_available_driver()
+        driver.current_task = threading.current_thread()
         try:
-            self.driver.current_url
-        except Exception:
-            self.driver = webdriver.Chrome(options=self.options)
-        return self.driver
+            driver.get(url)
+            html = cls.wait_for_page_load(driver)
+            return BeautifulSoup(html, "html.parser")
+        finally:
+            driver.current_task = None
 
-    def quit(self):
-        if self.driver:
-            self.driver.quit()
+    @staticmethod
+    def wait_for_page_load(driver):
+        while True:
+            state = driver.execute_script("return document.readyState")
+            if state == "complete":
+                return driver.page_source
+            time.sleep(1)
+
+    @classmethod
+    def fetch_pages(cls, urls):
+        def _fetch_page(url):
+            return cls.get(url)
+
+        threads = []
+        results = [None] * len(urls)
+
+        for i, url in enumerate(urls):
+            thread = threading.Thread(target=lambda idx, u: results.__setitem__(idx, _fetch_page(u)), args=(i, url))
+            threads.append(thread)
+            thread.start()
+
+        for thread in threads:
+            thread.join()
+
+        return results
+
+    @classmethod
+    def fetch_page(cls, url):
+        return cls.get(url)
+
+
+ChromeDriver.start()
 
 
 def cache(retention_period: timedelta, model: Type[T], source: str):
