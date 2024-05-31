@@ -1,21 +1,14 @@
-from aiden_recommender.scrapers.models import JobOffer, Coordinates, Office, Profession, Logo, CoverImage, Organization
+import os
+import re
+from datetime import datetime, timedelta
+from typing import Optional
+
+from offres_emploi import Api
+
+from aiden_recommender.constants import ISO_8601
+from aiden_recommender.scrapers.models import Coordinates, CoverImage, JobOffer, Logo, Office, Organization, Profession
 from aiden_recommender.scrapers.scraper_base import ScraperBase
 from aiden_recommender.scrapers.utils import cache
-from datetime import timedelta
-from offres_emploi import Api
-import re
-from datetime import datetime
-from typing import Optional
-import os
-
-
-def dt_to_str_iso(dt):
-    iso_format = "%Y-%m-%dT%H:%M:%SZ"
-    if isinstance(dt, datetime):
-        s = dt.strftime(iso_format)
-        return s
-    else:
-        raise ValueError("Arg 'dt' should be of class 'datetime.datetime'")
 
 
 class FranceTravailScraper(ScraperBase):
@@ -26,7 +19,7 @@ class FranceTravailScraper(ScraperBase):
         super().__init__()
 
     @staticmethod
-    def parse_salary(salary_str: str) -> tuple[Optional[int], Optional[int]]:
+    def parse_salary(salary_str: str) -> tuple[Optional[int], Optional[int], str]:
         # Extract numeric values using regex
         salary_values = re.findall(r"\d+(?:[.,]\d+)?", salary_str)
         salary_values = [float(value.replace(",", ".")) for value in salary_values]
@@ -52,8 +45,7 @@ class FranceTravailScraper(ScraperBase):
 
         return min_salary, max_salary, salary_period
 
-    @classmethod
-    def transform_data(cls, data: dict) -> JobOffer:
+    def transform_data(self, data: dict) -> JobOffer:
         if "latitude" in data["lieuTravail"].keys():
             coordinates = [Coordinates(lat=data["lieuTravail"]["latitude"], lng=data["lieuTravail"]["longitude"])]
         else:
@@ -80,7 +72,7 @@ class FranceTravailScraper(ScraperBase):
                 benefits.append(data["salaire"].get("complement2"))
 
         if (salaire_libelle := data["salaire"].get("libelle")) is not None:
-            salary_minimum, salary_maximum, salary_period = cls.parse_salary(salaire_libelle)
+            salary_minimum, salary_maximum, salary_period = self.parse_salary(salaire_libelle)
         else:
             salary_minimum = salary_maximum = salary_period = None
         # Handle date parsing
@@ -91,7 +83,6 @@ class FranceTravailScraper(ScraperBase):
         except Exception:
             experience_level_minimum = None
             has_experience_level_minimum = False
-        published_at
         job_offer = JobOffer(
             benefits=benefits,
             contract_type=data["typeContratLibelle"],
@@ -109,8 +100,8 @@ class FranceTravailScraper(ScraperBase):
             salary_minimum=salary_minimum,
             salary_period=salary_period,
             salary_currency="EUR",
-            sectors=[{"name": data["secteurActiviteLibelle"]}],
-            _geoloc=coordinates,
+            sectors=[{"name": data.get("secteurActiviteLibelle", "unkown")}],
+            geoloc=coordinates,
             reference=data["id"],
             slug=data["origineOffre"]["urlOrigine"].split("/")[-1],
             url=data["origineOffre"]["urlOrigine"],
@@ -120,18 +111,16 @@ class FranceTravailScraper(ScraperBase):
 
     @cache(retention_period=timedelta(hours=12), model=JobOffer, source="france_travail")
     def _fetch_results(self, search_query: str, location: str) -> list[JobOffer]:
-        start_dt = datetime(2023, 3, 1, 12, 30)
-        end_dt = datetime.today()
         params = {
             "motsCles": search_query,
             "lieux": location,
-            "minCreationDate": dt_to_str_iso(start_dt),
-            "maxCreationDate": dt_to_str_iso(end_dt),
+            "minCreationDate": datetime(2023, 3, 1, 12, 30).strftime(ISO_8601),
+            "maxCreationDate": datetime.today().strftime(ISO_8601),
             "etatPublication": "Active",
             "range": "0-149",
         }
 
-        # Perform the search
+        # Perform the seatrch
         search_results = self.client.search(params=params)
         job_offers = [self.transform_data(data) for data in search_results["resultats"]]
         return job_offers

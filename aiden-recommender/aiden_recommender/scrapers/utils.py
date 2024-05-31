@@ -6,8 +6,7 @@ from datetime import timedelta
 from functools import wraps
 from typing import Type, TypeVar
 
-
-from aiden_recommender import redis_client
+from aiden_recommender.tools import redis_client
 from loguru import logger
 from pydantic import BaseModel
 from pydantic_core import from_json

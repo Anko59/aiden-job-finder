@@ -115,7 +115,9 @@ services:
     networks:
       - aiden_network
     environment:
-      - QDRANT_STORAGE_DIR=/data # Adjust path if needed
+      - QDRANT_STORAGE_DIR=/qdrabt/storage # Adjust path if needed
+    volumes:
+      - qdrant_data:/qdrant/storage
     deploy:
       resources:
         limits:
@@ -179,6 +181,8 @@ services:
       ]
     networks:
       - aiden_network
+    volumes:
+      - redis_data:/data
     healthcheck:
       test: [ "CMD-SHELL", "redis-cli ping" ]
       interval: 10s
@@ -191,6 +195,8 @@ services:
           memory: 128M
 volumes:
   postgres_data:
+  qdrant_data:
+  redis_data:
 
 
 networks:

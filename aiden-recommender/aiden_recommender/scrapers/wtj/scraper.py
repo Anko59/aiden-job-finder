@@ -1,14 +1,14 @@
 import json
 from datetime import timedelta
-from urllib.parse import urlencode
+from urllib.parse import quote_plus, urlencode
 
 import requests
-from aiden_recommender.scrapers.scraper_base import ScraperBase
-from aiden_recommender.scrapers.utils import ChromeDriver, cache
-from aiden_recommender.scrapers.models import JobOffer
 from chompjs import parse_js_object
 from loguru import logger
-import urllib
+
+from aiden_recommender.scrapers.models import JobOffer
+from aiden_recommender.scrapers.scraper_base import ScraperBase
+from aiden_recommender.scrapers.utils import ChromeDriver, cache
 
 
 class WelcomeToTheJungleScraper(ScraperBase):
@@ -37,9 +37,9 @@ class WelcomeToTheJungleScraper(ScraperBase):
     @cache(retention_period=timedelta(hours=12), model=JobOffer, source="wtj")
     def _fetch_results(self, search_query: str, location: str) -> list[JobOffer]:
         base_url = "https://geocode.search.hereapi.com/v1/geocode"
-        address = urllib.parse.quote_plus(location)
+        address = quote_plus(location)
         self.geocode_params["q"] = address
-        url = f"{base_url}?{urllib.parse.urlencode(self.geocode_params)}"
+        url = f"{base_url}?{urlencode(self.geocode_params)}"
         geocode = json.loads(requests.get(url, headers=self.headers).text)
         if not geocode["items"]:
             return []
