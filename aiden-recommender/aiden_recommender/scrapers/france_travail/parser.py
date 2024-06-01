@@ -1,13 +1,5 @@
 from aiden_recommender.scrapers.abstract_parser import AbstractParser
-from aiden_recommender.scrapers.field_extractors import (
-    FieldExtractorBase as feb,
-    MultipleFieldsExtractor as mfe,
-    NestedFieldExtractor as nfe,
-    FromMultipleFieldExtractor as fme,
-    FieldExtractorConstant as fce,
-    DateFieldExtractor as dfe,
-    ListFieldExtractor as lfe,
-)
+from aiden_recommender.scrapers.field_extractors import FieldExtractor
 from aiden_recommender.models import Coordinates, Office, Organization, Profession
 import jmespath
 import re
@@ -55,51 +47,52 @@ def parse_experience_level(experience_level):
 
 
 class FranceTravailParser(AbstractParser):
-    source = fce("france_travail")
-    geoloc = nfe(
+    source = FieldExtractor("source", default="france_travail")
+    geoloc = FieldExtractor(
+        "geoloc",
         model=Coordinates,
-        nested_fields={
-            "lat": feb("lieuTravail.latitude"),
-            "lng": feb("lieuTravail.longitude"),
-        },
+        nested_fields=[
+            FieldExtractor("lat", query="lieuTravail.latitude"),
+            FieldExtractor("lng", query="lieuTravail.longitude"),
+        ],
     )
-    offices = lfe(
+    offices = FieldExtractor(
+        "offices",
         query="lieuTravail",
-        field_extractor=nfe(
-            model=Office,
-            nested_fields={
-                "country": fce("France"),
-                "local_city": feb("libelle", transform_func=parse_local_city),
-            },
-        ),
+        model=Office,
+        nested_fields=[
+            FieldExtractor("country", default="France"),
+            FieldExtractor("local_city", query="libelle", transform_func=parse_local_city),
+        ],
     )
-    organization = nfe(
+    organization = FieldExtractor(
+        "organization",
         model=Organization,
-        nested_fields={
-            "name": feb("entreprise.nom", default="unknown"),
-        },
+        nested_fields=[
+            FieldExtractor("name", query="entreprise.nom", default="unknown"),
+        ],
     )
-    new_profession = nfe(
+    new_profession = FieldExtractor(
+        "new_profession",
         model=Profession,
-        nested_fields={
-            "category_name": feb("romeLibelle"),
-            "sub_category_name": feb("appellationlibelle"),
-            "sub_category_reference": feb("romeCode"),
-        },
+        nested_fields=[
+            FieldExtractor("category_name", query="romeLibelle"),
+            FieldExtractor("sub_category_name", query="appellationlibelle"),
+            FieldExtractor("sub_category_reference", query="romeCode"),
+        ],
     )
-    benefits = fme(["salaire.libelle", "salaire.complement1", "salaire.complement2"])
-    salary = mfe(
-        fields=["salary_minimum", "salary_maximum", "salary_period"],
-        extract_func=parse_salary,
+    benefits = FieldExtractor("benefits", query=["salaire.libelle", "salaire.complement1", "salaire.complement2"])
+    salary = FieldExtractor(
+        ["salary_minimum", "salary_maximum", "salary_period"],
+        transform_func=parse_salary,
     )
-    published_at = dfe("dateCreation", format="%Y-%m-%dT%H:%M:%S.%fZ")
-    experience_level_minimum = feb("experienceLibelle", transform_func=parse_experience_level)
-    contract_type = feb("typeContratLibelle")
-    education_level = feb("experienceLibelle")
-    language = feb("langue", default="fr")
-    name = feb("intitule")
-    profile = feb("description")
-    sectors = feb("secteurActiviteLibelle", transform_func=lambda x: [{"name": x}])
-    reference = feb("id")
-    slug = feb("origineOffre.urlOrigine", transform_func=lambda x: x.split("/")[-1])
-    url = feb("origineOffre.urlOrigine")
+    published_at = FieldExtractor("published_at", query="dateCreation", format="%Y-%m-%dT%H:%M:%S.%fZ")
+    experience_level_minimum = FieldExtractor("experience_level_minimum", query="experienceLibelle", transform_func=parse_experience_level)
+    contract_type = FieldExtractor("contract_type", query="typeContratLibelle")
+    education_level = FieldExtractor("education_level", query="experienceLibelle")
+    language = FieldExtractor("language", query="langue", default="fr")
+    name = FieldExtractor("name", query="intitule")
+    profile = FieldExtractor("profile", query="description")
+    sectors = FieldExtractor("sectors", query="secteurActiviteLibelle", transform_func=lambda x: [{"name": x}])
+    reference = FieldExtractor("reference", query="id")
+    url = FieldExtractor("url", query="origineOffre.urlOrigine")

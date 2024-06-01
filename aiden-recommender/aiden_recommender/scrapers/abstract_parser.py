@@ -8,7 +8,7 @@ class AbstractParser(ABC):
         for field in dir(self):
             extractor = getattr(self, field)
             if isinstance(extractor, AbstractFieldExtractor):
-                data = extractor.extract(data, field)
+                data.update(extractor.extract(data))
         return JobOffer(**data)
 
     def parse(self, data: list) -> list[JobOffer]:
