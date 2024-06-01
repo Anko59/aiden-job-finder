@@ -33,8 +33,8 @@ class Organization(BaseModel):
     description: Optional[str] = None
     name: str
     nb_employees: Optional[int] = None
-    logo: Logo
-    cover_image: CoverImage
+    logo: Optional[Logo] = None
+    cover_image: Optional[CoverImage] = None
 
 
 class JobOffer(BaseModel):
@@ -43,10 +43,10 @@ class JobOffer(BaseModel):
     contract_duration_minimum: Optional[int] = None
     contract_type: Optional[str] = None
     education_level: Optional[str] = None
-    experience_level_minimum: Optional[float] = None
+    experience_level_minimum: Optional[float | str] = None
     has_contract_duration: Optional[bool] = None
     has_education_level: Optional[bool] = None
-    has_experience_level_minimum: bool
+    has_experience_level_minimum: Optional[bool] = None
     has_remote: Optional[bool] = None
     has_salary_yearly_minimum: Optional[bool] = None
     language: str
@@ -65,6 +65,7 @@ class JobOffer(BaseModel):
     sectors: Optional[list[dict]] = None
     url: Optional[str] = None
 
+    source: str
     reference: str
     slug: str
     geoloc: Optional[list[Coordinates]] = Field(None, validation_alias=AliasChoices("_geoloc", "geoloc"))

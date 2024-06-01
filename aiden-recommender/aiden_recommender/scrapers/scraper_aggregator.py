@@ -8,7 +8,7 @@ from mistralai.models.embeddings import EmbeddingObject
 from aiden_recommender.constants import JOB_COLLECTION
 from aiden_recommender.scrapers.france_travail.scraper import FranceTravailScraper
 from aiden_recommender.scrapers.indeed.scraper import IndeedScraper
-from aiden_recommender.scrapers.models import JobOffer
+from aiden_recommender.models import JobOffer
 from aiden_recommender.scrapers.utils import cache
 from aiden_recommender.scrapers.wtj.scraper import WelcomeToTheJungleScraper
 from aiden_recommender.tools import qdrant_client

@@ -6,7 +6,7 @@ from fastapi.params import Body
 from pydantic import BaseModel
 from redis.exceptions import ConnectionError
 
-from aiden_recommender.scrapers.models import JobOffer
+from aiden_recommender.models import JobOffer
 from aiden_recommender.scrapers.scraper_aggregator import scraper_aggregator
 from aiden_recommender.tools import redis_client
 
