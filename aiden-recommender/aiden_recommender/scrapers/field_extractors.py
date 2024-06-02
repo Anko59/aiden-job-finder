@@ -61,8 +61,11 @@ class FieldExtractor:
         if isinstance(result, list):
             result = [self.transform_func(item) for item in result]
             result = self.aggregate_func(result)
-        else:
+        elif result is not None:
             result = self.transform_func(result)
+
+        if result is None or result == "" or result == [] or result == {} or result == data:
+            result = self.default
 
         if isinstance(self.field, list):
             return {field: value for field, value in zip(self.field, result)}

@@ -26,12 +26,13 @@ class WelcomeToTheJungleScraper(AbstractScraper):
         super().__init__(*args, **kwargs)
         start_params = self._get_start_params()
         self.algolia_app_id = start_params.algolia_app_id
-        self.headers = {
+        headers = {
             "Referer": "https://www.welcometothejungle.com/",
             "x-algolia-api-key": start_params.algolia_api_key,
             "x-algolia-application-id": self.algolia_app_id,
             "content-type": "application/x-www-form-urlencoded",
         }
+        self.headers = [{"name": key, "value": value} for key, value in headers.items()]
         self.geocode_params = {
             "apiKey": start_params.here_api_key,
             "lang": "fr",
@@ -59,7 +60,7 @@ class WelcomeToTheJungleScraper(AbstractScraper):
         address = quote_plus(location)
         self.geocode_params["q"] = address
         url = f"{self.geocode_url}?{urlencode(self.geocode_params)}"
-        geocode = self.get(url).json()
+        geocode = json.loads(self.get(url))
         if not geocode["items"]:
             return []
         pos = geocode["items"][0]["position"]
@@ -67,7 +68,7 @@ class WelcomeToTheJungleScraper(AbstractScraper):
         params = self._get_algolia_params(search_query, pos)
         response = self.get(
             f"https://{self.algolia_app_id.lower()}-dsn.algolia.net/1/indexes/*/queries?x-algolia-agent=Algolia%20for%20JavaScript%20(4.20.0)%3B%20Browser&search_origin=job_search_client",  # noqa
-            additional_zyte_params={"httpRequestBody": params, "httpRequestMethod": "POST", "customHttpRequestHeaders": self.headers},
+            additional_zyte_params={"httpRequestText": params, "httpRequestMethod": "POST", "customHttpRequestHeaders": self.headers},
         )
-        result = response.json()["results"][0]["hits"]
+        result = json.loads(response)["results"][0]["hits"]
         return result

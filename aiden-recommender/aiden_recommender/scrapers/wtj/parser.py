@@ -1,5 +1,5 @@
 from aiden_recommender.scrapers.abstract_parser import AbstractParser
-from aiden_recommender.scrapers.field_extractors import FieldExtractorBase as feb
+from aiden_recommender.scrapers.field_extractors import FieldExtractor
 
 
 def parse_url(data):
@@ -9,6 +9,6 @@ def parse_url(data):
 
 
 class WtjParser(AbstractParser):
-    source = "wtj"
-    url = feb(query=None, transform_func=parse_url)
-    geoloc = feb(query="_geloc", transform_func=lambda x: x[0])
+    source = FieldExtractor("source", default="wtj")
+    url = FieldExtractor("url", transform_func=parse_url)
+    geoloc = FieldExtractor("geoloc", query="_geoloc", aggregate_func=lambda x: x[0])

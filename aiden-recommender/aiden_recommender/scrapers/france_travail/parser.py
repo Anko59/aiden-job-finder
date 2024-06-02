@@ -1,6 +1,8 @@
 from aiden_recommender.scrapers.abstract_parser import AbstractParser
 from aiden_recommender.scrapers.field_extractors import FieldExtractor
 from aiden_recommender.models import Coordinates, Office, Organization, Profession
+from aiden_recommender.constants import ISO_8601
+from datetime import datetime
 import jmespath
 import re
 
@@ -46,6 +48,10 @@ def parse_experience_level(experience_level):
         return experience_level
 
 
+def parse_published_at(published_at):
+    return datetime.strptime(published_at, "%Y-%m-%dT%H:%M:%S.%fZ").strftime(ISO_8601)
+
+
 class FranceTravailParser(AbstractParser):
     source = FieldExtractor("source", default="france_travail")
     geoloc = FieldExtractor(
@@ -64,6 +70,7 @@ class FranceTravailParser(AbstractParser):
             FieldExtractor("country", default="France"),
             FieldExtractor("local_city", query="libelle", transform_func=parse_local_city),
         ],
+        transform_func=lambda x: [x],
     )
     organization = FieldExtractor(
         "organization",
@@ -86,7 +93,7 @@ class FranceTravailParser(AbstractParser):
         ["salary_minimum", "salary_maximum", "salary_period"],
         transform_func=parse_salary,
     )
-    published_at = FieldExtractor("published_at", query="dateCreation", format="%Y-%m-%dT%H:%M:%S.%fZ")
+    published_at = FieldExtractor("published_at", query="dateCreation", transform_func=parse_published_at)
     experience_level_minimum = FieldExtractor("experience_level_minimum", query="experienceLibelle", transform_func=parse_experience_level)
     contract_type = FieldExtractor("contract_type", query="typeContratLibelle")
     education_level = FieldExtractor("education_level", query="experienceLibelle")
