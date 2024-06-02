@@ -14,8 +14,6 @@ from aiden_recommender.constants import JOB_COLLECTION
 from aiden_recommender.models import JobOffer
 from aiden_recommender.tools import qdrant_client, redis_client
 from aiden_recommender.scrapers.abstract_parser import AbstractParser
-from aiden_recommender.scrapers.utils import cache
-from datetime import timedelta
 
 
 def chunk_list(lst, n):
@@ -92,7 +90,6 @@ class AbstractScraper(ABC):
         pass
 
     def _get_fetch_results_func(self):
-        @cache(retention_period=timedelta(hours=12), model=JobOffer, source=self.source)
         def fetch_results(search_query: str, location: str) -> list[JobOffer]:
             results = self._fetch_results(search_query, location)
             return self.parser.parse(results)

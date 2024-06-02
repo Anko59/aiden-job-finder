@@ -39,7 +39,7 @@ class IndeedParser(AbstractParser):
             FieldExtractor("local_state", "jobLocationState"),
         ],
     )
-    benefits = FieldExtractor("benefits", query="taxonomyAttributes.3.attributes.label", transform_func=parse_benefits)
+    benefits = FieldExtractor("benefits", query="taxonomyAttributes[*].attributes[*].label", transform_func=parse_benefits)
     experience_level_minimum = FieldExtractor("experience_level_minimum", query="rankingScoresModel.bid")
     language = FieldExtractor("language", default="French")
     name = FieldExtractor("name", query="displayTitle")
@@ -55,7 +55,7 @@ class IndeedParser(AbstractParser):
     )
     profile = FieldExtractor("profile", query="jobDescription")
     url = FieldExtractor("url", query="jobkey", transform_func=lambda x: f"https://www.indeed.fr/viewjob?jk={x}")
-    contract_type = FieldExtractor("contract_type", query="jobTypes.0")
+    contract_type = FieldExtractor("contract_type", query="jobTypes[0]")
     salary_minimum = FieldExtractor("salary_minimum", query="extractedSalary.min")
     salary_maximum = FieldExtractor("salary_maximum", query="extractedSalary.max")
     salary_period = FieldExtractor("salary_period", query="extractedSalary.type")
