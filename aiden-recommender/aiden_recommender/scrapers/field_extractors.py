@@ -59,6 +59,7 @@ class FieldExtractor:
                 result = None
 
         if isinstance(result, list):
+            result = [x for x in result if x is not None]
             result = [self.transform_func(item) for item in result]
             result = self.aggregate_func(result)
         elif result is not None:

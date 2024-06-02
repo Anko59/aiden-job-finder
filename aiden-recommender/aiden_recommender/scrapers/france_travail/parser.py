@@ -88,7 +88,7 @@ class FranceTravailParser(AbstractParser):
             FieldExtractor("sub_category_reference", query="romeCode"),
         ],
     )
-    benefits = FieldExtractor("benefits", query=["salaire.libelle", "salaire.complement1", "salaire.complement2"])
+    benefits = FieldExtractor("benefits", query=["salaire.libelle", "salaire.complement1", "salaire.complement2"], default=[])
     salary = FieldExtractor(
         ["salary_minimum", "salary_maximum", "salary_period"],
         transform_func=parse_salary,
