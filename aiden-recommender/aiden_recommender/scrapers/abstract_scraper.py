@@ -8,6 +8,7 @@ from uuid import uuid4
 
 from mistralai.client import MistralClient
 from qdrant_client.models import PointStruct
+from base64 import b64decode
 
 from aiden_recommender.constants import JOB_COLLECTION
 from aiden_recommender.models import JobOffer
@@ -25,13 +26,13 @@ class AbstractScraper(ABC):
     zyte_url = "https://api.zyte.com/v1/extract"
     settings = {}
     parser: AbstractParser = None
-    zyte_api_automap = {}
+    zyte_api_automap = {"httpResponseBody": True}
     mistral_client = MistralClient(api_key=os.environ.get("MISTRAL_API_KEY"))
     zyte_api_key = os.environ.get("ZYTE_API_KEY")
 
     @property
     def source(self) -> str:
-        return self.parser.source
+        return self.parser.source.default
 
     def __init__(self):
         session = requests.Session()
@@ -51,7 +52,7 @@ class AbstractScraper(ABC):
         self.session = session
         self.fetch_results = self._get_fetch_results_func()
 
-    def get(self, url: str, additional_zyte_params: dict = {}) -> BeautifulSoup:
+    def get(self, url: str, additional_zyte_params: dict = {}) -> BeautifulSoup | dict:
         json = {"url": url}
         json.update(self.zyte_api_automap)
         json.update(additional_zyte_params)
@@ -61,6 +62,8 @@ class AbstractScraper(ABC):
         else:
             if json.get("browserHtml"):
                 return BeautifulSoup(data.json()["browserHtml"], "html.parser")
+            elif json.get("httpResponseBody"):
+                return b64decode(data.json()["httpResponseBody"]).decode("utf-8")
             else:
                 return BeautifulSoup(data.text, "html.parser")
 

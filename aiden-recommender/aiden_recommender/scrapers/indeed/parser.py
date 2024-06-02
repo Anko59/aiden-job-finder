@@ -1,12 +1,8 @@
 from aiden_recommender.scrapers.abstract_parser import AbstractParser
 from aiden_recommender.models import Coordinates, Office, Organization, CoverImage
 from datetime import datetime
-from aiden_recommender.scrapers.field_extractors import (
-    FieldExtractorBase as feb,
-    NestedFieldExtractor as nfe,
-    FieldExtractorConstant as fce,
-    ListFieldExtractor as lfe,
-)
+from aiden_recommender.scrapers.field_extractors import FieldExtractor
+from aiden_recommender.constants import ISO_8601
 
 
 def parse_benefits(benefits):
@@ -14,52 +10,52 @@ def parse_benefits(benefits):
 
 
 def parse_published_at(published_at):
-    return datetime.fromtimestamp(published_at / 1000).strftime("%Y-%m-%dT%H:%M:%SZ")
+    return datetime.fromtimestamp(published_at / 1000).strftime(ISO_8601)
 
 
 class IndeedParser(AbstractParser):
-    source = "indeed"
-    organization = nfe(
+    source = FieldExtractor("source", default="indeed")
+    organization = FieldExtractor(
+        "organization",
         model=Organization,
-        nested_fields={
-            "name": feb(query="truncatedCompany"),
-            "logo": feb(query="companyBrandingAttributes.logoUrl"),
-            "cover_image": nfe(
+        nested_fields=[
+            FieldExtractor("name", query="truncatedCompany"),
+            FieldExtractor("logo", query="companyBrandingAttributes.logoUrl"),
+            FieldExtractor(
+                "cover_image",
                 model=CoverImage,
-                nested_fields={
-                    "medium": feb(query="companyBrandingAttributes.headerImageUrl"),
-                },
+                nested_fields=[
+                    FieldExtractor("medium", query="companyBrandingAttributes.headerImageUrl"),
+                ],
             ),
-        },
+        ],
     )
-    offices = lfe(
-        query=None,
-        field_extractor=nfe(
-            model=Office,
-            nested_fields={
-                "country": fce("France"),
-                "local_city": feb("jobLocationCity"),
-                "local_state": feb("jobLocationState"),
-            },
-        ),
+    offices = FieldExtractor(
+        "offices",
+        model=Office,
+        nested_fields=[
+            FieldExtractor("country", "France"),
+            FieldExtractor("local_city", "jobLocationCity"),
+            FieldExtractor("local_state", "jobLocationState"),
+        ],
     )
-    benefits = feb(query="taxonomyAttributes.3.attributes.label", transform_func=parse_benefits)
-    experience_level_minimum = feb(query="rankingScoresModel.bid")
-    language = fce("French")
-    name = feb(query="displayTitle")
-    published_at = feb(query="pubDate", transform_func=parse_published_at)
-    reference = feb(query="jobkey")
-    slug = feb(query="jobkey")
-    geoloc = nfe(
+    benefits = FieldExtractor("benefits", query="taxonomyAttributes.3.attributes.label", transform_func=parse_benefits)
+    experience_level_minimum = FieldExtractor("experience_level_minimum", query="rankingScoresModel.bid")
+    language = FieldExtractor("language", default="French")
+    name = FieldExtractor("name", query="displayTitle")
+    published_at = FieldExtractor("published_at", query="pubDate", transform_func=parse_published_at)
+    reference = FieldExtractor("reference", query="jobkey")
+    geoloc = FieldExtractor(
+        "geoloc",
         model=Coordinates,
-        nested_fields={
-            "lat": feb(query="_geoloc.lat"),
-            "lng": feb(query="_geoloc.lng"),
-        },
+        nested_fields=[
+            FieldExtractor("lat", query="_geoloc.lat"),
+            FieldExtractor("lng", query="_geoloc.lng"),
+        ],
     )
-    profile = feb(query="jobDescription")
-    url = feb(query="jobkey", transform_func=lambda x: f"https://www.indeed.fr/viewjob?jk={x}")
-    contract_type = feb(query="jobTypes.0")
-    salary_minimum = feb(query="extractedSalary.min")
-    salary_maximum = feb(query="extractedSalary.max")
-    salary_period = feb(query="extractedSalary.type")
+    profile = FieldExtractor("profile", query="jobDescription")
+    url = FieldExtractor("url", query="jobkey", transform_func=lambda x: f"https://www.indeed.fr/viewjob?jk={x}")
+    contract_type = FieldExtractor("contract_type", query="jobTypes.0")
+    salary_minimum = FieldExtractor("salary_minimum", query="extractedSalary.min")
+    salary_maximum = FieldExtractor("salary_maximum", query="extractedSalary.max")
+    salary_period = FieldExtractor("salary_period", query="extractedSalary.type")

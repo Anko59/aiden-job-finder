@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import Optional
 
-from pydantic import AliasChoices, BaseModel, Field
+from pydantic import BaseModel
 
 
 class Coordinates(BaseModel):
@@ -67,8 +67,7 @@ class JobOffer(BaseModel):
 
     source: str
     reference: str
-    slug: str
-    geoloc: Optional[list[Coordinates]] = Field(None, validation_alias=AliasChoices("_geoloc", "geoloc"))
+    geoloc: Optional[Coordinates] = None
 
     def model_dump(self, *args, **kwargs):
         data = super().model_dump(*args, **kwargs)
