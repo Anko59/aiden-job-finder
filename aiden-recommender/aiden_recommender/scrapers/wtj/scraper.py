@@ -47,7 +47,7 @@ class WelcomeToTheJungleScraper(AbstractScraper):
     @cache(retention_period=timedelta(hours=12), model=StartParams, source="wtj_start_params")
     def _get_start_params(self) -> StartParams:
         # We want to cache the start parmas because the browserHtml request is a bit expensive
-        soup = self.get(self.base_url, {"browserHtml": True})
+        soup = self.get(self.base_url, {"browserHtml": True, "httpResponseBody": False})
         script = soup.find("script", {"type": "text/javascript"}).get_text()
         script_dict = parse_js_object(script)
         return StartParams(
