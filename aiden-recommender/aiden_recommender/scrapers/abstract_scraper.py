@@ -1,21 +1,18 @@
-import os
-import requests
-from bs4 import BeautifulSoup
-from requests.adapters import HTTPAdapter
-from urllib3.util.retry import Retry
 from abc import ABC, abstractmethod
+from base64 import b64decode
+from functools import partial
+from typing import Any, Callable
 from uuid import uuid4
 
-from mistralai.client import MistralClient
+# import requests
+from bs4 import BeautifulSoup
 from qdrant_client.models import PointStruct
-from base64 import b64decode
 
+# from urllib3.util.retry import Retry
 from aiden_recommender.constants import JOB_COLLECTION
-from aiden_recommender.models import JobOffer
-from aiden_recommender.tools import qdrant_client, redis_client
+from aiden_recommender.models import JobOffer, Request, ScraperItem
 from aiden_recommender.scrapers.abstract_parser import AbstractParser
-from aiden_recommender.scrapers.utils import cache
-from datetime import timedelta
+from aiden_recommender.tools import async_mistral_client, async_qdrant_client, async_zyte_client, redis_client, zyte_client
 
 
 def chunk_list(lst, n):
@@ -25,80 +22,86 @@ def chunk_list(lst, n):
 class AbstractScraper(ABC):
     zyte_url = "https://api.zyte.com/v1/extract"
     settings = {}
-    parser: AbstractParser = None
+    parser: AbstractParser
     zyte_api_automap = {"httpResponseBody": True}
-    mistral_client = MistralClient(api_key=os.environ.get("MISTRAL_API_KEY"))
-    zyte_api_key = os.environ.get("ZYTE_API_KEY")
 
     @property
     def source(self) -> str:
-        return self.parser.source.default
+        return self.parser.source.default  # type: ignore
 
     def __init__(self):
-        session = requests.Session()
-        retry = Retry(
-            total=3,
-            backoff_factor=1,
-            status_forcelist=(
-                502,
-                429,
-            ),  # 429 for too many requests and 502 for bad gateway
-            respect_retry_after_header=False,
-        )
-        adapter = HTTPAdapter(max_retries=retry)
-        session.mount("http://", adapter)
-        session.mount("https://", adapter)
-        session.auth = (self.zyte_api_key, "")
-        self.session = session
-        self.fetch_results = self._get_fetch_results_func()
+        self._start_requests = self._get_start_requests_func()
 
-    def get(self, url: str, additional_zyte_params: dict = {}) -> BeautifulSoup | dict:
-        json = {"url": url}
-        json.update(self.zyte_api_automap)
-        json.update(additional_zyte_params)
-        data = self.session.post(self.zyte_url, json=json)
-        if data.status_code != 200:
-            raise Exception(f"Failed to fetch data from {url}. Status code: {data.status_code}")
+    def inline_get(self, url: str, additional_zyte_params: dict = {}) -> BeautifulSoup | str:
+        query: dict[str, Any] = {"url": url}
+        query.update(self.zyte_api_automap)
+        query.update(additional_zyte_params)
+        data = zyte_client.get(query=query)
+
+        if data.get("browserHtml"):
+            return BeautifulSoup(data["browserHtml"], "html.parser")
+        elif data.get("httpResponseBody"):
+            return b64decode(data["httpResponseBody"]).decode("utf-8")
         else:
-            if json.get("browserHtml"):
-                return BeautifulSoup(data.json()["browserHtml"], "html.parser")
-            elif json.get("httpResponseBody"):
-                return b64decode(data.json()["httpResponseBody"]).decode("utf-8")
+            raise Exception
+
+    async def parse_zyte_response(self, response: dict, parser_func: Callable, meta: dict[str, str] = {}):
+        if response.get("browserHtml"):
+            data = BeautifulSoup(response["browserHtml"], "html.parser")
+        elif response.get("httpResponseBody"):
+            data = b64decode(response["httpResponseBody"]).decode("utf-8")
+        else:
+            raise Exception
+        for parsed_result in parser_func(data, **meta):
+            if isinstance(parsed_result, ScraperItem):
+                yield self.parser.transform_to_job_offer(ScraperItem.raw_data)
             else:
-                return BeautifulSoup(data.text, "html.parser")
+                yield parsed_result
 
-    def _embed_offers(self, job_offers: list[JobOffer]) -> list[str]:
-        offers_to_embed = [offer for offer in job_offers if redis_client.get(offer.reference) is None]
+    async def get(self, url: str, callback: Callable, additional_zyte_params: dict = {}, meta: dict[str, str] = {}):
+        query: dict[str, Any] = {"url": url}
+        query.update(self.zyte_api_automap)
+        query.update(additional_zyte_params)
+        _callback = partial(self.parse_zyte_response, parser_func=callback, meta=meta)
+        yield Request(async_zyte_client.get(query=query), _callback)
 
-        ids = [str(uuid4()) for _ in range(len(offers_to_embed))]
-        for offers, ids_chunked in zip(chunk_list(offers_to_embed, 5), chunk_list(ids, 5)):
-            embeddings = self.mistral_client.embeddings(
-                model="mistral-embed", input=[job_offer.profile or job_offer.metadata_repr() for job_offer in offers]
-            )
-            qdrant_client.upload_points(
-                collection_name=JOB_COLLECTION,
-                points=[
-                    PointStruct(id=ids_chunked[i], vector=embeddings.data[i].embedding, payload=offer.model_dump())
-                    for i, offer in enumerate(offers)
-                ],
-            )
-            for id_, offer in zip(ids_chunked, offers):
-                redis_client.set(name=offer.reference, value=id_)
+    async def _embed_offer(self, job_offer: JobOffer) -> str:
+        if _id := redis_client.get(name=job_offer.reference):
+            return str(_id)
+        embedding = await async_mistral_client.embeddings(model="mistral-embed", input=[job_offer.metadata_repr()])
+        _id = uuid4().hex
+        await async_qdrant_client.upload_points(
+            collection_name=JOB_COLLECTION,
+            points=[PointStruct(id=_id, vector=embedding.data[0].embedding, payload=job_offer.model_dump())],
+        )
 
-        return ids
+        redis_client.set(name=job_offer.reference, value=_id)
+
+        return _id
 
     @abstractmethod
-    def _fetch_results(self, search_query: str, location: str) -> list[dict]:
-        pass
+    def get_start_requests(self, search_query: str, location: str):
+        return []
 
-    def _get_fetch_results_func(self):
-        @cache(retention_period=timedelta(hours=12), model=JobOffer, source=self.source)
-        def fetch_results(search_query: str, location: str) -> list[JobOffer]:
-            results = self._fetch_results(search_query, location)
-            return self.parser.parse(results)
+    def _get_start_requests_func(self):
+        # @cache(retention_period=timedelta(hours=12), model=JobOffer, source=self.source)
+        def get_start_requests(search_query: str, location: str):
+            yield from self.get_start_requests(search_query, location)
 
-        return fetch_results
+        return get_start_requests
 
-    def search_jobs(self, search_query: str, location: str, num_results: int = 15) -> list[str]:
-        jobs = self.fetch_results(search_query, location)[:num_results]
-        return self._embed_offers(jobs)
+    async def _parse_scraper_output(self, item: JobOffer | Request):
+        if isinstance(item, Request):
+            response = await item.coroutine
+            result = await item.callback(response)
+            yield self._parse_scraper_output(result)
+        elif isinstance(item, JobOffer):
+            item_id = await self._embed_offer(item)
+            yield item_id
+
+    async def search_jobs(self, search_query: str, location: str, num_results: int = 15) -> list[str]:
+        results = []
+        async for item in self._start_requests(search_query, location):
+            async for parsed_item in self._parse_scraper_output(item):
+                results.append(parsed_item)
+        return results

@@ -1,7 +1,17 @@
 from datetime import datetime
-from typing import Optional
+from typing import Callable, NamedTuple, Optional
+from typing import Coroutine
 
 from pydantic import BaseModel
+
+
+class Request(NamedTuple):
+    coroutine: Coroutine
+    callback: Callable
+
+
+class ScraperItem(BaseModel):
+    raw_data: dict
 
 
 class Coordinates(BaseModel):

@@ -8,6 +8,7 @@ from loguru import logger
 from aiden_recommender.scrapers.abstract_scraper import AbstractScraper
 from aiden_recommender.scrapers.wtj.parser import WtjParser
 from aiden_recommender.scrapers.utils import cache
+from aiden_recommender.models import ScraperItem
 from pydantic import BaseModel
 
 
@@ -21,6 +22,29 @@ class WelcomeToTheJungleScraper(AbstractScraper):
     base_url = "https://www.welcometothejungle.com"
     geocode_url = "https://geocode.search.hereapi.com/v1/geocode"
     parser = WtjParser()
+
+    def parse_algolia_resuts(self, algolia_results: str, meta: dict):
+        result = json.loads(algolia_results)
+        yield ScraperItem(raw_data=result["results"][0]["hits"])
+
+    def parse_geocoding_results(self, api_results: str, meta: dict):
+        geocode = json.loads(api_results)
+        if not geocode["items"]:
+            yield []
+            return
+        pos = geocode["items"][0]["position"]
+        params = self._get_algolia_params(search_query=meta["search_query"], pos=pos)
+        yield self.get(
+            f"https://{self.algolia_app_id.lower()}-dsn.algolia.net/1/indexes/*/queries?x-algolia-agent=Algolia%20for%20JavaScript%20(4.20.0)%3B%20Browser&search_origin=job_search_client",  # noqa
+            callback=self.parse_algolia_resuts,
+            additional_zyte_params={"httpRequestText": params, "httpRequestMethod": "POST", "customHttpRequestHeaders": self.headers},
+        )
+
+    def get_start_requests(self, search_query: str, location: str):
+        address = quote_plus(location)
+        self.geocode_params["q"] = address
+        url = f"{self.geocode_url}?{urlencode(self.geocode_params)}"
+        yield self.get(url=url, callback=self.parse_geocoding_results, meta={"search_query": search_query})
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -47,28 +71,11 @@ class WelcomeToTheJungleScraper(AbstractScraper):
     @cache(retention_period=timedelta(hours=12), model=StartParams, source="wtj_start_params")
     def _get_start_params(self) -> StartParams:
         # We want to cache the start parmas because the browserHtml request is a bit expensive
-        soup = self.get(self.base_url, {"browserHtml": True, "httpResponseBody": False})
-        script = soup.find("script", {"type": "text/javascript"}).get_text()
+        soup = self.inline_get(self.base_url, additional_zyte_params={"browserHtml": True, "httpResponseBody": False})
+        script = soup.find("script", {"type": "text/javascript"}).get_text()  # type: ignore
         script_dict = parse_js_object(script)
         return StartParams(
             algolia_app_id=script_dict["ALGOLIA_APPLICATION_ID"],
             algolia_api_key=script_dict["ALGOLIA_API_KEY_CLIENT"],
             here_api_key=script_dict["HERE_API_KEY"],
         )
-
-    def _fetch_results(self, search_query: str, location: str) -> list[dict]:
-        address = quote_plus(location)
-        self.geocode_params["q"] = address
-        url = f"{self.geocode_url}?{urlencode(self.geocode_params)}"
-        geocode = json.loads(self.get(url))
-        if not geocode["items"]:
-            return []
-        pos = geocode["items"][0]["position"]
-        # Query algolia
-        params = self._get_algolia_params(search_query, pos)
-        response = self.get(
-            f"https://{self.algolia_app_id.lower()}-dsn.algolia.net/1/indexes/*/queries?x-algolia-agent=Algolia%20for%20JavaScript%20(4.20.0)%3B%20Browser&search_origin=job_search_client",  # noqa
-            additional_zyte_params={"httpRequestText": params, "httpRequestMethod": "POST", "customHttpRequestHeaders": self.headers},
-        )
-        result = json.loads(response)["results"][0]["hits"]
-        return result
