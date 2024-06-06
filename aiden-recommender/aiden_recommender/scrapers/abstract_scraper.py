@@ -1,18 +1,15 @@
 from abc import ABC, abstractmethod
 from base64 import b64decode
 from functools import partial
-from typing import Any, Callable
-from uuid import uuid4
+from typing import Any, Callable, Iterable
 
 # import requests
 from bs4 import BeautifulSoup
-from qdrant_client.models import PointStruct
 
 # from urllib3.util.retry import Retry
-from aiden_recommender.constants import JOB_COLLECTION
-from aiden_recommender.models import JobOffer, Request, ScraperItem
+from aiden_recommender.models import JobOffer, ScraperItem, ZyteRequest, MistralEmbeddingRequest, QdrantRequest, Request
 from aiden_recommender.scrapers.abstract_parser import AbstractParser
-from aiden_recommender.tools import async_mistral_client, async_qdrant_client, async_zyte_client, async_redis_client, zyte_session
+from aiden_recommender.tools import async_redis_client, zyte_session
 
 
 def chunk_list(lst, n):
@@ -37,7 +34,7 @@ class AbstractScraper(ABC):
         else:
             raise Exception
 
-    def parse_zyte_response(self, response: dict, parser_func: Callable, meta: dict[str, str] = {}):
+    def parse_zyte_response(self, response: dict, parser_func: Callable, meta: dict[str, str] = {}) -> Iterable[JobOffer | Request]:
         print("got zyte")
         data = self._extract_zyte_data(response)
         for next_item in parser_func(data, meta):
@@ -49,7 +46,7 @@ class AbstractScraper(ABC):
             else:
                 yield next_item
 
-    def inline_get_zyte(self, url, additional_zyte_params: dict = {}):
+    def inline_get_zyte(self, url, additional_zyte_params: dict = {}) -> BeautifulSoup | str:
         query = {"url": url}
         query.update(self.zyte_api_automap)
         query.update(additional_zyte_params)
@@ -59,33 +56,33 @@ class AbstractScraper(ABC):
         except Exception:
             return BeautifulSoup(data.text, "html.parser")
 
-    def get_zyte_request(self, url: str, callback: Callable, additional_zyte_params: dict = {}, meta: dict[str, str] = {}):
+    def get_zyte_request(self, url: str, callback: Callable, additional_zyte_params: dict = {}, meta: dict[str, str] = {}) -> ZyteRequest:
         print("get_zyte")
         query: dict[str, Any] = {"url": url}
         query.update(self.zyte_api_automap)
         query.update(additional_zyte_params)
         _callback = partial(self.parse_zyte_response, parser_func=callback, meta=meta)
-        return Request(async_zyte_client.get(query=query), _callback)
+        return ZyteRequest(query=query, callback=_callback)
 
-    def _parse_qdrant_response(self, qdrand_response, job_offer, _id):
-        coroutine = async_redis_client.set(name=job_offer.reference, value=_id)
-        yield Request(coroutine, None)
-
-    def _parse_embedding_response(self, embedding, job_offer) -> Request:
+    def _get_qdrant_request(self, embeddings, job_offer) -> Iterable[QdrantRequest]:
         print("got embed")
-        _id = uuid4().hex
-        coroutine = async_qdrant_client.upload_points(
-            collection_name=JOB_COLLECTION, points=[PointStruct(id=_id, vector=embedding.data[0].embedding, payload=job_offer.model_dump())]
-        )
-        callback = partial(self._parse_qdrant_response, job_offer=job_offer, _id=_id)
-        yield Request(coroutine, callback)
+        yield QdrantRequest(embeddings=embeddings.data, job_offers=[job_offer])
 
-    def _get_embedding_request(self, job_offer: JobOffer) -> Request:
+    def _get_embedding_request(self, job_offer: JobOffer) -> MistralEmbeddingRequest:
         print("get embed")
-        coroutine = async_mistral_client.embeddings(model="mistral-embed", input=[job_offer.metadata_repr()])
-        callback = partial(self._parse_embedding_response, job_offer=job_offer)
-        return Request(coroutine, callback)
+        callback = partial(self._get_qdrant_request, job_offer=job_offer)
+        return MistralEmbeddingRequest(input=[job_offer], callback=callback)
 
     @abstractmethod
-    def get_start_requests(self, search_query: str, location: str):
+    def get_start_requests(self, search_query: str, location: str, num_results: int) -> Iterable[Request]:
         return []
+
+    async def get_cached_start_requests(self, search_query: str, location: str, num_results: int):
+        offer_seen = await async_redis_client.exists(f"{self.source}-{search_query}-{location}")
+        if offer_seen >= num_results:
+            return
+        for request in self.get_start_requests(search_query, location, num_results):
+            yield request
+
+    async def set_cache(self, search_query: str, location: str, num_results: int):
+        await async_redis_client.set(f"{self.source}-{search_query}-{location}", num_results)

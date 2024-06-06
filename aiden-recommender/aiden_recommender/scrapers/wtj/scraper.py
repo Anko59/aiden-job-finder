@@ -6,6 +6,8 @@ from chompjs import parse_js_object
 from aiden_recommender.scrapers.abstract_scraper import AbstractScraper
 from aiden_recommender.scrapers.wtj.parser import WtjParser
 from aiden_recommender.models import ScraperItem
+from aiden_recommender.scrapers.utils import cache
+from datetime import timedelta
 from pydantic import BaseModel
 
 
@@ -67,7 +69,7 @@ class WelcomeToTheJungleScraper(AbstractScraper):
         params = {"hitsPerPage": num_results, "query": search_query, "aroundLatLng": latlng, "aroundRadius": 2000000}
         return json.dumps({"requests": [{"indexName": "wttj_jobs_production_fr", "params": urlencode(params)}]})
 
-    # @cache(retention_period=timedelta(hours=12), model=StartParams, source="wtj_start_params")
+    @cache(retention_period=timedelta(hours=12), model=StartParams, source="wtj_start_params")
     def _get_start_params(self) -> StartParams:
         # We want to cache the start parmas because the browserHtml request is a bit expensive
         soup = self.inline_get_zyte(self.base_url, {"browserHtml": True, "httpResponseBody": False})

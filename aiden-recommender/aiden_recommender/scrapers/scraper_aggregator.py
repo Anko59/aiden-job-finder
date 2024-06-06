@@ -10,6 +10,8 @@ from aiden_recommender.models import JobOffer, Request
 from aiden_recommender.scrapers.abstract_scraper import AbstractScraper
 from aiden_recommender.scrapers.wtj.scraper import WelcomeToTheJungleScraper
 from aiden_recommender.tools import qdrant_client, mistral_client
+from aiden_recommender.scrapers.utils import cache
+from datetime import timedelta
 
 
 class ScraperAggregator:
@@ -17,27 +19,17 @@ class ScraperAggregator:
         self.scrapers: list[AbstractScraper] = [WelcomeToTheJungleScraper(), IndeedScraper()]
         self.workers = max_workers
         self.timeout = 60
-        # self.france_travail_scraper = FranceTravailScraper()
-        # self.indeed_scraper = IndeedScraper()
 
-    # @cache(retention_period=timedelta(hours=12), model=EmbeddingObject, source="search_queries")
+    @cache(retention_period=timedelta(hours=12), model=EmbeddingObject, source="search_queries")
     def _get_search_query_vector(self, search_query: str) -> list[EmbeddingObject]:
         return mistral_client.embeddings(model="mistral-embed", input=[search_query]).data
 
-    async def _run_scraper(self, scraper, search_query, location, num_results):
-        results = []
-        async for result in scraper.search_jobs(search_query, location, num_results):
-            results.append(result)
-        return results
-
-    async def handle_request(self, request, request_queue, results_queue):
-        response = await request.coroutine
-        if request.callback is not None:
-            for next_item in request.callback(response):
-                if isinstance(next_item, Request):
-                    await request_queue.put(next_item)
-                else:
-                    await results_queue.put(next_item)
+    async def handle_request(self, request: Request, request_queue: asyncio.Queue, results_queue: asyncio.Queue):
+        async for item in request.send():
+            if isinstance(item, Request):
+                await request_queue.put(item)
+            elif isinstance(item, JobOffer):
+                await results_queue.put(item)
 
     async def worker(self, queue, results):
         while True:
@@ -61,7 +53,7 @@ class ScraperAggregator:
         request_queue = asyncio.Queue()
         results_queue = asyncio.Queue()
         for scraper in self.scrapers:
-            for request in scraper.get_start_requests(search_query, location, num_results):
+            async for request in scraper.get_cached_start_requests(search_query, location, num_results):
                 await request_queue.put(request)
         workers = []
         for _ in range(self.workers):
@@ -84,8 +76,6 @@ class ScraperAggregator:
             collection_name=JOB_COLLECTION, query_vector=search_vector, with_vectors=False, with_payload=True, limit=num_results
         )
 
-        # Return the top `num_results` search results
-        # type: ignore
         return [JobOffer(**result.payload) for result in search_result]
 
 

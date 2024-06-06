@@ -1,13 +1,112 @@
+from __future__ import annotations
 from datetime import datetime
-from typing import Callable, NamedTuple, Optional
-from typing import Coroutine
+import json
+from typing import AsyncGenerator, Callable, Optional, Any
 
 from pydantic import BaseModel
+from abc import ABC, abstractmethod
+from mistralai.models.embeddings import EmbeddingObject
+from qdrant_client.models import PointStruct
+from aiden_recommender.constants import JOB_COLLECTION
+from aiden_recommender.tools import async_zyte_client, async_redis_client, async_mistral_client, async_qdrant_client
+import hashlib
+import uuid
 
 
-class Request(NamedTuple):
-    coroutine: Coroutine
-    callback: Callable
+def reference_to_uuid(reference: str) -> uuid.UUID:
+    return uuid.UUID(hashlib.md5(reference.encode()).hexdigest()).hex
+
+
+class Request(BaseModel, ABC):
+    @abstractmethod
+    async def send(self) -> AsyncGenerator[JobOffer | Request]:
+        pass
+
+
+class CachableRequest(Request, ABC):
+    callback: Optional[Callable] = None
+
+    async def _send(self):
+        response = await self.get_coroutine()
+        if response:
+            if self.callback:
+                for next_item in self.callback(response):
+                    yield next_item
+
+    @abstractmethod
+    def _generate_cache_keys(self) -> list[str]:
+        pass
+
+    @abstractmethod
+    def get_coroutine(self):
+        pass
+
+    async def send(self):
+        yield GetCacheRequest(original_request=self)
+
+
+class GetCacheRequest(Request):
+    original_request: CachableRequest
+
+    async def send(self):
+        responses = [await async_redis_client.get(key) for key in self.original_request._generate_cache_keys()]
+        if None in responses:
+            yield CacheCheckedRequest(original_request=self.original_request)
+
+
+class SetCacheRequest(Request):
+    original_request: CachableRequest
+
+    async def send(self):
+        for key in self.original_request._generate_cache_keys():
+            await async_redis_client.set(key, 1)
+        yield None
+
+
+class CacheCheckedRequest(Request):
+    original_request: CachableRequest
+
+    async def send(self):
+        async for item in self.original_request._send():
+            yield item
+        yield SetCacheRequest(original_request=self.original_request)
+
+
+class ZyteRequest(CachableRequest):
+    query: dict[str, Any]
+
+    def get_coroutine(self):
+        return async_zyte_client.get(query=self.query)
+
+    def _generate_cache_keys(self) -> str:
+        return [f"zyte-request-{json.dumps(self.query)}"]
+
+
+class MistralEmbeddingRequest(CachableRequest):
+    input: list["JobOffer"]
+
+    def get_coroutine(self):
+        return async_mistral_client.embeddings(model="mistral-embed", input=[item.metadata_repr() for item in self.input])
+
+    def _generate_cache_keys(self) -> str:
+        return [f"mistal-embed-{item.reference}" for item in self.input]
+
+
+class QdrantRequest(CachableRequest):
+    embeddings: list[EmbeddingObject]
+    job_offers: list["JobOffer"]
+
+    def get_coroutine(self):
+        return async_qdrant_client.upload_points(
+            collection_name=JOB_COLLECTION,
+            points=[
+                PointStruct(id=reference_to_uuid(job_offer.reference), vector=embedding.embedding, payload=job_offer.model_dump())
+                for job_offer, embedding in zip(self.job_offers, self.embeddings)
+            ],
+        )
+
+    def _generate_cache_keys(self) -> list[str]:
+        return [f"qdrant-embed-{job_offer.reference}" for job_offer in self.job_offers]
 
 
 class ScraperItem(BaseModel):
