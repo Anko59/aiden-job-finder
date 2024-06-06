@@ -1,11 +1,10 @@
-import json
+from aiden_recommender.models import ScraperItem
 import re
 from typing import Any
-from aiden_recommender.scrapers.utils import cache
 from chompjs import parse_js_object
-from datetime import timedelta
 from aiden_recommender.scrapers.abstract_scraper import AbstractScraper
 from aiden_recommender.scrapers.indeed.parser import IndeedParser
+from copy import deepcopy
 
 
 class IndeedScraper(AbstractScraper):
@@ -14,6 +13,26 @@ class IndeedScraper(AbstractScraper):
         "browserHtml": True,
     }
     parser = IndeedParser()
+    results_per_page = 15
+    search_url = base_url + "/jobs?q={search_query}&l={location}&from=searchOnHP&vjk=fa2409e45b11ca41&start={start}"
+
+    def get_start_requests(self, search_query: str, location: str, num_results: int):
+        meta = {"search_query": search_query, "location": location, "num_results": num_results, "current_results": 0}
+        url = self.search_url.format(start=0, **meta)
+        yield self.get_zyte_request(url, meta=meta, callback=self.parse_overview)
+
+    def parse_overview(self, soup, meta):
+        script = soup.find("script", {"id": "mosaic-data"}).string
+        results = self._extract_results(script)
+        current_results = meta["current_results"] + len(results)
+        meta["current_results"] = current_results
+        for result in results:
+            url = f"{self.base_url}{result['link']}"
+            next_meta = deepcopy(meta)
+            next_meta["ov_item"] = result
+            yield self.get_zyte_request(url, meta=next_meta, callback=self.parse_detail)
+        if len(results) == 15 and current_results < meta["num_results"]:
+            yield self.get_zyte_request(url=self.search_url.format(start=current_results, **meta), meta=meta, callback=self.parse_overview)
 
     def _extract_results(self, script: str) -> list[dict[str, Any]]:
         data = {}
@@ -30,31 +49,13 @@ class IndeedScraper(AbstractScraper):
         except KeyError:
             return []
 
-    def _fetch_results(self, search_query: str, location: str, start=0) -> list[dict[str, Any]]:
-        url = f"{self.base_url}/jobs?q={search_query}&l={location}&from=searchOnHP&vjk=fa2409e45b11ca41&start={start}"
-
-        soup = self.get(url)
-
-        script = soup.find("script", {"id": "mosaic-data"}).string
-
-        results = self._extract_results(script)  # type: ignore
-        descriptions = self._extract_job_descriptions(results)
-        for i, result in enumerate(results):
-            result["jobDescription"] = descriptions[i]
-        return results
-
-    def _extract_job_descriptions(self, results: list[dict[str, Any]]) -> list[str]:
-        urls = [f"{self.base_url}{result['link']}" for result in results]
-        return [self._extract_description(url) for url in urls]
-
-    @cache(retention_period=timedelta(days=1), source="indeed")
-    def _extract_description(self, url) -> str:
-        soup = self.get(url)
-        if soup is not None:
-            return ""
-        script = soup.find("script", {"type": "application/ld+json"})
+    def parse_detail(self, soup, meta):
+        job_offer = meta["ov_item"]
+        if soup is None:
+            return [ScraperItem(raw_data=[job_offer])]
+        script = soup.find("script", string=lambda text: text and "window._initialData=" in text)
         if script is None:
-            return ""
-        job_data = json.loads(script.string)
-        description = job_data["description"]
-        return description
+            return [ScraperItem(raw_data=[job_offer])]
+        job_data = parse_js_object(str(script)[str(script).index("window._initialData=") :])
+        job_offer = {**job_offer, **job_data}
+        return [ScraperItem(raw_data=[job_offer])]

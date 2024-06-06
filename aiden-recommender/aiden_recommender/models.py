@@ -11,7 +11,7 @@ class Request(NamedTuple):
 
 
 class ScraperItem(BaseModel):
-    raw_data: dict
+    raw_data: list[dict]
 
 
 class Coordinates(BaseModel):

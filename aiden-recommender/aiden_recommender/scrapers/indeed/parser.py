@@ -1,5 +1,5 @@
 from aiden_recommender.scrapers.abstract_parser import AbstractParser
-from aiden_recommender.models import Coordinates, Office, Organization, CoverImage
+from aiden_recommender.models import Coordinates, Office, Organization, CoverImage, Logo
 from datetime import datetime
 from aiden_recommender.scrapers.field_extractors import FieldExtractor
 from aiden_recommender.constants import ISO_8601
@@ -20,12 +20,14 @@ class IndeedParser(AbstractParser):
         model=Organization,
         nested_fields=[
             FieldExtractor("name", query="truncatedCompany"),
-            FieldExtractor("logo", query="companyBrandingAttributes.logoUrl"),
+            FieldExtractor("logo", model=Logo, nested_fields=[FieldExtractor("url", query="companyBrandingAttributes.logoUrl")]),
             FieldExtractor(
                 "cover_image",
                 model=CoverImage,
                 nested_fields=[
-                    FieldExtractor("medium", query="companyBrandingAttributes.headerImageUrl"),
+                    FieldExtractor(
+                        "medium", model=Logo, nested_fields=[FieldExtractor("url", query="companyBrandingAttributes.headerImageUrl")]
+                    ),
                 ],
             ),
         ],
@@ -34,12 +36,14 @@ class IndeedParser(AbstractParser):
         "offices",
         model=Office,
         nested_fields=[
-            FieldExtractor("country", "France"),
+            FieldExtractor("country", "jobCountry"),
             FieldExtractor("local_city", "jobLocationCity"),
             FieldExtractor("local_state", "jobLocationState"),
         ],
+        transform_func=lambda x: [x],
+        default=[],
     )
-    benefits = FieldExtractor("benefits", query="taxonomyAttributes[*].attributes[*].label", transform_func=parse_benefits)
+    benefits = FieldExtractor("benefits", query="taxonomyAttributes[*].attributes[*].label", aggregate_func=parse_benefits, default=[])
     experience_level_minimum = FieldExtractor("experience_level_minimum", query="rankingScoresModel.bid")
     language = FieldExtractor("language", default="French")
     name = FieldExtractor("name", query="displayTitle")
@@ -49,13 +53,13 @@ class IndeedParser(AbstractParser):
         "geoloc",
         model=Coordinates,
         nested_fields=[
-            FieldExtractor("lat", query="_geoloc.lat"),
-            FieldExtractor("lng", query="_geoloc.lng"),
+            FieldExtractor("lat", query="hostQueryExecutionResult.data.jobData.results[0].job.location.latitude"),
+            FieldExtractor("lng", query="hostQueryExecutionResult.data.jobData.results[0].job.location.longitude"),
         ],
     )
-    profile = FieldExtractor("profile", query="jobDescription")
+    profile = FieldExtractor("profile", query="hostQueryExecutionResult.data.jobData.results[0].job.description.text")
     url = FieldExtractor("url", query="jobkey", transform_func=lambda x: f"https://www.indeed.fr/viewjob?jk={x}")
     contract_type = FieldExtractor("contract_type", query="jobTypes[0]")
-    salary_minimum = FieldExtractor("salary_minimum", query="extractedSalary.min")
-    salary_maximum = FieldExtractor("salary_maximum", query="extractedSalary.max")
+    salary_minimum = FieldExtractor("salary_minimum", query="extractedSalary.min", transform_func=lambda x: int(x))
+    salary_maximum = FieldExtractor("salary_maximum", query="extractedSalary.max", transform_func=lambda x: int(x))
     salary_period = FieldExtractor("salary_period", query="extractedSalary.type")

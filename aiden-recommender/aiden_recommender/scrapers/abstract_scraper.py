@@ -12,7 +12,7 @@ from qdrant_client.models import PointStruct
 from aiden_recommender.constants import JOB_COLLECTION
 from aiden_recommender.models import JobOffer, Request, ScraperItem
 from aiden_recommender.scrapers.abstract_parser import AbstractParser
-from aiden_recommender.tools import async_mistral_client, async_qdrant_client, async_zyte_client, redis_client, zyte_client
+from aiden_recommender.tools import async_mistral_client, async_qdrant_client, async_zyte_client, async_redis_client, zyte_session
 
 
 def chunk_list(lst, n):
@@ -29,79 +29,63 @@ class AbstractScraper(ABC):
     def source(self) -> str:
         return self.parser.source.default  # type: ignore
 
-    def __init__(self):
-        self._start_requests = self._get_start_requests_func()
+    def _extract_zyte_data(self, response: dict) -> BeautifulSoup | str:
+        if response.get("browserHtml"):
+            return BeautifulSoup(response["browserHtml"], "html.parser")
+        elif response.get("httpResponseBody"):
+            return b64decode(response["httpResponseBody"]).decode("utf-8")
+        else:
+            raise Exception
 
-    def inline_get(self, url: str, additional_zyte_params: dict = {}) -> BeautifulSoup | str:
-        query: dict[str, Any] = {"url": url}
+    def parse_zyte_response(self, response: dict, parser_func: Callable, meta: dict[str, str] = {}):
+        print("got zyte")
+        data = self._extract_zyte_data(response)
+        for next_item in parser_func(data, meta):
+            if isinstance(next_item, ScraperItem):
+                job_offers = list(self.parser.parse(next_item.raw_data))
+                for job_offer in job_offers:
+                    yield self._get_embedding_request(job_offer)
+                    yield job_offer
+            else:
+                yield next_item
+
+    def inline_get_zyte(self, url, additional_zyte_params: dict = {}):
+        query = {"url": url}
         query.update(self.zyte_api_automap)
         query.update(additional_zyte_params)
-        data = zyte_client.get(query=query)
+        data = zyte_session.post(self.zyte_url, json=query)
+        try:
+            return self._extract_zyte_data(data.json())
+        except Exception:
+            return BeautifulSoup(data.text, "html.parser")
 
-        if data.get("browserHtml"):
-            return BeautifulSoup(data["browserHtml"], "html.parser")
-        elif data.get("httpResponseBody"):
-            return b64decode(data["httpResponseBody"]).decode("utf-8")
-        else:
-            raise Exception
-
-    async def parse_zyte_response(self, response: dict, parser_func: Callable, meta: dict[str, str] = {}):
-        if response.get("browserHtml"):
-            data = BeautifulSoup(response["browserHtml"], "html.parser")
-        elif response.get("httpResponseBody"):
-            data = b64decode(response["httpResponseBody"]).decode("utf-8")
-        else:
-            raise Exception
-        for parsed_result in parser_func(data, **meta):
-            if isinstance(parsed_result, ScraperItem):
-                yield self.parser.transform_to_job_offer(ScraperItem.raw_data)
-            else:
-                yield parsed_result
-
-    async def get(self, url: str, callback: Callable, additional_zyte_params: dict = {}, meta: dict[str, str] = {}):
+    def get_zyte_request(self, url: str, callback: Callable, additional_zyte_params: dict = {}, meta: dict[str, str] = {}):
+        print("get_zyte")
         query: dict[str, Any] = {"url": url}
         query.update(self.zyte_api_automap)
         query.update(additional_zyte_params)
         _callback = partial(self.parse_zyte_response, parser_func=callback, meta=meta)
-        yield Request(async_zyte_client.get(query=query), _callback)
+        return Request(async_zyte_client.get(query=query), _callback)
 
-    async def _embed_offer(self, job_offer: JobOffer) -> str:
-        if _id := redis_client.get(name=job_offer.reference):
-            return str(_id)
-        embedding = await async_mistral_client.embeddings(model="mistral-embed", input=[job_offer.metadata_repr()])
+    def _parse_qdrant_response(self, qdrand_response, job_offer, _id):
+        coroutine = async_redis_client.set(name=job_offer.reference, value=_id)
+        yield Request(coroutine, None)
+
+    def _parse_embedding_response(self, embedding, job_offer) -> Request:
+        print("got embed")
         _id = uuid4().hex
-        await async_qdrant_client.upload_points(
-            collection_name=JOB_COLLECTION,
-            points=[PointStruct(id=_id, vector=embedding.data[0].embedding, payload=job_offer.model_dump())],
+        coroutine = async_qdrant_client.upload_points(
+            collection_name=JOB_COLLECTION, points=[PointStruct(id=_id, vector=embedding.data[0].embedding, payload=job_offer.model_dump())]
         )
+        callback = partial(self._parse_qdrant_response, job_offer=job_offer, _id=_id)
+        yield Request(coroutine, callback)
 
-        redis_client.set(name=job_offer.reference, value=_id)
-
-        return _id
+    def _get_embedding_request(self, job_offer: JobOffer) -> Request:
+        print("get embed")
+        coroutine = async_mistral_client.embeddings(model="mistral-embed", input=[job_offer.metadata_repr()])
+        callback = partial(self._parse_embedding_response, job_offer=job_offer)
+        return Request(coroutine, callback)
 
     @abstractmethod
     def get_start_requests(self, search_query: str, location: str):
         return []
-
-    def _get_start_requests_func(self):
-        # @cache(retention_period=timedelta(hours=12), model=JobOffer, source=self.source)
-        def get_start_requests(search_query: str, location: str):
-            yield from self.get_start_requests(search_query, location)
-
-        return get_start_requests
-
-    async def _parse_scraper_output(self, item: JobOffer | Request):
-        if isinstance(item, Request):
-            response = await item.coroutine
-            result = await item.callback(response)
-            yield self._parse_scraper_output(result)
-        elif isinstance(item, JobOffer):
-            item_id = await self._embed_offer(item)
-            yield item_id
-
-    async def search_jobs(self, search_query: str, location: str, num_results: int = 15) -> list[str]:
-        results = []
-        async for item in self._start_requests(search_query, location):
-            async for parsed_item in self._parse_scraper_output(item):
-                results.append(parsed_item)
-        return results
