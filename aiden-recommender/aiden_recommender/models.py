@@ -14,7 +14,7 @@ import uuid
 
 
 def reference_to_uuid(reference: str) -> uuid.UUID:
-    return uuid.UUID(hashlib.md5(reference.encode()).hexdigest()).hex
+    return uuid.UUID(hashlib.md5(reference.encode()).hexdigest())
 
 
 class Request(BaseModel, ABC):
@@ -29,10 +29,9 @@ class CachableRequest(Request, ABC):
 
     async def _send(self):
         response = await self.get_coroutine()
-        if response:
-            if self.callback:
-                for next_item in self.callback(response):
-                    yield next_item
+        if response and self.callback:
+            for next_item in self.callback(response):
+                yield next_item
 
     @abstractmethod
     def _generate_cache_keys(self) -> list[str]:
@@ -103,7 +102,7 @@ class QdrantRequest(CachableRequest):
         return async_qdrant_client.upload_points(
             collection_name=JOB_COLLECTION,
             points=[
-                PointStruct(id=reference_to_uuid(job_offer.reference), vector=embedding.embedding, payload=job_offer.model_dump())
+                PointStruct(id=reference_to_uuid(job_offer.reference).hex, vector=embedding.embedding, payload=job_offer.model_dump())
                 for job_offer, embedding in zip(self.job_offers, self.embeddings)
             ],
         )

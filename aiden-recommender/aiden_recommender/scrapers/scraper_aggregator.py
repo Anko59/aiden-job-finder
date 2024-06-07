@@ -62,7 +62,7 @@ class ScraperAggregator:
             raise RuntimeError("User has no vector embedding.")
         return user_vector
 
-    async def search_jobs(self, search_query: str, location: str, profile_embedding_id: UUID, num_results: int = 15) -> list[str]:
+    async def search_jobs(self, search_query: str, location: str, profile_embedding_id: UUID, num_results: int = 15) -> list[JobOffer]:
         user_vector = self._get_user_vector(profile_embedding_id)
         request_queue = asyncio.Queue()
         results_queue = asyncio.Queue()
