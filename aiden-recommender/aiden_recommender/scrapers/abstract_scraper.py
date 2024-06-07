@@ -19,6 +19,9 @@ class AbstractScraper(ABC):
     parser: AbstractParser
     zyte_api_automap = {"httpResponseBody": True}
 
+    def __init__(self, results_multiplier: int = 1):
+        self.results_multiplier = results_multiplier
+
     @property
     def source(self) -> str:
         return self.parser.source.default  # type: ignore

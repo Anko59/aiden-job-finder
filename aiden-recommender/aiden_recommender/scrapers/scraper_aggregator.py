@@ -18,7 +18,13 @@ from contextlib import suppress
 
 class ScraperAggregator:
     def __init__(self, max_workers=64):
-        self.scrapers: list[AbstractScraper] = [WelcomeToTheJungleScraper(), IndeedScraper(), FranceTravailScraper()]
+        # As the IndeedScraper is much slower than the other scrapers
+        # we reduce the number of results it returns to 1/10th of the other scrapers
+        self.scrapers: list[AbstractScraper] = [
+            WelcomeToTheJungleScraper(results_multiplier=10),
+            IndeedScraper(),
+            FranceTravailScraper(results_multiplier=10),
+        ]
         self.workers = max_workers
         self.timeout = 60
 
@@ -69,7 +75,7 @@ class ScraperAggregator:
         active_workers = asyncio.Semaphore(self.workers)
         condition = asyncio.Condition()
         for scraper in self.scrapers:
-            async for request in scraper.get_cached_start_requests(search_query, location, num_results):
+            async for request in scraper.get_cached_start_requests(search_query, location, num_results * scraper.results_multiplier):
                 await request_queue.put(request)
         workers = []
         for _ in range(self.workers):
