@@ -74,6 +74,7 @@ class AbstractScraper(ABC):
         yield QdrantRequest(embeddings=embeddings.data, job_offers=job_offers)
 
     def _get_embedding_request(self, job_offer: JobOffer) -> MistralEmbeddingRequest:
+        logger.warning("Sending request to Mistral")
         callback = partial(self._get_qdrant_request, job_offers=[job_offer])
         return MistralEmbeddingRequest(input=[job_offer], callback=callback)
         """if len(self.job_offers_buffer) >= 24:
