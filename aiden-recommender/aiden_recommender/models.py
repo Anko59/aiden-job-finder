@@ -50,6 +50,8 @@ class GetCacheRequest(Request):
 
     async def send(self):
         responses = [await async_redis_client.get(key) for key in self.original_request._generate_cache_keys()]
+        print("responses")
+        print(responses)
         if None in responses:
             yield CacheCheckedRequest(original_request=self.original_request)
 

@@ -29,7 +29,7 @@ def healthcheck() -> dict[str, str]:
     return {"status": "healthy"}
 
 
-@app.post("/joboffers", response_model=list[str])
+@app.post("/joboffers", response_model=list[JobOffer])
 async def recommend(job_offer_request: Annotated[JobOfferRequest, Body()]) -> list[JobOffer]:
     results = await scraper_aggregator.search_jobs(
         search_query=job_offer_request.query,
