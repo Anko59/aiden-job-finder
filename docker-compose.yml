@@ -87,24 +87,24 @@ services:
         limits:
           memory: 512m
 
-  pgweb:
-    image: sosedoff/pgweb
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.pgweb.rule=Host(`pgweb.dev.localhost`)"
-      - "traefik.http.services.pgweb.loadbalancer.server.port=8081"
-    environment:
-      - PGWEB_DATABASE_URL=postgres://${DATABASE_USER}:${DATABASE_PASSWORD}@db:5432/${DATABASE_NAME}?sslmode=disable
-      - DATABASE_READ_ONLY=true
-    networks:
-      - aiden_network
-    depends_on:
-      db:
-        condition: service_healthy
-    deploy:
-      resources:
-        limits:
-          memory: 512m
+  # pgweb:
+  #   image: sosedoff/pgweb
+  #   labels:
+  #     - "traefik.enable=true"
+  #     - "traefik.http.routers.pgweb.rule=Host(`pgweb.dev.localhost`)"
+  #     - "traefik.http.services.pgweb.loadbalancer.server.port=8081"
+  #   environment:
+  #     - PGWEB_DATABASE_URL=postgres://${DATABASE_USER}:${DATABASE_PASSWORD}@db:5432/${DATABASE_NAME}?sslmode=disable
+  #     - DATABASE_READ_ONLY=true
+  #   networks:
+  #     - aiden_network
+  #   depends_on:
+  #     db:
+  #       condition: service_healthy
+  #   deploy:
+  #     resources:
+  #       limits:
+  #         memory: 512m
 
   qdrant:
     image: qdrant/qdrant

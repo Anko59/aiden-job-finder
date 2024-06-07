@@ -1,15 +1,38 @@
-import json
+from aiden_recommender.models import ScraperItem
 import re
 from typing import Any
-from aiden_recommender.scrapers.utils import chrome_driver, cache
-from aiden_recommender.scrapers.models import JobOffer, Coordinates, Logo, CoverImage, Organization, Office
-from aiden_recommender.scrapers.scraper_base import ScraperBase
 from chompjs import parse_js_object
-from datetime import datetime, timedelta
+from aiden_recommender.scrapers.abstract_scraper import AbstractScraper
+from aiden_recommender.scrapers.indeed.parser import IndeedParser
+from copy import deepcopy
 
 
-class IndeedScraper(ScraperBase):
+class IndeedScraper(AbstractScraper):
     base_url = "https://fr.indeed.com"
+    zyte_api_automap = {
+        "browserHtml": True,
+    }
+    parser = IndeedParser()
+    results_per_page = 15
+    search_url = base_url + "/jobs?q={search_query}&l={location}&from=searchOnHP&vjk=fa2409e45b11ca41&start={start}"
+
+    def get_start_requests(self, search_query: str, location: str, num_results: int):
+        meta = {"search_query": search_query, "location": location, "num_results": num_results, "current_results": 0}
+        url = self.search_url.format(start=0, **meta)
+        yield self.get_zyte_request(url, meta=meta, callback=self.parse_overview)
+
+    def parse_overview(self, soup, meta):
+        script = soup.find("script", {"id": "mosaic-data"}).string
+        results = self._extract_results(script)
+        current_results = meta["current_results"] + len(results)
+        meta["current_results"] = current_results
+        for result in results:
+            url = f"{self.base_url}{result['link']}"
+            next_meta = deepcopy(meta)
+            next_meta["ov_item"] = result
+            yield self.get_zyte_request(url, meta=next_meta, callback=self.parse_detail)
+        if len(results) == 15 and current_results < meta["num_results"]:
+            yield self.get_zyte_request(url=self.search_url.format(start=current_results, **meta), meta=meta, callback=self.parse_overview)
 
     def _extract_results(self, script: str) -> list[dict[str, Any]]:
         data = {}
@@ -26,73 +49,13 @@ class IndeedScraper(ScraperBase):
         except KeyError:
             return []
 
-    @classmethod
-    def transform_to_job_offer(cls, data: dict) -> JobOffer:
-        coordinates = [Coordinates(lat=loc["lat"], lng=loc["lng"]) for loc in data.get("_geoloc", [])]
-        logo = Logo(url=data["companyBrandingAttributes"].get("logoUrl", ""))
-        cover_image = CoverImage(medium=Logo(url=data["companyBrandingAttributes"].get("headerImageUrl", "")))
-        organization = Organization(
-            name=data["truncatedCompany"],
-            logo=logo,
-            cover_image=cover_image,
-        )
-        office = Office(country=data["jobLocationCity"], local_state=data["jobLocationState"])
-        args = {
-            "benefits": [x["label"] for x in data["taxonomyAttributes"][3]["attributes"]],
-            "experience_level_minimum": data.get("rankingScoresModel", {}).get("bid"),
-            "has_experience_level_minimum": True,
-            "language": "French",
-            "name": data["displayTitle"],
-            "offices": [office],
-            "organization": organization,
-            "published_at": datetime.fromtimestamp(data["pubDate"] / 1000).strftime("%Y-%m-%dT%H:%M:%SZ"),
-            "reference": data["jobkey"],
-            "slug": data["jobkey"],
-            "geoloc": coordinates,
-            "profile": data.get("jobDescription"),
-            "url": f"{cls.base_url}/viewjob?jk={data['jobkey']}",
-        }
-        if (salary_info := data.get("extractedSalary")) is not None:
-            args.update(
-                {
-                    "salary_minimum": salary_info.get("min"),
-                    "salary_maximum": salary_info.get("max"),
-                    "salary_period": salary_info.get("type"),
-                }
-            )
-
-        if len(data["jobTypes"]) > 0:
-            args["contract_type"] = data["jobTypes"][0]
-
-        job_offer = JobOffer(**args)
-        return job_offer
-
-    @cache(retention_period=timedelta(days=1), model=JobOffer, source="indeed")
-    def _fetch_results(self, search_query: str, location: str, start=0) -> list[dict[str, Any]]:
-        url = f"{self.base_url}/jobs?q={search_query}&l={location}&from=searchOnHP&vjk=fa2409e45b11ca41&start={start}"
-
-        soup = chrome_driver.fetch_page(url)
-
-        script = soup.find("script", {"id": "mosaic-data"}).string
-
-        results = self._extract_results(script)  # type: ignore
-        descriptions = self._extract_job_descriptions(results)
-        for i, result in enumerate(results):
-            result["jobDescription"] = descriptions[i]
-        return [self.transform_to_job_offer(result) for result in results]
-
-    def _extract_job_descriptions(self, results: list[dict[str, Any]]) -> list[str]:
-        urls = [f"{self.base_url}{result['link']}" for result in results]
-        soups = chrome_driver.fetch_pages(urls)
-        return [self._extract_description(soup) for soup in soups]
-
-    @staticmethod
-    def _extract_description(soup) -> str:
-        if soup is not None:
-            return ""
-        script = soup.find("script", {"type": "application/ld+json"})
+    def parse_detail(self, soup, meta):
+        job_offer = meta["ov_item"]
+        if soup is None:
+            return [ScraperItem(raw_data=[job_offer])]
+        script = soup.find("script", string=lambda text: text and "window._initialData=" in text)
         if script is None:
-            return ""
-        job_data = json.loads(script.string)
-        description = job_data["description"]
-        return description
+            return [ScraperItem(raw_data=[job_offer])]
+        job_data = parse_js_object(str(script)[str(script).index("window._initialData=") :])
+        job_offer = {**job_offer, **job_data}
+        return [ScraperItem(raw_data=[job_offer])]

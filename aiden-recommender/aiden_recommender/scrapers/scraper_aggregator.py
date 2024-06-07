@@ -1,29 +1,57 @@
-import os
-from datetime import timedelta
+import asyncio
 from uuid import UUID
+from loguru import logger
 
-from mistralai.client import MistralClient
 from mistralai.models.embeddings import EmbeddingObject
-
 from aiden_recommender.constants import JOB_COLLECTION
+
 from aiden_recommender.scrapers.france_travail.scraper import FranceTravailScraper
 from aiden_recommender.scrapers.indeed.scraper import IndeedScraper
-from aiden_recommender.scrapers.models import JobOffer
-from aiden_recommender.scrapers.utils import cache
+from aiden_recommender.models import JobOffer, Request
+from aiden_recommender.scrapers.abstract_scraper import AbstractScraper
 from aiden_recommender.scrapers.wtj.scraper import WelcomeToTheJungleScraper
-from aiden_recommender.tools import qdrant_client
+from aiden_recommender.tools import qdrant_client, mistral_client
+from aiden_recommender.scrapers.utils import cache
+from datetime import timedelta
+from contextlib import suppress
 
 
 class ScraperAggregator:
-    def __init__(self):
-        self.wtj_scraper = WelcomeToTheJungleScraper()
-        self.france_travail_scraper = FranceTravailScraper()
-        self.indeed_scraper = IndeedScraper()
-        self.mistral_client = MistralClient(api_key=os.environ.get("MISTRAL_API_KEY"))
+    def __init__(self, max_workers=64):
+        self.scrapers: list[AbstractScraper] = [WelcomeToTheJungleScraper(), IndeedScraper(), FranceTravailScraper()]
+        self.workers = max_workers
+        self.timeout = 60
 
     @cache(retention_period=timedelta(hours=12), model=EmbeddingObject, source="search_queries")
     def _get_search_query_vector(self, search_query: str) -> list[EmbeddingObject]:
-        return self.mistral_client.embeddings(model="mistral-embed", input=[search_query]).data
+        return mistral_client.embeddings(model="mistral-embed", input=[search_query]).data
+
+    async def handle_request(
+        self,
+        request: Request,
+        request_queue: asyncio.Queue,
+        results_queue: asyncio.Queue,
+        active_workers: asyncio.Semaphore,
+        condition: asyncio.Condition,
+    ):
+        async with active_workers:
+            async for item in request.send():
+                if isinstance(item, Request):
+                    await request_queue.put(item)
+                elif isinstance(item, JobOffer):
+                    await results_queue.put(item)
+
+        async with condition:
+            if request_queue.empty() and active_workers._value == self.workers:
+                condition.notify_all()
+
+    async def worker(self, queue: asyncio.Queue, results: asyncio.Queue, active_workers: asyncio.Semaphore, condition: asyncio.Condition):
+        while True:
+            request = await queue.get()
+            try:
+                await self.handle_request(request, queue, results, active_workers, condition)
+            finally:
+                queue.task_done()
 
     @staticmethod
     def _get_user_vector(profile_embedding_id: UUID) -> list[float]:
@@ -34,32 +62,39 @@ class ScraperAggregator:
             raise RuntimeError("User has no vector embedding.")
         return user_vector
 
-    def search_jobs(self, search_query: str, location: str, profile_embedding_id: UUID, num_results: int = 15) -> list[str]:
+    async def search_jobs(self, search_query: str, location: str, profile_embedding_id: UUID, num_results: int = 15) -> list[JobOffer]:
         user_vector = self._get_user_vector(profile_embedding_id)
-
-        wtj_embedding_ids = self.wtj_scraper.search_jobs(search_query=search_query, location=location, num_results=num_results * 10)  # noqa: F841
-        france_travail_embedding_ids = self.france_travail_scraper.search_jobs(  # noqa: F841
-            search_query=search_query, location=location, num_results=num_results * 10
-        )
-
-        indeed_embedding_ids = self.indeed_scraper.search_jobs(search_query=search_query, location=location, num_results=num_results)  # noqa: F841
-        # Get embedding ids
-        # embedding_ids = wtj_embedding_ids + france_travail_embedding_ids + indeed_embedding_ids
-
-        # Generate the search vector
+        request_queue = asyncio.Queue()
+        results_queue = asyncio.Queue()
+        active_workers = asyncio.Semaphore(self.workers)
+        condition = asyncio.Condition()
+        for scraper in self.scrapers:
+            async for request in scraper.get_cached_start_requests(search_query, location, num_results):
+                await request_queue.put(request)
+        workers = []
+        for _ in range(self.workers):
+            worker_task = asyncio.create_task(self.worker(request_queue, results_queue, active_workers, condition))
+            workers.append(worker_task)
+        try:
+            async with condition:
+                await asyncio.wait_for(
+                    condition.wait_for(lambda: request_queue.empty() and active_workers._value == self.workers), timeout=self.timeout
+                )
+        except asyncio.TimeoutError:
+            logger.info("Timeout reached")
+        finally:
+            await request_queue.join()
+            for worker in workers:
+                worker.cancel()
+                with suppress(asyncio.CancelledError):
+                    await worker
         search_query_vector = self._get_search_query_vector(search_query + " " + location)[0].embedding
         search_vector = [a + (b * 0.5) for a, b in zip(search_query_vector, user_vector)]  # type: ignore
-
-        # Filter the search to only include the job offers with the given embedding ids
-        # currently not working
-        # job_filter = models.Filter(must=[models.FieldCondition(key="_id", match=models.MatchValue(value=str(id))) for id in embedding_ids])  # noqa
-        # Perform the search with the filter
         search_result = qdrant_client.search(
             collection_name=JOB_COLLECTION, query_vector=search_vector, with_vectors=False, with_payload=True, limit=num_results
         )
 
-        # Return the top `num_results` search results
-        return [JobOffer(**result.payload) for result in search_result]  # type: ignore
+        return [JobOffer(**result.payload) for result in search_result]
 
 
 scraper_aggregator = ScraperAggregator()
