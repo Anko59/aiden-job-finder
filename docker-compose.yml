@@ -115,7 +115,7 @@ services:
     networks:
       - aiden_network
     environment:
-      - QDRANT_STORAGE_DIR=/qdrabt/storage # Adjust path if needed
+      - QDRANT_STORAGE_DIR=/qdrant/storage # Adjust path if needed
     volumes:
       - qdrant_data:/qdrant/storage
     deploy:
