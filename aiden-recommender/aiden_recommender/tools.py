@@ -12,6 +12,8 @@ from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
 from redis.asyncio import Redis
 from aiden_recommender.constants import COMPANY_COLLECTION, JOB_COLLECTION
+from aiden_recommender.france_travail_clients.job_search_client import JobSearchClient
+
 
 if (qdrant_url := os.getenv("QDRANT_URL")) is None:
     raise Exception("QDRANT_URL env variable is not set")
@@ -36,8 +38,8 @@ redis_client = redis.Redis.from_url(redis_url)
 
 async_zyte_client = AsyncZyteAPI(api_key=os.getenv("ZYTE_API_KEY"))
 
-async_mistral_client = MistralAsyncClient(api_key=os.environ.get("MISTRAL_API_KEY"))
-mistral_client = MistralClient(api_key=os.environ.get("MISTRAL_API_KEY"))
+async_mistral_client = MistralAsyncClient(api_key=os.getenv("MISTRAL_API_KEY"))
+mistral_client = MistralClient(api_key=os.getenv("MISTRAL_API_KEY"))
 async_redis_client = Redis.from_url(redis_url)
 
 zyte_session = requests.Session()
@@ -54,3 +56,7 @@ adapter = HTTPAdapter(max_retries=retry)
 zyte_session.mount("http://", adapter)
 zyte_session.mount("https://", adapter)
 zyte_session.auth = (os.getenv("ZYTE_API_KEY"), "")
+
+async_job_search_client = JobSearchClient(
+    client_id=os.getenv("FRANCE_TRAVAIL_CLIENT_ID"), client_secret=os.getenv("FRANCE_TRAVAIL_CLIENT_SECRET")
+)

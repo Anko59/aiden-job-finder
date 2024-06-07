@@ -1,5 +1,5 @@
 from __future__ import annotations
-from datetime import datetime
+from datetime import datetime, timedelta
 import json
 from typing import AsyncGenerator, Callable, Optional, Any
 
@@ -25,6 +25,7 @@ class Request(BaseModel, ABC):
 
 class CachableRequest(Request, ABC):
     callback: Optional[Callable] = None
+    retention_period: timedelta = timedelta(hours=12)
 
     async def _send(self):
         response = await self.get_coroutine()
@@ -50,10 +51,10 @@ class GetCacheRequest(Request):
 
     async def send(self):
         responses = [await async_redis_client.get(key) for key in self.original_request._generate_cache_keys()]
-        print("responses")
-        print(responses)
         if None in responses:
             yield CacheCheckedRequest(original_request=self.original_request)
+        else:
+            yield None
 
 
 class SetCacheRequest(Request):
@@ -61,7 +62,7 @@ class SetCacheRequest(Request):
 
     async def send(self):
         for key in self.original_request._generate_cache_keys():
-            await async_redis_client.set(key, 1)
+            await async_redis_client.setex(key, self.original_request.retention_period, 1)
         yield None
 
 

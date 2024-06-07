@@ -2,11 +2,8 @@ from abc import ABC, abstractmethod
 from base64 import b64decode
 from functools import partial
 from typing import Any, Callable, Iterable
-
-# import requests
 from bs4 import BeautifulSoup
 
-# from urllib3.util.retry import Retry
 from aiden_recommender.models import JobOffer, ScraperItem, ZyteRequest, MistralEmbeddingRequest, QdrantRequest, Request
 from aiden_recommender.scrapers.abstract_parser import AbstractParser
 from aiden_recommender.tools import async_redis_client, zyte_session
@@ -34,10 +31,8 @@ class AbstractScraper(ABC):
         else:
             raise Exception
 
-    def parse_zyte_response(self, response: dict, parser_func: Callable, meta: dict[str, str] = {}) -> Iterable[JobOffer | Request]:
-        print("got zyte")
-        data = self._extract_zyte_data(response)
-        for next_item in parser_func(data, meta):
+    def parse_response(self, response: dict, parser_func: Callable, meta: dict[str, str] = {}) -> Iterable[JobOffer | Request]:
+        for next_item in parser_func(response, meta):
             if isinstance(next_item, ScraperItem):
                 job_offers = list(self.parser.parse(next_item.raw_data))
                 for job_offer in job_offers:
@@ -45,6 +40,10 @@ class AbstractScraper(ABC):
                     yield job_offer
             else:
                 yield next_item
+
+    def parse_zyte_response(self, response: dict, parser_func: Callable, meta: dict[str, str] = {}) -> Iterable[JobOffer | Request]:
+        data = self._extract_zyte_data(response)
+        yield from self.parse_response(data, parser_func, meta)
 
     def inline_get_zyte(self, url, additional_zyte_params: dict = {}) -> BeautifulSoup | str:
         query = {"url": url}
@@ -57,7 +56,6 @@ class AbstractScraper(ABC):
             return BeautifulSoup(data.text, "html.parser")
 
     def get_zyte_request(self, url: str, callback: Callable, additional_zyte_params: dict = {}, meta: dict[str, str] = {}) -> ZyteRequest:
-        print("get_zyte")
         query: dict[str, Any] = {"url": url}
         query.update(self.zyte_api_automap)
         query.update(additional_zyte_params)
@@ -65,11 +63,9 @@ class AbstractScraper(ABC):
         return ZyteRequest(query=query, callback=_callback)
 
     def _get_qdrant_request(self, embeddings, job_offer) -> Iterable[QdrantRequest]:
-        print("got embed")
         yield QdrantRequest(embeddings=embeddings.data, job_offers=[job_offer])
 
     def _get_embedding_request(self, job_offer: JobOffer) -> MistralEmbeddingRequest:
-        print("get embed")
         callback = partial(self._get_qdrant_request, job_offer=job_offer)
         return MistralEmbeddingRequest(input=[job_offer], callback=callback)
 

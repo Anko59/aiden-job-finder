@@ -1,28 +1,46 @@
-import os
+import json
 from datetime import datetime
+from typing import Any, Iterable
+from functools import partial
+from copy import deepcopy
 
-from offres_emploi import Api
 
 from aiden_recommender.constants import ISO_8601
 from aiden_recommender.scrapers.abstract_scraper import AbstractScraper
 from aiden_recommender.scrapers.france_travail.parser import FranceTravailParser
+from aiden_recommender.tools import async_job_search_client
+from aiden_recommender.models import CachableRequest, ScraperItem
+
+
+class JobSearchRequest(CachableRequest):
+    params: dict[str, str]
+
+    def get_coroutine(self):
+        return async_job_search_client.search(params=self.params)
+
+    def _generate_cache_keys(self):
+        params = deepcopy(self.params)
+        # Convert the dates to days, so that the cache key is the same for the same days
+        params["minCreationDate"] = datetime.strptime(params["minCreationDate"], ISO_8601).strftime("%Y-%m-%d")
+        params["maxCreationDate"] = datetime.strptime(params["maxCreationDate"], ISO_8601).strftime("%Y-%m-%d")
+        return ["france-travail-job-search-" + json.dumps(params)]
 
 
 class FranceTravailScraper(AbstractScraper):
-    client = Api(client_id=os.environ.get("FRANCE_TRAVAIL_CLIENT_ID"), client_secret=os.environ.get("FRANCE_TRAVAIL_CLIENT_SECRET"))
-
     parser = FranceTravailParser()
 
-    def _fetch_results(self, search_query: str, location: str) -> list[dict]:
+    def _parse_results(self, response: dict[str, Any], meta: dict) -> Iterable[ScraperItem]:
+        yield ScraperItem(raw_data=response["resultats"])
+
+    def get_start_requests(self, search_query: str, location: str, num_results: int) -> Iterable[JobSearchRequest]:
         params = {
             "motsCles": search_query,
             "lieux": location,
             "minCreationDate": datetime(2023, 3, 1, 12, 30).strftime(ISO_8601),
             "maxCreationDate": datetime.today().strftime(ISO_8601),
             "etatPublication": "Active",
-            "range": "0-149",
+            "range": f"0-{num_results}",
         }
-
-        # Perform the seatrch
-        search_results = self.client.search(params=params)
-        return search_results["resultats"]
+        print(params)
+        callback = partial(self.parse_response, parser_func=self._parse_results)
+        yield JobSearchRequest(params=params, callback=callback)

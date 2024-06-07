@@ -1,10 +1,11 @@
 import asyncio
 from uuid import UUID
+from loguru import logger
 
 from mistralai.models.embeddings import EmbeddingObject
 from aiden_recommender.constants import JOB_COLLECTION
 
-# from aiden_recommender.scrapers.france_travail.scraper import FranceTravailScraper
+from aiden_recommender.scrapers.france_travail.scraper import FranceTravailScraper
 from aiden_recommender.scrapers.indeed.scraper import IndeedScraper
 from aiden_recommender.models import JobOffer, Request
 from aiden_recommender.scrapers.abstract_scraper import AbstractScraper
@@ -17,7 +18,7 @@ from contextlib import suppress
 
 class ScraperAggregator:
     def __init__(self, max_workers=64):
-        self.scrapers: list[AbstractScraper] = [WelcomeToTheJungleScraper(), IndeedScraper()]
+        self.scrapers: list[AbstractScraper] = [WelcomeToTheJungleScraper(), IndeedScraper(), FranceTravailScraper()]
         self.workers = max_workers
         self.timeout = 60
 
@@ -80,7 +81,7 @@ class ScraperAggregator:
                     condition.wait_for(lambda: request_queue.empty() and active_workers._value == self.workers), timeout=self.timeout
                 )
         except asyncio.TimeoutError:
-            print("Timeout")
+            logger.info("Timeout reached")
         finally:
             await request_queue.join()
             for worker in workers:
