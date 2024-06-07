@@ -21,7 +21,7 @@ class ScraperTool(Tool):
             "limit": num_results,
             "profile_id": str(self.profile_embedding_id),
         }
-        response = httpx.post(url=url, json=payload, timeout=300)
+        response = httpx.post(url=url, json=payload, timeout=60)
         response.raise_for_status()
 
         results = response.json()

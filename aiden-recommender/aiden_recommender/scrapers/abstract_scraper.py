@@ -2,6 +2,7 @@ from abc import ABC, abstractmethod
 from base64 import b64decode
 from functools import partial
 from typing import Any, Callable, Iterable
+from loguru import logger
 from bs4 import BeautifulSoup
 
 from aiden_recommender.models import JobOffer, ScraperItem, ZyteRequest, MistralEmbeddingRequest, QdrantRequest, Request
@@ -21,6 +22,7 @@ class AbstractScraper(ABC):
 
     def __init__(self, results_multiplier: int = 1):
         self.results_multiplier = results_multiplier
+        self.job_offers_buffer = []
 
     @property
     def source(self) -> str:
@@ -45,6 +47,7 @@ class AbstractScraper(ABC):
                 yield next_item
 
     def parse_zyte_response(self, response: dict, parser_func: Callable, meta: dict[str, str] = {}) -> Iterable[JobOffer | Request]:
+        logger.warning("Received response from Zyte")
         data = self._extract_zyte_data(response)
         yield from self.parse_response(data, parser_func, meta)
 
@@ -59,18 +62,25 @@ class AbstractScraper(ABC):
             return BeautifulSoup(data.text, "html.parser")
 
     def get_zyte_request(self, url: str, callback: Callable, additional_zyte_params: dict = {}, meta: dict[str, str] = {}) -> ZyteRequest:
+        logger.warning("Sending request to Zyte")
         query: dict[str, Any] = {"url": url}
         query.update(self.zyte_api_automap)
         query.update(additional_zyte_params)
         _callback = partial(self.parse_zyte_response, parser_func=callback, meta=meta)
         return ZyteRequest(query=query, callback=_callback)
 
-    def _get_qdrant_request(self, embeddings, job_offer) -> Iterable[QdrantRequest]:
-        yield QdrantRequest(embeddings=embeddings.data, job_offers=[job_offer])
+    def _get_qdrant_request(self, embeddings, job_offers) -> Iterable[QdrantRequest]:
+        logger.warning("Sending request to Qdrant")
+        yield QdrantRequest(embeddings=embeddings.data, job_offers=job_offers)
 
     def _get_embedding_request(self, job_offer: JobOffer) -> MistralEmbeddingRequest:
-        callback = partial(self._get_qdrant_request, job_offer=job_offer)
+        callback = partial(self._get_qdrant_request, job_offers=[job_offer])
         return MistralEmbeddingRequest(input=[job_offer], callback=callback)
+        """if len(self.job_offers_buffer) >= 24:
+            logger.warning(f"Sending request to Mistral")
+            callback = partial(self._get_qdrant_request, job_offers=self.job_offers_buffer)
+            self.job_offers_buffer = []
+            return MistralEmbeddingRequest(input=self.job_offers_buffer, callback=callback)"""
 
     @abstractmethod
     def get_start_requests(self, search_query: str, location: str, num_results: int) -> Iterable[Request]:

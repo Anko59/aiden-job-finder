@@ -24,7 +24,7 @@ class WelcomeToTheJungleScraper(AbstractScraper):
 
     def parse_algolia_resuts(self, algolia_results: str, meta: dict):
         result = json.loads(algolia_results)
-        yield ScraperItem(raw_data=result["results"][0]["hits"][: meta["num_results"]])
+        yield ScraperItem(raw_data=result["results"][0]["hits"])
 
     def parse_geocoding_results(self, api_results: str, meta: dict):
         geocode = json.loads(api_results)

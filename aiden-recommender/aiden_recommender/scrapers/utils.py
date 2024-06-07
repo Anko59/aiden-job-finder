@@ -22,7 +22,7 @@ def cache(retention_period: timedelta, model: Optional[Type[T]] = None, source: 
             # Try to get the cached result
             cached_result: str | None = redis_client.get(key)  # type: ignore
             if cached_result is not None:
-                logger.info("Cache HIT")
+                logger.warning("Cache HIT")
                 if isinstance(results := json.loads(cached_result), list):
                     return [model.model_validate(from_json(r)) for r in results]
                 else:

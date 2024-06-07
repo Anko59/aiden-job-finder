@@ -38,7 +38,7 @@ redis_client = redis.Redis.from_url(redis_url)
 
 async_zyte_client = AsyncZyteAPI(api_key=os.getenv("ZYTE_API_KEY"))
 
-async_mistral_client = MistralAsyncClient(api_key=os.getenv("MISTRAL_API_KEY"))
+async_mistral_client = MistralAsyncClient(api_key=os.getenv("MISTRAL_API_KEY"), timeout=5)
 mistral_client = MistralClient(api_key=os.getenv("MISTRAL_API_KEY"))
 async_redis_client = Redis.from_url(redis_url)
 

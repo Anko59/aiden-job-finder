@@ -1,7 +1,6 @@
 from pydantic import BaseModel
 import jmespath
 from pydantic_core import ValidationError
-from loguru import logger
 
 
 class FieldExtractor:
@@ -54,8 +53,7 @@ class FieldExtractor:
                     for extractor in self.nested_fields:
                         model_args.update(extractor.extract(result))
                     result = self.model(**model_args)
-            except ValidationError as e:
-                logger.warning(f"Error while extracting nested fields: {e}")
+            except ValidationError:
                 result = None
 
         if isinstance(result, list):

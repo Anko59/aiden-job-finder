@@ -44,7 +44,11 @@ class JobSearchClient(AbstractFranceTravailClient):
                 found_range = re.search(
                     pattern=r"offres (?P<first_index>\d+)-(?P<last_index>\d+)/(?P<max_results>\d+)",
                     string=r.headers["Content-Range"],
-                ).groupdict()
-                out = await r.json()
-                out.update({"Content-Range": found_range})
-                return out
+                )
+                if found_range:
+                    found_range = found_range.groupdict()
+                    out = await r.json()
+                    out.update({"Content-Range": found_range})
+                    return out
+                else:
+                    return {"resultats": []}

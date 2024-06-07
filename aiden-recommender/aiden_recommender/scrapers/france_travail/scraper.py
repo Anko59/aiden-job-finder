@@ -1,6 +1,7 @@
 import json
 from datetime import datetime
 from typing import Any, Iterable
+from loguru import logger
 from functools import partial
 from copy import deepcopy
 
@@ -30,6 +31,7 @@ class FranceTravailScraper(AbstractScraper):
     parser = FranceTravailParser()
 
     def _parse_results(self, response: dict[str, Any], meta: dict) -> Iterable[ScraperItem]:
+        logger.warning("Received response from FranceTravail")
         yield ScraperItem(raw_data=response["resultats"])
 
     def get_start_requests(self, search_query: str, location: str, num_results: int) -> Iterable[JobSearchRequest]:
@@ -39,8 +41,9 @@ class FranceTravailScraper(AbstractScraper):
             "minCreationDate": datetime(2023, 3, 1, 12, 30).strftime(ISO_8601),
             "maxCreationDate": datetime.today().strftime(ISO_8601),
             "etatPublication": "Active",
-            "range": f"0-{num_results}",
+            "range": f"0-{min(num_results, 149)}",
         }
         print(params)
         callback = partial(self.parse_response, parser_func=self._parse_results)
+        logger.warning("Sending request to FranceTravail")
         yield JobSearchRequest(params=params, callback=callback)

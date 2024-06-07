@@ -38,3 +38,8 @@ async def recommend(job_offer_request: Annotated[JobOfferRequest, Body()]) -> li
         profile_embedding_id=job_offer_request.profile_id,
     )
     return results
+
+
+@app.on_event("startup")
+async def on_startup():
+    await scraper_aggregator.start_workers()
