@@ -8,6 +8,14 @@ Aiden (AI-Driven Employment Navigator) is a Django-based web application that us
 - CV editing tool
 - Job scraping tool from Indeed, Wecolme to the Jungle and France Travail
 
+### Profile Creation example
+https://www.youtube.com/watch?v=hhzNcBknJgA
+
+### Job search example
+
+https://www.youtube.com/watch?v=eIQbA1N_fUc
+
+
 ## Installation
 
 You need the following API keys to run the app:

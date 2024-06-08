@@ -17,7 +17,7 @@ def reference_to_uuid(reference: str) -> uuid.UUID:
     return uuid.UUID(hashlib.md5(reference.encode()).hexdigest())
 
 
-class Request(ABC):
+class Request(BaseModel, ABC):
     callback: Optional[Callable] = None
     retention_period: timedelta = timedelta(hours=12)
 
@@ -31,7 +31,7 @@ class Request(ABC):
 
     async def send(self) -> AsyncGenerator[JobOffer | Request]:
         is_cached = [await async_redis_client.exists(key) for key in self._generate_cache_keys()]
-        if None in is_cached:
+        if False in is_cached:
             response = await self.get_coroutine(is_cached)
             if response and self.callback:
                 for next_item in self.callback(response):
