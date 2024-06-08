@@ -17,93 +17,63 @@ def reference_to_uuid(reference: str) -> uuid.UUID:
     return uuid.UUID(hashlib.md5(reference.encode()).hexdigest())
 
 
-class Request(BaseModel, ABC):
-    @abstractmethod
-    async def send(self) -> AsyncGenerator[JobOffer | Request]:
-        pass
-
-
-class CachableRequest(Request, ABC):
+class Request(ABC):
     callback: Optional[Callable] = None
     retention_period: timedelta = timedelta(hours=12)
-
-    async def _send(self):
-        response = await self.get_coroutine()
-        if response and self.callback:
-            for next_item in self.callback(response):
-                yield next_item
 
     @abstractmethod
     def _generate_cache_keys(self) -> list[str]:
         pass
 
     @abstractmethod
-    def get_coroutine(self):
+    def get_coroutine(self, is_cached):
         pass
 
-    async def send(self):
-        yield GetCacheRequest(original_request=self)
+    async def send(self) -> AsyncGenerator[JobOffer | Request]:
+        is_cached = [await async_redis_client.exists(key) for key in self._generate_cache_keys()]
+        if None in is_cached:
+            response = await self.get_coroutine(is_cached)
+            if response and self.callback:
+                for next_item in self.callback(response):
+                    yield next_item
+            for key in self._generate_cache_keys():
+                await async_redis_client.setex(key, self.retention_period, 1)
 
 
-class GetCacheRequest(Request):
-    original_request: CachableRequest
-
-    async def send(self):
-        responses = [await async_redis_client.get(key) for key in self.original_request._generate_cache_keys()]
-        if None in responses:
-            yield CacheCheckedRequest(original_request=self.original_request)
-        else:
-            yield None
-
-
-class SetCacheRequest(Request):
-    original_request: CachableRequest
-
-    async def send(self):
-        for key in self.original_request._generate_cache_keys():
-            await async_redis_client.setex(key, self.original_request.retention_period, 1)
-        yield None
-
-
-class CacheCheckedRequest(Request):
-    original_request: CachableRequest
-
-    async def send(self):
-        async for item in self.original_request._send():
-            yield item
-        yield SetCacheRequest(original_request=self.original_request)
-
-
-class ZyteRequest(CachableRequest):
+class ZyteRequest(Request):
     query: dict[str, Any]
 
-    def get_coroutine(self):
+    def get_coroutine(self, is_cached):
         return async_zyte_client.get(query=self.query)
 
     def _generate_cache_keys(self) -> str:
         return [f"zyte-request-{json.dumps(self.query)}"]
 
 
-class MistralEmbeddingRequest(CachableRequest):
+class MistralEmbeddingRequest(Request):
     input: list["JobOffer"]
 
-    def get_coroutine(self):
-        return async_mistral_client.embeddings(model="mistral-embed", input=[item.metadata_repr() for item in self.input])
+    def get_coroutine(self, is_cached):
+        # We only want to embed the items that are not already cached
+        return async_mistral_client.embeddings(
+            model="mistral-embed", input=[item.metadata_repr() for item, cache in zip(self.input, is_cached) if not cache]
+        )
 
     def _generate_cache_keys(self) -> str:
         return [f"mistal-embed-{item.reference}" for item in self.input]
 
 
-class QdrantRequest(CachableRequest):
+class QdrantRequest(Request):
     embeddings: list[EmbeddingObject]
     job_offers: list["JobOffer"]
 
-    def get_coroutine(self):
+    def get_coroutine(self, is_cached):
         return async_qdrant_client.upload_points(
             collection_name=JOB_COLLECTION,
             points=[
                 PointStruct(id=reference_to_uuid(job_offer.reference).hex, vector=embedding.embedding, payload=job_offer.model_dump())
-                for job_offer, embedding in zip(self.job_offers, self.embeddings)
+                for job_offer, embedding, cache in zip(self.job_offers, self.embeddings, is_cached)
+                if not cache
             ],
         )
 
