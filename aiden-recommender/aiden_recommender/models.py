@@ -1,16 +1,18 @@
 from __future__ import annotations
-from datetime import datetime, timedelta
-import json
-from typing import AsyncGenerator, Callable, Optional, Any
 
-from pydantic import BaseModel
-from abc import ABC, abstractmethod
-from mistralai.models.embeddings import EmbeddingObject
-from qdrant_client.models import PointStruct
-from aiden_recommender.constants import JOB_COLLECTION
-from aiden_recommender.tools import async_zyte_client, async_redis_client, async_mistral_client, async_qdrant_client
 import hashlib
+import json
 import uuid
+from abc import ABC, abstractmethod
+from datetime import datetime, timedelta
+from typing import Any, AsyncGenerator, Awaitable, Callable, Optional
+
+from mistralai.models.embeddings import EmbeddingObject
+from pydantic import BaseModel
+from qdrant_client.models import PointStruct
+
+from aiden_recommender.constants import JOB_COLLECTION
+from aiden_recommender.tools import async_mistral_client, async_qdrant_client, async_redis_client, async_zyte_client
 
 
 def reference_to_uuid(reference: str) -> uuid.UUID:
@@ -38,7 +40,7 @@ class CachableRequest(Request, ABC):
         pass
 
     @abstractmethod
-    def get_coroutine(self):
+    def get_coroutine(self) -> Awaitable:
         pass
 
     async def send(self):
@@ -80,7 +82,7 @@ class ZyteRequest(CachableRequest):
     def get_coroutine(self):
         return async_zyte_client.get(query=self.query)
 
-    def _generate_cache_keys(self) -> str:
+    def _generate_cache_keys(self) -> list[str]:
         return [f"zyte-request-{json.dumps(self.query)}"]
 
 
@@ -90,7 +92,7 @@ class MistralEmbeddingRequest(CachableRequest):
     def get_coroutine(self):
         return async_mistral_client.embeddings(model="mistral-embed", input=[item.metadata_repr() for item in self.input])
 
-    def _generate_cache_keys(self) -> str:
+    def _generate_cache_keys(self) -> list[str]:
         return [f"mistal-embed-{item.reference}" for item in self.input]
 
 

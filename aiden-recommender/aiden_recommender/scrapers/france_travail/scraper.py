@@ -43,7 +43,6 @@ class FranceTravailScraper(AbstractScraper):
             "etatPublication": "Active",
             "range": f"0-{min(num_results, 149)}",
         }
-        print(params)
         callback = partial(self.parse_response, parser_func=self._parse_results)
         logger.warning("Sending request to FranceTravail")
         yield JobSearchRequest(params=params, callback=callback)
