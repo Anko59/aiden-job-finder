@@ -6,13 +6,22 @@
             <div class="compact-view">
                 <h1 class="text-xl font-bold mb-2">{{ job_offer.name|safe }}</h1>
                 <p class="text-slate-700 dark:text-slate-300 mb-1"><strong>Organization:</strong> {{ job_offer.organization.name|safe }}</p>
-                <img src="{{ job_offer.organization.logo.url|safe }}" alt="{{ job_offer.organization.name|safe }}" class="w-10 h-10 mb-2">
+                {% for office in job_offer.offices %}
+                    {% if office.local_city and office.country %}
+                        <p class="text-slate dark:text-slate-300 mb-1"><strong>Location:</strong> {{ office.local_city|safe }}, {{ office.country|safe }}</p>
+                    {% endif %}
+                {% endfor %}
+                {% if job_offer.organization.logo.url %}
+                    <img src="{{ job_offer.organization.logo.url|safe }}" alt="{{ job_offer.organization.name|safe }}" class="w-10 h-10 mb-2">
+                {% endif %}
             </div>
             <div class="detailed-view hidden">
                 <!-- All the detailed information here -->
-                <div class="mb-4">
-                    <img src="{{ job_offer.organization.cover_image.medium.url|safe }}" alt="{{ job_offer.organization.name|safe }}" class="rounded-lg w-full">
-                </div>
+                {% if job_offer.organization.cover_image.medium.url %}
+                    <div class="mb-4">
+                        <img src="{{ job_offer.organization.cover_image.medium.url|safe }}" alt="{{ job_offer.organization.name|safe }}" class="rounded-lg w-full">
+                    </div>
+                {% endif %}
 
                 {% if job_offer.organization.description %}
                 <div class="text-slate-600 dark:text-slate-400 mb-1">{{ job_offer.organization.description|safe }}</div>
@@ -23,6 +32,12 @@
                 {% endif %}
                 {% if job_offer.organization.nb_employees %}
                 <p class="text-slate-700 dark:text-slate-300 mb-1"><strong>Number of Employees:</strong> {{ job_offer.organization.nb_employees|safe }}</p>
+                {% endif %}
+                {% if job_offer.salary_minimum and job_offer.salary_maximum %}
+                <p class="text-slate-700 dark:text-slate-300 mb-1"><strong>Salary:</strong> {{ job_offer.salary_minimum|safe }} - {{ job_offer.salary_maximum|safe }}</p>
+                {% endif %}
+                {% if job_offer.contract_type %}
+                <p class="text-slate-700 dark:text-slate-300 mb-1"><strong>Contract Type:</strong> {{ job_offer.contract_type|safe }}</p>
                 {% endif %}
 
 
@@ -38,6 +53,7 @@
                 {% endif %}
 
                 <p class="text-slate-500 dark:text-slate-400 text-xs mt-2"><strong>Published at:</strong> {{ job_offer.published_at|safe }}</p>
+                <p class="text-slate-500 dark:text-slate-400 text-xs mt-2"><strong>Last updated at:</strong> {{ job_offer.source|safe }}</p>
             </div>
         </div>
         {% endfor %}

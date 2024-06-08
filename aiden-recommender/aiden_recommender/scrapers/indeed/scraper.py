@@ -1,20 +1,40 @@
-import json
+from aiden_recommender.models import ScraperItem
 import re
-from typing import Any, Dict, List, Optional
-
-from aiden_recommender import redis_client
-from aiden_recommender.scrapers.utils import ChromeDriver
+from typing import Any
 from chompjs import parse_js_object
-from loguru import logger
-from selenium.webdriver.common.by import By
+from aiden_recommender.scrapers.abstract_scraper import AbstractScraper
+from aiden_recommender.scrapers.indeed.parser import IndeedParser
+from copy import deepcopy
 
 
-class IndeedScraper:
-    def __init__(self):
-        self.driver = ChromeDriver()
-        logger.info("succesfully initialized Indeed scraper")
+class IndeedScraper(AbstractScraper):
+    base_url = "https://fr.indeed.com"
+    zyte_api_automap = {
+        "browserHtml": True,
+    }
+    parser = IndeedParser()
+    results_per_page = 15
+    search_url = base_url + "/jobs?q={search_query}&l={location}&from=searchOnHP&vjk=fa2409e45b11ca41&start={start}"
 
-    def _extract_results(self, script: str) -> List[Dict[str, Any]]:
+    def get_start_requests(self, search_query: str, location: str, num_results: int):
+        meta = {"search_query": search_query, "location": location, "num_results": num_results, "current_results": 0}
+        url = self.search_url.format(start=0, **meta)
+        yield self.get_zyte_request(url, meta=meta, callback=self.parse_overview)
+
+    def parse_overview(self, soup, meta):
+        script = soup.find("script", {"id": "mosaic-data"}).string
+        results = self._extract_results(script)
+        current_results = meta["current_results"] + len(results)
+        meta["current_results"] = current_results
+        for result in results:
+            url = f"{self.base_url}{result['link']}"
+            next_meta = deepcopy(meta)
+            next_meta["ov_item"] = result
+            yield self.get_zyte_request(url, meta=next_meta, callback=self.parse_detail)
+        if len(results) == 15 and current_results < meta["num_results"]:
+            yield self.get_zyte_request(url=self.search_url.format(start=current_results, **meta), meta=meta, callback=self.parse_overview)
+
+    def _extract_results(self, script: str) -> list[dict[str, Any]]:
         data = {}
         for line in script.split("\n"):
             line = line.strip()
@@ -24,59 +44,18 @@ class IndeedScraper:
                 key = re.findall(r'"(.*?)"', key)
                 if len(key):
                     data[key[0]] = parse_js_object(value)
-        return data["mosaic-provider-jobcards"]["metaData"]["mosaicProviderJobCardsModel"]["results"]
-
-    def _fetch_results(self, search_query: str, location: str, start: int) -> List[Dict[str, Any]]:
-        driver = self.driver.start()
-
-        url = f"https://fr.indeed.com/jobs?q={search_query}&l={location}&from=searchOnHP&vjk=fa2409e45b11ca41&start={start}"
-
-        driver.get(url)
-
-        script = driver.find_element(By.XPATH, "//script[@id='mosaic-data']").get_attribute("textContent")
-        results = self._extract_results(script)  # type: ignore
-
-        driver.quit()
-
-        return results
-
-    def _extract_job_description(self, job_link: str) -> str | Exception:
-        driver = self.driver.start()
-
-        driver.get(job_link)
-
         try:
-            script = driver.find_element(By.XPATH, "//script[@type='application/ld+json']").get_attribute("innerHTML")
-            job_data = json.loads(script)  # type: ignore
-            description = job_data["description"]
-            driver.quit()
-            return description
-        except Exception as e:
-            print(f"Error extracting job description: {e}")
-            driver.quit()
-            return e
+            return data["mosaic-provider-jobcards"]["metaData"]["mosaicProviderJobCardsModel"]["results"]
+        except KeyError:
+            return []
 
-    def _get_job_details(self, job_title: str) -> Optional[Dict[str, Any]]:
-        job_link = str(redis_client.get(job_title))
-        description = self._extract_job_description(job_link)
-        if description is Exception:
-            return {
-                "error": "Exception: Error extracting job description.",
-                "description": str(description),
-            }
-
-        job_details = {"title": job_title, "description": description, "link": job_link}
-
-        return job_details
-
-    def search_jobs(self, search_query: str, location: str, num_results: int = 15, start: int = 0) -> List[Dict[str, Any]]:
-        all_results = []
-        while len(all_results) < num_results:
-            results = self._fetch_results(search_query, location, start)
-            all_results.extend(results)
-            start += 15
-            if len(results) < 15:
-                break
-        for result in all_results[:num_results]:
-            redis_client.set(result["title"], result["link"])
-        return all_results[:num_results]
+    def parse_detail(self, soup, meta):
+        job_offer = meta["ov_item"]
+        if soup is None:
+            return [ScraperItem(raw_data=[job_offer])]
+        script = soup.find("script", string=lambda text: text and "window._initialData=" in text)
+        if script is None:
+            return [ScraperItem(raw_data=[job_offer])]
+        job_data = parse_js_object(str(script)[str(script).index("window._initialData=") :])
+        job_offer = {**job_offer, **job_data}
+        return [ScraperItem(raw_data=[job_offer])]

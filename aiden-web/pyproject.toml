@@ -24,6 +24,7 @@ channels-redis = "^4.2.0"
 markdown2 = "^2.4.13"
 pygments = "^2.18.0"
 chompjs = "^1.2.3"
+latexcodec = "^3.0.0"
 
 [tool.poetry.group.dev.dependencies]
 ipython = "^8.24.0"

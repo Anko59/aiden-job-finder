@@ -1,5 +1,7 @@
 import os
 import subprocess
+import latexcodec  # noqa: F401
+from urllib.parse import unquote
 from dataclasses import dataclass
 from typing import Any, List, Union
 from aiden_app.models import UserProfile, ProfileInfo
@@ -22,7 +24,7 @@ class CVEditor:
         self.cv_images_path = os.path.join(MEDIA_ROOT, "cv")
         self.jinja_env = Environment(
             loader=FileSystemLoader(self.cv_images_path),
-            # Due to many compilers havind different comment delimiters,
+            # Due to many compilers having different comment delimiters,
             # we cannot have comments in the template
             comment_start_string="[èà_",
             comment_end_string='"àé"()',
@@ -31,7 +33,7 @@ class CVEditor:
     def generate_cv(self, profile: UserProfile):
         template = self.jinja_env.get_template("cv_template.tex")
         info = profile.profile_info.to_json()
-        info["photo_url"] = "../profile/" + profile.photo.url.split("/")[-1]
+        info["photo_url"] = "../profile/" + unquote(profile.photo.url.split("/")[-1])
 
         output = self._render_template(template, info)
         document_path = self._write_to_file(output, profile.cv_path.replace(".pdf", ".tex"))
@@ -55,7 +57,20 @@ class CVEditor:
         pix = page.get_pixmap()
         pix.save(png_path)
 
+    @classmethod
+    def _escape_latex_dict(cls, d: dict) -> dict:
+        # Clean up the dictionary to escape LaTeX special characters
+        if isinstance(d, dict):
+            return {k: cls._escape_latex_dict(v) for k, v in d.items()}
+        elif isinstance(d, list):
+            return [cls._escape_latex_dict(i) for i in d]
+        elif isinstance(d, str):
+            return d.encode("latex").decode("utf-8")
+        else:
+            return d
+
     def _render_template(self, template: Any, info: dict) -> str:
+        info = self._escape_latex_dict(info)
         output = template.render(**info)
         return "\n".join([x.replace("{ ", "{").replace(" }", "}") for x in output.split("\n") if x])
 

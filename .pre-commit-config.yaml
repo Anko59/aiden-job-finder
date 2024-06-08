@@ -5,10 +5,9 @@ repos:
     rev: v0.4.2
     hooks:
       # Run the linter.
+      - id: ruff-format
       - id: ruff
         args: [ --fix ]
-      # Run the formatter.
-      - id: ruff-format
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v4.4.0
     hooks:

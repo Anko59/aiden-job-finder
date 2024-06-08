@@ -6,8 +6,9 @@ from fastapi.params import Body
 from pydantic import BaseModel
 from redis.exceptions import ConnectionError
 
-from aiden_recommender import redis_client
-from aiden_recommender.scrapers.wtj import scraper as wtj_scraper
+from aiden_recommender.scrapers.scraper_aggregator import scraper_aggregator
+from aiden_recommender.tools import redis_client
+from aiden_recommender.models import JobOffer
 
 app = FastAPI()
 
@@ -28,15 +29,17 @@ def healthcheck() -> dict[str, str]:
     return {"status": "healthy"}
 
 
-@app.post("/joboffers", response_model=str)
-def recommend(job_offer_request: Annotated[JobOfferRequest, Body()]) -> list[str]:
-    wtj_results = wtj_scraper.search_jobs(
+@app.post("/joboffers", response_model=list[JobOffer])
+async def recommend(job_offer_request: Annotated[JobOfferRequest, Body()]) -> list[JobOffer]:
+    results = await scraper_aggregator.search_jobs(
         search_query=job_offer_request.query,
         location=job_offer_request.location,
         num_results=job_offer_request.limit,
         profile_embedding_id=job_offer_request.profile_id,
     )
-    # _ = indeed_scraper.search_jobs(
-    #     search_query=job_offer_request.query, location=job_offer_request.location, num_results=job_offer_request.limit
-    # )
-    return wtj_results
+    return results
+
+
+@app.on_event("startup")
+async def on_startup():
+    await scraper_aggregator.start_workers()
