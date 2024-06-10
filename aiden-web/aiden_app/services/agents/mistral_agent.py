@@ -115,9 +115,9 @@ class MistralAgent(Agent):
             for tool_call in message.tool_calls:
                 tool_message, agent_speaks_next = self._parse_tool_call(tool_call)
                 tool_calls += 1
-                yield tool_message.model_dump()
+                yield tool_message
             if agent_speaks_next:
                 message = self._message_model()
             else:
                 return
-        yield message.model_dump()
+        yield message

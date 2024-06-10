@@ -52,6 +52,7 @@ class ZyteRequest(Request):
 
 class MistralEmbeddingRequest(Request):
     input: list["JobOffer"]
+    retention_period: timedelta = timedelta(days=365)
 
     def get_coroutine(self, is_cached):
         # We only want to embed the items that are not already cached
@@ -66,6 +67,7 @@ class MistralEmbeddingRequest(Request):
 class QdrantRequest(Request):
     embeddings: list[EmbeddingObject]
     job_offers: list["JobOffer"]
+    retention_period: timedelta = timedelta(days=365)
 
     def get_coroutine(self, is_cached):
         return async_qdrant_client.upload_points(
