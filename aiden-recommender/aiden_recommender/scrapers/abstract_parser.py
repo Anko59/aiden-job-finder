@@ -1,7 +1,7 @@
 from abc import ABC
 from typing import Iterable
 
-from aiden_recommender.models import JobOffer
+from aiden_shared.models import JobOffer
 from aiden_recommender.scrapers.field_extractors import FieldExtractor
 
 

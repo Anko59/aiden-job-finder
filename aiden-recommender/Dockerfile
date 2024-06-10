@@ -8,12 +8,7 @@ ENV POETRY_NO_INTERACTION=1 \
 
 WORKDIR /app
 
-# Install necessary packages for selenium
-RUN apt-get update && apt-get install -y \
-    chromium \
-    chromium-driver \
-    && rm -rf /var/lib/apt/lists/*
-
-COPY pyproject.toml poetry.lock ./
-
-RUN  poetry install --no-root
+COPY aiden-recommender/pyproject.toml aiden-recommender/poetry.lock ./
+COPY aiden-recommender/aiden_recommender ./aiden_recommender
+COPY aiden-shared/aiden_shared /aiden_shared
+RUN --mount=type=bind,source=./aiden-shared,target=/aiden-shared poetry install --no-root

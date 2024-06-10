@@ -6,9 +6,11 @@ from typing import Any, Callable, Iterable
 from bs4 import BeautifulSoup
 from loguru import logger
 
-from aiden_recommender.models import JobOffer, MistralEmbeddingRequest, QdrantRequest, Request, ScraperItem, ZyteRequest
+from aiden_shared.models import JobOffer
+from aiden_recommender.models import MistralEmbeddingRequest, QdrantRequest, Request, ScraperItem, ZyteRequest
 from aiden_recommender.scrapers.abstract_parser import AbstractParser
-from aiden_recommender.tools import async_redis_client, zyte_session
+from aiden_recommender.tools import zyte_session
+from aiden_shared.tools import async_redis_client
 
 
 def chunk_list(lst, n):
