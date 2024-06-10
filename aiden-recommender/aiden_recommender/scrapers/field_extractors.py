@@ -1,5 +1,7 @@
-from pydantic import BaseModel
+from typing import Any, Callable, Optional
+
 import jmespath
+from pydantic import BaseModel
 from pydantic_core import ValidationError
 
 
@@ -7,12 +9,12 @@ class FieldExtractor:
     def __init__(
         self,
         field: str | list,
-        query: str | list[str] = None,
-        default: any = None,
-        transform_func: callable = None,
-        model: BaseModel = None,
+        query: Optional[str | list[str]] = None,
+        default: Any = None,
+        transform_func: Optional[Callable] = None,
+        model: Optional[BaseModel] = None,
         nested_fields: list["FieldExtractor"] = [],
-        aggregate_func: callable = None,
+        aggregate_func: Optional[Callable] = None,
     ) -> None:
         self.field = field
         self.query = query
@@ -23,7 +25,7 @@ class FieldExtractor:
         self.aggregate_func = aggregate_func if aggregate_func else lambda x: x
 
     @staticmethod
-    def select(data: dict, query: str) -> any:
+    def select(data: dict, query: str) -> Any:
         if not query:
             return data
         return jmespath.search(query, data)

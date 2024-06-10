@@ -2,10 +2,11 @@ from abc import ABC, abstractmethod
 from base64 import b64decode
 from functools import partial
 from typing import Any, Callable, Iterable
-from loguru import logger
-from bs4 import BeautifulSoup
 
-from aiden_recommender.models import JobOffer, ScraperItem, ZyteRequest, MistralEmbeddingRequest, QdrantRequest, Request
+from bs4 import BeautifulSoup
+from loguru import logger
+
+from aiden_recommender.models import JobOffer, MistralEmbeddingRequest, QdrantRequest, Request, ScraperItem, ZyteRequest
 from aiden_recommender.scrapers.abstract_parser import AbstractParser
 from aiden_recommender.tools import async_redis_client, zyte_session
 
@@ -61,7 +62,7 @@ class AbstractScraper(ABC):
         except Exception:
             return BeautifulSoup(data.text, "html.parser")
 
-    def get_zyte_request(self, url: str, callback: Callable, additional_zyte_params: dict = {}, meta: dict[str, str] = {}) -> ZyteRequest:
+    def get_zyte_request(self, url: str, callback: Callable, additional_zyte_params: dict = {}, meta: dict[str, Any] = {}) -> ZyteRequest:
         logger.warning("Sending request to Zyte")
         query: dict[str, Any] = {"url": url}
         query.update(self.zyte_api_automap)
@@ -77,11 +78,6 @@ class AbstractScraper(ABC):
         logger.warning("Sending request to Mistral")
         callback = partial(self._get_qdrant_request, job_offers=[job_offer])
         return MistralEmbeddingRequest(input=[job_offer], callback=callback)
-        """if len(self.job_offers_buffer) >= 24:
-            logger.warning(f"Sending request to Mistral")
-            callback = partial(self._get_qdrant_request, job_offers=self.job_offers_buffer)
-            self.job_offers_buffer = []
-            return MistralEmbeddingRequest(input=self.job_offers_buffer, callback=callback)"""
 
     @abstractmethod
     def get_start_requests(self, search_query: str, location: str, num_results: int) -> Iterable[Request]:
@@ -90,6 +86,7 @@ class AbstractScraper(ABC):
     async def get_cached_start_requests(self, search_query: str, location: str, num_results: int):
         offer_seen = await async_redis_client.exists(f"{self.source}-{search_query}-{location}")
         if offer_seen >= num_results:
+            logger.info(f"{offer_seen} cache HIT: {search_query}, {location}, {num_results}")
             return
         for request in self.get_start_requests(search_query, location, num_results):
             yield request

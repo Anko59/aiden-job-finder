@@ -1,19 +1,19 @@
 import asyncio
 import sys
+from datetime import timedelta
 from uuid import UUID
+
 from loguru import logger
-
 from mistralai.models.embeddings import EmbeddingObject
-from aiden_recommender.constants import JOB_COLLECTION
 
-from aiden_recommender.scrapers.france_travail.scraper import FranceTravailScraper
-from aiden_recommender.scrapers.indeed.scraper import IndeedScraper
+from aiden_recommender.constants import JOB_COLLECTION
 from aiden_recommender.models import JobOffer, Request
 from aiden_recommender.scrapers.abstract_scraper import AbstractScraper
-from aiden_recommender.scrapers.wtj.scraper import WelcomeToTheJungleScraper
-from aiden_recommender.tools import qdrant_client, mistral_client
+from aiden_recommender.scrapers.france_travail.scraper import FranceTravailScraper
+from aiden_recommender.scrapers.indeed.scraper import IndeedScraper
 from aiden_recommender.scrapers.utils import cache
-from datetime import timedelta
+from aiden_recommender.scrapers.wtj.scraper import WelcomeToTheJungleScraper
+from aiden_recommender.tools import mistral_client, qdrant_client
 
 logger.remove()
 logger.add(sys.stderr, level="INFO")
@@ -104,7 +104,7 @@ class ScraperAggregator:
             collection_name=JOB_COLLECTION, query_vector=search_vector, with_vectors=False, with_payload=True, limit=num_results
         )
         logger.warning(f"Found {len(search_result)} results")
-        return [JobOffer(**result.payload) for result in search_result]
+        return [JobOffer(**result.payload) for result in search_result]  # type: ignore
 
 
 scraper_aggregator = ScraperAggregator()

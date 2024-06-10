@@ -34,9 +34,6 @@ class FranceTravailScraper(AbstractScraper):
         logger.warning("Received response from FranceTravail")
         yield ScraperItem(raw_data=response["resultats"])
 
-    def expand_search_query(self, search_query: str) -> str:
-        return search_query
-
     def get_start_requests(self, search_query: str, location: str, num_results: int) -> Iterable[JobSearchRequest]:
         params = {
             "motsCles": search_query,
@@ -46,7 +43,6 @@ class FranceTravailScraper(AbstractScraper):
             "etatPublication": "Active",
             "range": f"0-{min(num_results, 149)}",
         }
-        print(params)
         callback = partial(self.parse_response, parser_func=self._parse_results)
         logger.warning("Sending request to FranceTravail")
         yield JobSearchRequest(params=params, callback=callback)

@@ -2,17 +2,18 @@ import hashlib
 import json
 from datetime import timedelta
 from functools import wraps
-from typing import Type, TypeVar, Optional
+from typing import Optional, Type, TypeVar
 
-from aiden_recommender.tools import redis_client
 from loguru import logger
 from pydantic import BaseModel
 from pydantic_core import from_json
 
+from aiden_recommender.tools import redis_client
+
 T = TypeVar("T", bound="BaseModel")
 
 
-def cache(retention_period: timedelta, model: Optional[Type[T]] = None, source: Optional[str] = "default"):
+def cache(retention_period: timedelta, model: Type[T], source: Optional[str] = "default"):
     def decorator(func):
         @wraps(func)
         def wrapper(self, *args, **kwargs):
@@ -31,11 +32,9 @@ def cache(retention_period: timedelta, model: Optional[Type[T]] = None, source: 
             # Call the function and cache the result
             result: model | list[model] = func(self, *args, **kwargs)
             if isinstance(result, list):
-                redis_client.setex(
-                    key, retention_period, json.dumps([model.model_dump_json() for model in result])
-                ) if model else json.dumps(result)
+                redis_client.setex(key, retention_period, json.dumps([model.model_dump_json() for model in result]))
             else:
-                redis_client.setex(key, retention_period, result.model_dump_json() if model else json.dumps(result))  # type: ignore
+                redis_client.setex(key, retention_period, result.model_dump_json() if model else json.dumps(result))
 
             return result
 
