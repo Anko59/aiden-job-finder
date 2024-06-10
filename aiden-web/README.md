@@ -41,7 +41,9 @@ This API provides endpoints for interacting with user profiles and a chat servic
 
 ### 1. Start Chat
 **Endpoint:** `api/v2/start_chat`
+
 **Method:** `POST`
+
 **Description:** Start a chat session with a given profile.
 
 #### Expected Input (JSON):
@@ -65,7 +67,9 @@ This API provides endpoints for interacting with user profiles and a chat servic
 
 ### 2. Handle Question
 **Endpoint:** `api/v2/question`
+
 **Method:** `POST`
+
 **Description:** Handle user question and respond via streaming HTTP.
 
 #### Expected Input (JSON):
@@ -89,7 +93,9 @@ A stream of `ChatMessage` objects:
 
 ### 3. Get Profiles
 **Endpoint:** `api/v2/get_profiles`
+
 **Method:** `GET`
+
 **Description:** Retrive available user profiles
 
 #### Expected Input (JSON):
@@ -111,7 +117,9 @@ A list of profiles:
 
 ### 4. Create Profile
 **Endpoint:** `api/v2/create_profile`
+
 **Method:** `POST`
+
 **Description:** Create a new user profile from submitted form data.
 
 #### Expected Input (Multipart form data):
@@ -126,7 +134,9 @@ Fields required by UserCreationForm.
 
 ### 5. Get Documents
 **Endpoint:** `api/v2/get_documents`
+
 **Method:** `POST`
+
 **Description:** Get documents associated with a given profile.
 
 #### Expected Input (JSON):
@@ -149,7 +159,7 @@ A list of documents:
 ]
 ```
 
-Error Responses
+### Error Responses
 In case of an error, the API will return an error response with the following format:
 
 ```json
