@@ -1,5 +1,4 @@
 from abc import ABC
-from typing import Iterable
 
 from aiden_recommender.models import JobOffer
 from aiden_recommender.scrapers.field_extractors import FieldExtractor
@@ -15,6 +14,5 @@ class AbstractParser(ABC):
                 data.update(extractor.extract(data))
         return JobOffer(**data)
 
-    def parse(self, data) -> Iterable[JobOffer]:
-        for job_offer in data:
-            yield self.transform_to_job_offer(job_offer)
+    def parse(self, data) -> list[JobOffer]:
+        return [self.transform_to_job_offer(job_offer) for job_offer in data]

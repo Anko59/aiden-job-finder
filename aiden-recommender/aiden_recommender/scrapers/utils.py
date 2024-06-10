@@ -13,6 +13,36 @@ from aiden_recommender.tools import redis_client
 T = TypeVar("T", bound="BaseModel")
 
 
+def func_cache(retention_period: timedelta, model: Type[T], source: Optional[str] = "default"):
+    def decorator(func):
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            # Generate a unique cache key based on function name and arguments
+            key = _generate_cache_key(func, source, *args, **kwargs)
+
+            # Try to get the cached result
+            cached_result: str | None = redis_client.get(key)  # type: ignore
+            if cached_result is not None:
+                logger.info("Cache HIT")
+                if isinstance(results := json.loads(cached_result), list):
+                    return [model.model_validate(from_json(r)) for r in results]
+                else:
+                    return model.model_validate(results)
+
+            # Call the function and cache the result
+            result: model | list[model] = func(*args, **kwargs)
+            if isinstance(result, list):
+                redis_client.setex(key, retention_period, json.dumps([model.model_dump_json() for model in result]))
+            else:
+                redis_client.setex(key, retention_period, result.model_dump_json() if model else json.dumps(result))
+
+            return result
+
+        return wrapper
+
+    return decorator
+
+
 def cache(retention_period: timedelta, model: Type[T], source: Optional[str] = "default"):
     def decorator(func):
         @wraps(func)

@@ -6,9 +6,10 @@ from fastapi.params import Body
 from pydantic import BaseModel
 from redis.exceptions import ConnectionError
 
-from aiden_recommender.scrapers.scraper_aggregator import scraper_aggregator
-from aiden_recommender.tools import redis_client
 from aiden_recommender.models import JobOffer
+from aiden_recommender.scrapers.scraper_aggregator import scraper_aggregator
+from aiden_recommender.scrapers.wtj.flow import scrape_wtj
+from aiden_recommender.tools import redis_client
 
 app = FastAPI()
 
@@ -37,6 +38,12 @@ async def recommend(job_offer_request: Annotated[JobOfferRequest, Body()]) -> li
         num_results=job_offer_request.limit,
         profile_embedding_id=job_offer_request.profile_id,
     )
+    return results
+
+
+@app.post("/test", response_model=list[JobOffer])
+def test() -> list[JobOffer]:
+    results = scrape_wtj(search_query="ML engineer", location="Paris", num_results=100)
     return results
 
 
