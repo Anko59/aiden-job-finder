@@ -52,8 +52,11 @@
                 </div>
                 {% endif %}
 
-                <p class="text-slate-500 dark:text-slate-400 text-xs mt-2"><strong>Published at:</strong> {{ job_offer.published_at|safe }}</p>
-                <p class="text-slate-500 dark:text-slate-400 text-xs mt-2"><strong>Last updated at:</strong> {{ job_offer.source|safe }}</p>
+                <p class="text-slate-500 dark:text-slate-400 text-xs mt-2"><strong>Published at: </strong> {{ job_offer.published_at|safe }}</p>
+                <p class="text-slate-500 dark:text-slate-400 text-xs mt-2"><strong>Source: </strong> {{ job_offer.source|safe }}</p>
+                <button class="inline-flex rounded-lg px-3.5 py-2.5 text-center text-sm font-semibold text-blue-600 ring-1 ring-inset ring-blue-600 hover:bg-blue-600 hover:text-blue-50" id="offer-focus" reference="{{ job_offer.reference|safe }}">
+                Apply
+                </button>
             </div>
         </div>
         {% endfor %}

@@ -108,6 +108,14 @@ function initializeMessageEvents() {
             detailedView.classList.toggle('hidden');
         });
     }
+    let applyButtons = document.getElementsByClassName('offer-focus');
+    for (let i = 0; i < applyButtons.length; i++) {
+        applyButtons[i].addEventListener('click', function () {
+            let reference = applyButtons[i].getAttribute('reference');
+            getOfferFocus(reference);
+        });
+    }
+
 }
 
 function toggleJobOffersInGrid(currentOffer) {
@@ -118,6 +126,33 @@ function toggleJobOffersInGrid(currentOffer) {
             jobOffersInGrid[i].classList.toggle('hidden');
         }
     }
+}
+
+function initializeOfferFocusEvents() {
+
+}
+
+function getOfferFocus(reference) {
+    const fetchOptions = {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': getCookie('csrftoken'),
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ reference: reference }),
+    };
+    hideChatForm();
+    fetch('/api/get_offer_focus', fetchOptions)
+        .then(response => response.text())
+        .then(data => {
+            emptyMessageContainer();
+            document.getElementById('message-container').innerHTML += data;
+            initializeOfferFocusEvents();
+            showChatForm();
+        })
+        .catch(error => {
+            console.error('Error:', error);
+        });
 }
 
 export function getProfiles() {
