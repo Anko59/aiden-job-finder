@@ -28,6 +28,7 @@ class ChatService:
         def generate_responses():
             yield render_to_string("langui/message.html", {"role": "user", "content": question})
             for message in agent.chat(question):
+                message = message.model_dump()
                 role = message["role"]
                 content = message["content"]
                 if role == "assistant":

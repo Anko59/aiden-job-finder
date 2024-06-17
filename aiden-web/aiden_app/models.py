@@ -4,6 +4,36 @@ from aiden_project.settings import MEDIA_ROOT
 import os
 import uuid
 
+from pydantic import BaseModel as PydanticBaseModel
+
+
+class QuestionRequest(PydanticBaseModel):
+    question: str
+
+
+class StartChatRequest(PydanticBaseModel):
+    first_name: str
+    last_name: str
+
+
+class UserProfileResponse(PydanticBaseModel):
+    first_name: str
+    last_name: str
+    photo_url: str
+
+
+class DocumentResponse(PydanticBaseModel):
+    name: str
+    path: str
+
+
+class CreateProfileResponse(PydanticBaseModel):
+    success: str
+
+
+class ErrorResponse(PydanticBaseModel):
+    error: str
+
 
 class BaseModel(models.Model):
     class Meta:

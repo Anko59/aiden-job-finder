@@ -29,7 +29,7 @@ class ScraperAggregator:
             FranceTravailScraper(results_multiplier=2),
         ]
         self.workers = max_workers
-        self.timeout = 45
+        self.timeout = 15
         self.request_queue = asyncio.Queue()
         self.results_queue = asyncio.Queue()
         self.active_workers = asyncio.Semaphore(self.workers)

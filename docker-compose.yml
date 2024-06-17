@@ -131,10 +131,10 @@ services:
     networks:
       - aiden_network
     env_file:
-      - aiden-recommender/.env
+      - .env
     volumes:
       - ./aiden-recommender/aiden_recommender:/app/aiden_recommender
-      - ./aiden-recommender/.env:/app/.env
+      - ./.env:/app/.env
     command:
       [
         "poetry",

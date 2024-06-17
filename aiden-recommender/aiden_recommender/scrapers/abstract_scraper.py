@@ -90,3 +90,6 @@ class AbstractScraper(ABC):
             return
         for request in self.get_start_requests(search_query, location, num_results):
             yield request
+
+    async def set_cache(self, search_query: str, location: str, num_results: int):
+        await async_redis_client.set(f"{self.source}-{search_query}-{location}", num_results)

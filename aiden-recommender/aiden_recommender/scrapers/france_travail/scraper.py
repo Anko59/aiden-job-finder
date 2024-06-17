@@ -10,13 +10,13 @@ from aiden_recommender.constants import ISO_8601
 from aiden_recommender.scrapers.abstract_scraper import AbstractScraper
 from aiden_recommender.scrapers.france_travail.parser import FranceTravailParser
 from aiden_recommender.tools import async_job_search_client
-from aiden_recommender.models import CachableRequest, ScraperItem
+from aiden_recommender.models import Request, ScraperItem
 
 
-class JobSearchRequest(CachableRequest):
+class JobSearchRequest(Request):
     params: dict[str, str]
 
-    def get_coroutine(self):
+    def get_coroutine(self, is_cached):
         return async_job_search_client.search(params=self.params)
 
     def _generate_cache_keys(self):
