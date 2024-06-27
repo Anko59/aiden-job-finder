@@ -1,6 +1,8 @@
 services:
   aiden_app:
-    build: ./aiden-web
+    build:
+      context: ./
+      dockerfile: ./aiden-web/Dockerfile
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.aiden.rule=Host(`aiden.dev.localhost`)"
@@ -12,6 +14,7 @@ services:
       - ./aiden-web/aiden_project:/app/aiden_project
       - ./aiden-web/manage.py:/app/manage.py
       - ./aiden-web/media:/app/media
+
     env_file:
       - .env
     environment:
@@ -123,7 +126,9 @@ services:
         limits:
           memory: 4g
   recommender:
-    build: ./aiden-recommender
+    build:
+      context: ./
+      dockerfile: ./aiden-recommender/Dockerfile
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.recommender.rule=Host(`recommender.dev.localhost`)"
@@ -147,6 +152,7 @@ services:
         "8082",
         "--reload"
       ]
+
     healthcheck:
       test:
         [

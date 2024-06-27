@@ -1,7 +1,7 @@
 from aiden_recommender.scrapers.abstract_parser import AbstractParser
 from aiden_recommender.scrapers.field_extractors import FieldExtractor
-from aiden_recommender.models import Coordinates, Office, Organization, Profession
-from aiden_recommender.constants import ISO_8601
+from aiden_shared.models import Coordinates, Office, Organization, Profession
+from aiden_shared.constants import ISO_8601
 from datetime import datetime
 import jmespath
 import re

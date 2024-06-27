@@ -1,0 +1,18 @@
+[tool.poetry]
+name = "aiden-shared"
+version = "0.1.0"
+description = "shared code for aiden application"
+authors = ["Anko59 <jeancollette138@gmail.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.11"
+pydantic = "^2.7.3"
+mistralai = "^0.4.0"
+qdrant-client = "^1.9.1"
+redis = "^5.0.5"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
