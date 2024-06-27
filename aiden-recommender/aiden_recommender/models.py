@@ -8,9 +8,9 @@ from pydantic import BaseModel
 from abc import ABC, abstractmethod
 from mistralai.models.embeddings import EmbeddingObject
 from qdrant_client.models import PointStruct
-
 from aiden_shared.constants import JOB_COLLECTION
-from aiden_recommender.tools import async_zyte_client, async_redis_client, async_mistral_client, async_qdrant_client
+from aiden_shared.tools import async_redis_client, async_mistral_client, async_qdrant_client
+from aiden_recommender.tools import async_zyte_client
 import hashlib
 import uuid
 

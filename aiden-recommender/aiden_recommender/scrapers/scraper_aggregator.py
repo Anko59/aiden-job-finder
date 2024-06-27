@@ -20,8 +20,6 @@ logger.add(sys.stderr, level="INFO")
 
 class ScraperAggregator:
     def __init__(self, max_workers=64):
-        # As the IndeedScraper is much slower than the other scrapers
-        # we reduce the number of results it returns to 1/10th of the other scrapers
         self.scrapers: list[AbstractScraper] = [
             france_travail_scraper,
             wtj_scraper,
