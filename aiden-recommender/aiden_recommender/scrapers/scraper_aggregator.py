@@ -6,14 +6,15 @@ from uuid import UUID
 from loguru import logger
 from mistralai.models.embeddings import EmbeddingObject
 
-from aiden_recommender.constants import JOB_COLLECTION
-from aiden_recommender.models import JobOffer, Request
+from aiden_shared.constants import JOB_COLLECTION
+from aiden_shared.models import JobOffer
+from aiden_recommender.models import Request
 from aiden_recommender.scrapers.abstract_scraper import AbstractScraper
 from aiden_recommender.scrapers.france_travail.scraper import FranceTravailScraper
 from aiden_recommender.scrapers.indeed.scraper import IndeedScraper
 from aiden_recommender.scrapers.utils import cache
 from aiden_recommender.scrapers.wtj.scraper import WelcomeToTheJungleScraper
-from aiden_recommender.tools import mistral_client, qdrant_client
+from aiden_shared.tools import mistral_client, qdrant_client
 
 logger.remove()
 logger.add(sys.stderr, level="INFO")

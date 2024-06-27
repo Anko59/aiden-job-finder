@@ -7,8 +7,8 @@ from pydantic import BaseModel
 from redis.exceptions import ConnectionError
 
 from aiden_recommender.scrapers.scraper_aggregator import scraper_aggregator
-from aiden_recommender.tools import redis_client
-from aiden_recommender.models import JobOffer
+from aiden_shared.tools import redis_client
+from aiden_shared.models import JobOffer
 
 app = FastAPI()
 

@@ -8,7 +8,7 @@ from loguru import logger
 from pydantic import BaseModel
 from pydantic_core import from_json
 
-from aiden_recommender.tools import redis_client
+from aiden_shared.tools import redis_client
 
 T = TypeVar("T", bound="BaseModel")
 

@@ -1,8 +1,8 @@
 from aiden_recommender.scrapers.abstract_parser import AbstractParser
-from aiden_recommender.models import Coordinates, Office, Organization, CoverImage, Logo
+from aiden_shared.models import Coordinates, Office, Organization, CoverImage, Logo
 from datetime import datetime
 from aiden_recommender.scrapers.field_extractors import FieldExtractor
-from aiden_recommender.constants import ISO_8601
+from aiden_shared.constants import ISO_8601
 
 
 def parse_benefits(benefits):

@@ -6,7 +6,7 @@ from functools import partial
 from copy import deepcopy
 
 
-from aiden_recommender.constants import ISO_8601
+from aiden_shared.constants import ISO_8601
 from aiden_recommender.scrapers.abstract_scraper import AbstractScraper
 from aiden_recommender.scrapers.france_travail.parser import FranceTravailParser
 from aiden_recommender.tools import async_job_search_client
