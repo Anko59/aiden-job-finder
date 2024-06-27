@@ -11,7 +11,14 @@ from aiden_app.services.tools.cv_editor_tool import CVEditorTool
 from aiden_app.services.tools.scraper_tool import ScraperTool
 from aiden_app.services.tools.tool_aggregator import ToolAggregator
 
-from .prompts import PROFILE_CREATION_SYSTEM_PROMPT, START_CHAT_PROMPT, SYSTEM_PROMPT
+from .prompts import (
+    PROFILE_CREATION_SYSTEM_PROMPT,
+    START_CHAT_PROMPT,
+    SYSTEM_PROMPT,
+    PROFILE_EDIT_SYSTEM_PROMPT,
+    GENERATE_COVER_LETTER_SYSTEM_PROMPT,
+    FILL_APPLICATION_FIELDS_SYSTEM_PROMPT,
+)
 
 
 class Agent(ABC):
@@ -29,7 +36,7 @@ class Agent(ABC):
         pass
 
     @abstractmethod
-    def _message_model(self) -> Any:
+    def _message_model(self, **kwargs) -> Any:
         pass
 
     @abstractmethod
@@ -97,3 +104,44 @@ class Agent(ABC):
         profile_info["last_name"] = base_last_name
         profile_info["photo_url"] = base_photo_url
         return profile_info
+
+    def edit_profile(self, profile_info: dict[str, str], job_offer: dict[str, str]):
+        profile_schema_path = os.path.join(MEDIA_ROOT, "cv", "cv_schema.json")
+        profile_schema = json.load(open(profile_schema_path))
+        base_first_name = profile_info["first_name"]
+        base_last_name = profile_info["last_name"]
+        base_photo_url = profile_info["photo_url"]
+        messages = [
+            self.message_class(role="system", content=PROFILE_EDIT_SYSTEM_PROMPT),
+            self.message_class(role="system", content=json.dumps(profile_schema)),
+            self.message_class(role="system", content=json.dumps(job_offer)),
+            self.message_class(role="user", content=json.dumps(profile_info)),
+        ]
+        message = self._message_model(response_format={"type": "json_object"}, tools=[], messages=messages)
+        self.messages.append(message)
+        profile_info = json.loads(message.content)
+        profile_info["first_name"] = base_first_name
+        profile_info["last_name"] = base_last_name
+        profile_info["photo_url"] = base_photo_url
+        return profile_info
+
+    def generate_cover_letter(self, job_offer: dict[str, str], profile_info: dict[str, str]):
+        messages = [
+            self.message_class(role="system", content=GENERATE_COVER_LETTER_SYSTEM_PROMPT),
+            self.message_class(role="system", content=json.dumps(job_offer)),
+            self.message_class(role="user", content=json.dumps(profile_info)),
+        ]
+        message = self._message_model(tools=[], messages=messages)
+        self.messages.append(message)
+        return message.content
+
+    def fill_form(self, fields: dict[str, str], job_offer: dict[str, str], profile_info: dict[str, str]):
+        messages = [
+            self.message_class(role="system", content=FILL_APPLICATION_FIELDS_SYSTEM_PROMPT),
+            self.message_class(role="system", content=json.dumps(job_offer)),
+            self.message_class(role="system", content=json.dumps(profile_info)),
+            self.message_class(role="user", content=json.dumps(fields)),
+        ]
+        message = self._message_model(tools=[], messages=messages, response_format={"type": "json_object"})
+        self.messages.append(message)
+        return json.loads(message.content)

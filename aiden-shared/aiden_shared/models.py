@@ -36,6 +36,7 @@ class Organization(BaseModel):
     nb_employees: Optional[int] = None
     logo: Optional[Logo] = None
     cover_image: Optional[CoverImage] = None
+    slug: Optional[str] = None
 
 
 class JobOffer(BaseModel):
@@ -69,6 +70,7 @@ class JobOffer(BaseModel):
     source: str
     reference: str
     geoloc: Optional[Coordinates] = None
+    slug: Optional[str] = None
 
     def model_dump(self, *args, **kwargs):
         data = super().model_dump(*args, **kwargs)

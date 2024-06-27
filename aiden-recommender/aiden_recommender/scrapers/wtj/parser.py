@@ -4,7 +4,7 @@ from aiden_recommender.scrapers.field_extractors import FieldExtractor
 
 def parse_url(data):
     return (
-        f"https://www.welcometothejungle.com/fr/companies/{data['organization']['name'].lower()}/jobs/{data['slug']}?&o={data['reference']}"  # noqa
+        f"https://www.welcometothejungle.com/fr/companies/{data['organization']['slug'].lower()}/jobs/{data['slug']}?&o={data['reference']}"  # noqa
     )
 
 

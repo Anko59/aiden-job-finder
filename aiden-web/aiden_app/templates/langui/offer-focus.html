@@ -1,0 +1,78 @@
+{% load static %}
+<div class="flex flex-row px-4 py-8 sm:px-6">
+    <img class="mr-2 flex h-8 w-8 rounded-full sm:mr-4" src="{% static 'images/tools.png' %}" />
+    <h1 class="text-xl font-bold mb-2">{{ offer.name|safe }}</h1>
+    <div class="flex flex-col">
+        <div class="mb-4">
+            <h2 class="text-lg font-semibold">Company Information</h2>
+            <p><strong>Name:</strong> {{ offer.organization.name }}</p>
+            {% if offer.organization.description %}
+            <p><strong>Description:</strong> {{ offer.organization.description }}</p>
+            {% endif %}
+            {% if offer.organization.nb_employees %}
+            <p><strong>Number of Employees:</strong> {{ offer.organization.nb_employees }}</p>
+            {% endif %}
+            {% if offer.organization.logo %}
+            <img class="h-12 w-12 rounded-full" src="{{ offer.organization.logo.url }}" alt="Company Logo">
+            {% endif %}
+            {% if offer.organization.cover_image %}
+            <img class="w-full h-auto mt-2" src="{{ offer.organization.cover_image.medium.url }}" alt="Cover Image">
+            {% endif %}
+        </div>
+        <div class="mb-4">
+            <h2 class="text-lg font-semibold">Job Details</h2>
+            <p><strong>Category:</strong> {{ offer.new_profession.category_name }}</p>
+            <p><strong>Sub-Category:</strong> {{ offer.new_profession.sub_category_name }}</p>
+            <p><strong>Contract Type:</strong> {{ offer.contract_type }}</p>
+            {% if offer.contract_duration_minimum and offer.contract_duration_maximum %}
+            <p><strong>Contract Duration:</strong> {{ offer.contract_duration_minimum }} - {{
+                offer.contract_duration_maximum }} months</p>
+            {% endif %}
+            {% if offer.education_level %}
+            <p><strong>Education Level:</strong> {{ offer.education_level }}</p>
+            {% endif %}
+            {% if offer.experience_level_minimum %}
+            <p><strong>Minimum Experience Level:</strong> {{ offer.experience_level_minimum }}</p>
+            {% endif %}
+            <p><strong>Language:</strong> {{ offer.language }}</p>
+            {% if offer.salary_minimum and offer.salary_maximum %}
+            <p><strong>Salary Range:</strong> {{ offer.salary_currency }} {{ offer.salary_minimum }} - {{
+                offer.salary_maximum }} per {{ offer.salary_period }}</p>
+            {% endif %}
+            {% if offer.has_remote %}
+            <p><strong>Remote Work:</strong> {{ offer.remote }}</p>
+            {% endif %}
+        </div>
+        <div class="mb-4">
+            <h2 class="text-lg font-semibold">Location</h2>
+            {% for office in offer.offices %}
+            <p><strong>Country:</strong> {{ office.country }}</p>
+            {% if office.local_city %}
+            <p><strong>City:</strong> {{ office.local_city }}</p>
+            {% endif %}
+            {% if office.local_state %}
+            <p><strong>State:</strong> {{ office.local_state }}</p>
+            {% endif %}
+            {% endfor %}
+        </div>
+        <div class="mb-4">
+            <h2 class="text-lg font-semibold">Benefits</h2>
+            <ul class="list-disc list-inside">
+                {% for benefit in offer.benefits %}
+                <li>{{ benefit }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+        <div class="mb-4">
+            <h2 class="text-lg font-semibold">Additional Information</h2>
+            {% if offer.profile %}
+            <p><strong>Profile:</strong> {{ offer.profile }}</p>
+            {% endif %}
+            <p><strong>Published At:</strong> {{ offer.published_at }}</p>
+            {% if offer.url %}
+            <p><strong>Job URL:</strong> <a class="text-blue-500 underline" href="{{ offer.url }}">{{ offer.url }}</a>
+            </p>
+            {% endif %}
+        </div>
+    </div>
+</div>

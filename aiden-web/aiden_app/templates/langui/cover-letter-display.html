@@ -1,0 +1,12 @@
+{% load static %}
+<div class="flex bg-slate-100 px-4 py-8 dark:bg-slate-900 sm:px-6">
+    <img class="mr-2 flex h-8 w-8 rounded-full sm:mr-4" src="{% static 'images/dog.png' %}" />
+
+    <div class="flex w-full flex-col items-start lg:flex-row lg:justify-between">
+        <div class="max-w-3xl markdown-content">
+            I generated a cover letter fitting your resume and the job description. Here is the cover letter:
+            {{ cover_letter}}
+        </div>
+        {% include 'langui/assistant-message-buttons.html' %}
+    </div>
+</div>

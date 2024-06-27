@@ -4,7 +4,10 @@ from typing import Any
 from chompjs import parse_js_object
 from aiden_recommender.scrapers.abstract_scraper import AbstractScraper
 from aiden_recommender.scrapers.indeed.parser import IndeedParser
+from aiden_recommender.scrapers.utils import extract_form_fields
 from copy import deepcopy
+
+from aiden_shared.models import JobOffer
 
 
 class IndeedScraper(AbstractScraper):
@@ -22,7 +25,10 @@ class IndeedScraper(AbstractScraper):
         yield self.get_zyte_request(url, meta=meta, callback=self.parse_overview)
 
     def parse_overview(self, soup, meta):
-        script = soup.find("script", {"id": "mosaic-data"}).string
+        if (script := soup.find("script", {"id": "mosaic-data"})) is not None:
+            script = script.string
+        else:
+            return []
         results = self._extract_results(script)
         current_results = meta["current_results"] + len(results)
         meta["current_results"] = current_results
@@ -59,3 +65,7 @@ class IndeedScraper(AbstractScraper):
         job_data = parse_js_object(str(script)[str(script).index("window._initialData=") :])
         job_offer = {**job_offer, **job_data}
         return [ScraperItem(raw_data=[job_offer])]
+
+    def get_form(self, job_offer: JobOffer) -> dict[str, Any]:
+        url = f"https://fr.indeed.com/applystart?jk={job_offer.reference}"
+        return extract_form_fields(url)
