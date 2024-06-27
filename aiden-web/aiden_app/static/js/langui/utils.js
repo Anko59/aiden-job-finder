@@ -129,30 +129,34 @@ function toggleJobOffersInGrid(currentOffer) {
 }
 
 function initializeOfferFocusEvents() {
-
+    initializeDocumentEvents();
 }
 
-function getOfferFocus(reference) {
+async function getOfferFocus(reference) {
+    hideChatForm();
+    emptyMessageContainer();
     const fetchOptions = {
         method: 'POST',
         headers: {
             'X-CSRFToken': getCookie('csrftoken'),
             'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ reference: reference }),
+        body: JSON.stringify({ 'offer_id': reference }),
     };
-    hideChatForm();
-    fetch('/api/get_offer_focus', fetchOptions)
-        .then(response => response.text())
-        .then(data => {
-            emptyMessageContainer();
-            document.getElementById('message-container').innerHTML += data;
+    const response = await fetch('api/get_offer_focus', fetchOptions);
+    const reader = response.body.getReader();
+    let done = false;
+    while (!done) {
+        const { value, done: resultDone } = await reader.read();
+        done = resultDone;
+        if (value) {
+            const text = new TextDecoder('utf-8').decode(value);
+            document.getElementById('message-container').innerHTML += text;
+            initializeMessageEvents();
             initializeOfferFocusEvents();
-            showChatForm();
-        })
-        .catch(error => {
-            console.error('Error:', error);
-        });
+        }
+    }
+    showChatForm();
 }
 
 export function getProfiles() {

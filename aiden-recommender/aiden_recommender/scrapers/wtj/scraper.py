@@ -1,12 +1,16 @@
+from base64 import b64decode
 import json
+from typing import Any
 from urllib.parse import quote_plus, urlencode
 
 from chompjs import parse_js_object
 
+from aiden_shared.models import JobOffer
+from aiden_recommender.tools import zyte_session
 from aiden_recommender.scrapers.abstract_scraper import AbstractScraper
 from aiden_recommender.scrapers.wtj.parser import WtjParser
 from aiden_recommender.models import ScraperItem
-from aiden_recommender.scrapers.utils import cache
+from aiden_recommender.scrapers.utils import cache, extract_form_fields
 from datetime import timedelta
 from pydantic import BaseModel
 
@@ -15,6 +19,8 @@ class StartParams(BaseModel):
     algolia_app_id: str
     algolia_api_key: str
     here_api_key: str
+    api_auth_cookies: list[dict[str, Any]]
+    csrf_token: str
 
 
 class WelcomeToTheJungleScraper(AbstractScraper):
@@ -51,6 +57,7 @@ class WelcomeToTheJungleScraper(AbstractScraper):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         start_params = self._get_start_params()
+        self.start_params = start_params
         self.algolia_app_id = start_params.algolia_app_id
         headers = {
             "Referer": "https://www.welcometothejungle.com/",
@@ -75,8 +82,74 @@ class WelcomeToTheJungleScraper(AbstractScraper):
         soup = self.inline_get_zyte(self.base_url, {"browserHtml": True, "httpResponseBody": False})
         script = soup.find("script", {"type": "text/javascript"}).get_text()  # type: ignore
         script_dict = parse_js_object(script)
+        response = zyte_session.post(
+            self.zyte_url,
+            json={"url": "https://api.welcometothejungle.com/api/v1/search/job_filters", "httpResponseBody": True, "responseCookies": True},
+        ).json()
+        csrf_token = [x["value"] for x in response["responseCookies"] if x["name"] == "csrf-token"][0]
         return StartParams(
             algolia_app_id=script_dict["ALGOLIA_APPLICATION_ID"],
             algolia_api_key=script_dict["ALGOLIA_API_KEY_CLIENT"],
             here_api_key=script_dict["HERE_API_KEY"],
+            api_auth_cookies=response["responseCookies"],
+            csrf_token=csrf_token,
         )
+
+    def get_job_details(self, job_offer: JobOffer) -> dict[str, Any]:
+        url = f"https://api.welcometothejungle.com/api/v1/organizations/{job_offer.organization.slug}/jobs/{job_offer.slug}"
+        headers = {
+            "x-csrf-token": self.start_params.csrf_token,
+        }
+        headers = [{"name": key, "value": value} for key, value in headers.items()]
+        response = zyte_session.post(
+            self.zyte_url,
+            json={
+                "url": url,
+                "httpResponseBody": True,
+                "requestCookies": self.start_params.api_auth_cookies,
+                "customHttpRequestHeaders": headers,
+            },
+        ).json()
+        data = json.loads(b64decode(response["httpResponseBody"]).decode())
+        return data["job"]
+
+    def form_schema(self, job_details) -> dict[str, Any]:
+        schema = {
+            "type": "object",
+            "properties": {
+                "subtitle": {"type": "string", "desciption": "Title of the job application"},
+                "resume": {"type": "application/pdf"},
+                "cover_letter": {"type": "string", "description": "Cover letter for the job application. Must be detailed."},
+                "address": {
+                    "type": "object",
+                    "properties": {"city": {"type": "string"}, "country_code": {"type": "string"}, "zip_code": {"type": "string"}},
+                    "required": ["city", "country_code", "zip_code"],
+                },
+            },
+        }
+        required = ["subtitle", "resume", "cover_letter", "address"]
+        if len(job_details["questions"]) > 0:
+            questions = {}
+            for question in job_details["questions"]:
+                questions[question["question"]] = {"type": "string"}
+                if question["mode"] == "mandatory":
+                    required.append(question["question"])
+            schema["properties"].update(questions)
+
+        additional_fields = {}
+        for field in job_details["application_fields"]:
+            if field["mode"] != "disabled":
+                additional_fields[field["name"]] = {"type": "string"}
+                if field["mode"] == "mandatory":
+                    required.append(field["name"])
+
+        schema["properties"].update(additional_fields)
+        schema["required"] = required
+        return schema
+
+    def get_form(self, job_offer: JobOffer) -> dict[str, Any]:
+        details = self.get_job_details(job_offer)
+        if details.get("apply_url"):
+            return extract_form_fields(details["apply_url"])
+        else:
+            return self.form_schema(details)

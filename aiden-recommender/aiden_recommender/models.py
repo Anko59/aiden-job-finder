@@ -11,12 +11,7 @@ from qdrant_client.models import PointStruct
 from aiden_shared.constants import JOB_COLLECTION
 from aiden_shared.tools import async_redis_client, async_mistral_client, async_qdrant_client
 from aiden_recommender.tools import async_zyte_client
-import hashlib
-import uuid
-
-
-def reference_to_uuid(reference: str) -> uuid.UUID:
-    return uuid.UUID(hashlib.md5(reference.encode()).hexdigest())
+from aiden_shared.utils import reference_to_uuid
 
 
 class Request(BaseModel, ABC):

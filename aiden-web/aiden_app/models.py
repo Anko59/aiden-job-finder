@@ -40,7 +40,7 @@ class BaseModel(models.Model):
         abstract = True
 
     @classmethod
-    def from_json(cls, json_data: dict, *args, **kwargs):
+    def from_json(cls, json_data: dict, *args, **kwargs) -> "BaseModel":
         # Handle ManyToManyField and OneToOneField
         m2m_fields = [
             field
@@ -71,13 +71,15 @@ class BaseModel(models.Model):
 
         return instance
 
-    def to_json(self):
+    def to_json(self) -> dict:
         json_data = {}
         for field in self._meta.get_fields():
             if isinstance(field, models.ManyToManyField):
                 json_data[field.name] = [obj.to_json() for obj in getattr(self, field.name).all()]
             elif isinstance(field, models.OneToOneField):
                 json_data[field.name] = getattr(self, field.name).to_json()
+            elif isinstance(field, models.UUIDField):
+                json_data[field.name] = str(getattr(self, field.name))
             elif not isinstance(field, models.ImageField) and not field.is_relation and field.name != "id":
                 json_data[field.name] = getattr(self, field.name)
         return json_data

@@ -1,4 +1,4 @@
-from django.http import JsonResponse
+from django.http import JsonResponse, StreamingHttpResponse
 from django.shortcuts import render
 from django.views import View
 from django.views.decorators.csrf import csrf_protect
@@ -41,6 +41,7 @@ def handle_start_chat(request):
 
     agent, response = ChatService.start_chat(profile)
     request.session["agent"] = agent.to_json()
+    request.session["profile"] = profile.to_json()
     return render(request, "langui/message.html", response)
 
 
@@ -83,3 +84,16 @@ def handle_create_profile(request):
 
     profile_data = form.llm_input()
     return ChatService.create_profile(profile_data, form.cleaned_data, request)
+
+
+@csrf_protect
+@api_view(["POST"])
+def handle_offer_focus(request):
+    offer_id = request.data.get("offer_id")
+    if not offer_id:
+        return JsonResponse({"error": "Invalid offer_id parameter"}, status=status.HTTP_400_BAD_REQUEST)
+
+    offer = ChatService.job_offer_from_reference(offer_id)
+    if not offer:
+        return JsonResponse({"error": "Invalid offer_id parameter"}, status=status.HTTP_400_BAD_REQUEST)
+    return StreamingHttpResponse(ChatService.get_offer_focus(request, offer))

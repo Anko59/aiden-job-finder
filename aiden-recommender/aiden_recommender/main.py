@@ -7,6 +7,7 @@ from pydantic import BaseModel
 from redis.exceptions import ConnectionError
 
 from aiden_recommender.scrapers.scraper_aggregator import scraper_aggregator
+from aiden_recommender.form_finder.form_finder import get_form_cached, Form
 from aiden_shared.tools import redis_client
 from aiden_shared.models import JobOffer
 
@@ -18,6 +19,10 @@ class JobOfferRequest(BaseModel):
     query: str
     limit: int
     profile_id: UUID
+
+
+class FormRequest(BaseModel):
+    job_reference: str
 
 
 @app.get("/health", status_code=200)
@@ -43,3 +48,10 @@ async def recommend(job_offer_request: Annotated[JobOfferRequest, Body()]) -> li
 @app.on_event("startup")
 async def on_startup():
     await scraper_aggregator.start_workers()
+
+
+@app.post("/get_form", response_model=Form)
+async def get_form_schema(form_request: Annotated[FormRequest, Body()]) -> Form:
+    print(type(form_request))
+    form = get_form_cached(form_request.job_reference)
+    return form

@@ -10,10 +10,8 @@ from aiden_shared.constants import JOB_COLLECTION
 from aiden_shared.models import JobOffer
 from aiden_recommender.models import Request
 from aiden_recommender.scrapers.abstract_scraper import AbstractScraper
-from aiden_recommender.scrapers.france_travail.scraper import FranceTravailScraper
-from aiden_recommender.scrapers.indeed.scraper import IndeedScraper
+from aiden_recommender.scrapers import france_travail_scraper, indeed_scraper, wtj_scraper
 from aiden_recommender.scrapers.utils import cache
-from aiden_recommender.scrapers.wtj.scraper import WelcomeToTheJungleScraper
 from aiden_shared.tools import mistral_client, qdrant_client
 
 logger.remove()
@@ -25,9 +23,9 @@ class ScraperAggregator:
         # As the IndeedScraper is much slower than the other scrapers
         # we reduce the number of results it returns to 1/10th of the other scrapers
         self.scrapers: list[AbstractScraper] = [
-            WelcomeToTheJungleScraper(results_multiplier=2),
-            IndeedScraper(),
-            FranceTravailScraper(results_multiplier=2),
+            france_travail_scraper,
+            wtj_scraper,
+            indeed_scraper,
         ]
         self.workers = max_workers
         self.timeout = 15
