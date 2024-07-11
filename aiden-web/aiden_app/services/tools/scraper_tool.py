@@ -9,7 +9,7 @@ from .tool import Tool
 class ScraperTool(Tool):
     def __init__(self, profile_embedding_id: UUID) -> None:
         super().__init__("ScraperTool")
-        self.add_tool("search_jobs", self.search_jobs_wrapper)
+        self.add_tool("search_jobs", self.search_jobs_wrapper, agent_speaks_next=False)
         self.profile_embedding_id: UUID = profile_embedding_id
 
     @Tool.tool_function  # type: ignore
