@@ -1,10 +1,24 @@
 from django.db import models
+from django.core.validators import RegexValidator
+from django.core.exceptions import ValidationError
+from loguru import logger
+from django.utils.encoding import force_str
 from aiden_project.settings import MEDIA_ROOT
 
 import os
 import uuid
 
 from pydantic import BaseModel as PydanticBaseModel
+
+
+def remove_special_characters(value):
+    regex_validator = RegexValidator(r"^[a-zA-Z0-9\s]+$", "Special characters are not allowed.")
+    try:
+        regex_validator(value)
+    except ValidationError:
+        # Remove special characters
+        return "".join(char for char in force_str(value) if char.isalnum() or char.isspace())
+    return value
 
 
 class QuestionRequest(PydanticBaseModel):
@@ -57,10 +71,23 @@ class BaseModel(models.Model):
             if field.name in json_data:
                 del json_data[field.name]
 
-        # Remove unusable fields
-        for key in list(json_data.keys()):
+        # Remove unusable fields and clean up data
+        for key, value in json_data.items():
             if key not in [field.name for field in cls._meta.get_fields()]:
                 del json_data[key]
+            else:
+                field_object = cls._meta.get_field(key)
+                print(f"field: {key}, value: {value}")
+                for validator in field_object.validators:
+                    try:
+                        validation = validator(value)
+                    except ValidationError as e:
+                        logger.error(f"Validation error: {e}")
+                        value = None
+                        break
+                    if validation is not None:
+                        value = validation
+                json_data[key] = value
 
         # Create the instance
         instance = cls.objects.create(**json_data)
@@ -138,8 +165,10 @@ class Skill(BaseModel):
 class ProfileInfo(BaseModel):
     first_name = models.CharField(max_length=100, help_text="The first name of the individual")
     last_name = models.CharField(max_length=100, help_text="The last name of the individual")
-    photo_url = models.URLField(help_text="The URL of the profile picture")
-    cv_title = models.CharField(max_length=255, help_text="The professional title or headline for the CV")
+    photo_url = models.CharField(help_text="The name of the profile picture")
+    cv_title = models.CharField(
+        max_length=255, help_text="The professional title or headline for the CV", validators=[remove_special_characters]
+    )
     profile_description = models.TextField(help_text="A summary of the individual's professional background and objectives")
     email = models.EmailField(help_text="The email address for contacting the individual")
     phone_number = models.CharField(max_length=20, help_text="The phone number for contacting the individual")
