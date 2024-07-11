@@ -9,8 +9,10 @@ from copy import deepcopy
 from aiden_shared.constants import ISO_8601
 from aiden_recommender.scrapers.abstract_scraper import AbstractScraper
 from aiden_recommender.scrapers.france_travail.parser import FranceTravailParser
+from aiden_recommender.scrapers.utils import base_fields
 from aiden_recommender.tools import async_job_search_client
 from aiden_recommender.models import Request, ScraperItem
+from aiden_shared.models import JobOffer
 
 
 class JobSearchRequest(Request):
@@ -46,3 +48,7 @@ class FranceTravailScraper(AbstractScraper):
         callback = partial(self.parse_response, parser_func=self._parse_results)
         logger.warning("Sending request to FranceTravail")
         yield JobSearchRequest(params=params, callback=callback)
+
+    def get_form(self, job_offer: JobOffer) -> dict[str, Any]:
+        # All france travail jobs require CV and motivation letter
+        return base_fields

@@ -26,6 +26,7 @@ pygments = "^2.18.0"
 chompjs = "^1.2.3"
 latexcodec = "^3.0.0"
 aiden-shared = {path = "../aiden-shared"}
+loguru = "^0.7.2"
 
 [tool.poetry.group.dev.dependencies]
 ipython = "^8.24.0"

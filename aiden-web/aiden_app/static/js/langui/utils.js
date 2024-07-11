@@ -108,6 +108,14 @@ function initializeMessageEvents() {
             detailedView.classList.toggle('hidden');
         });
     }
+    let applyButtons = document.getElementsByClassName('offer-focus');
+    for (let i = 0; i < applyButtons.length; i++) {
+        applyButtons[i].addEventListener('click', function () {
+            let reference = applyButtons[i].getAttribute('reference');
+            getOfferFocus(reference);
+        });
+    }
+
 }
 
 function toggleJobOffersInGrid(currentOffer) {
@@ -118,6 +126,37 @@ function toggleJobOffersInGrid(currentOffer) {
             jobOffersInGrid[i].classList.toggle('hidden');
         }
     }
+}
+
+function initializeOfferFocusEvents() {
+    initializeDocumentEvents();
+}
+
+async function getOfferFocus(reference) {
+    hideChatForm();
+    emptyMessageContainer();
+    const fetchOptions = {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': getCookie('csrftoken'),
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ 'offer_id': reference }),
+    };
+    const response = await fetch('api/get_offer_focus', fetchOptions);
+    const reader = response.body.getReader();
+    let done = false;
+    while (!done) {
+        const { value, done: resultDone } = await reader.read();
+        done = resultDone;
+        if (value) {
+            const text = new TextDecoder('utf-8').decode(value);
+            document.getElementById('message-container').innerHTML += text;
+            initializeMessageEvents();
+            initializeOfferFocusEvents();
+        }
+    }
+    showChatForm();
 }
 
 export function getProfiles() {
