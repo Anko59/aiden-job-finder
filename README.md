@@ -1,12 +1,13 @@
 # Aiden App
 
-Aiden (AI-Driven Employment Navigator) is a Django-based web application that uses the Mistral AI model for chat interactions. It also includes tools for CV editing and job scraping from Indeed.
+Aiden (AI-Driven Employment Navigator) is a Django-based web application that uses the Mistral AI model for chat interactions. It also includes tools for CV editing and job scraping from Indeed, WelcomeToTheJungle and FranceTravail.
 
 ## Features
 
 - Chat interface with the Mistral AI model
 - CV editing tool
 - Job scraping tool from Indeed, Wecolme to the Jungle and France Travail
+- Cover letter generation and automated application form filling
 
 ### Profile Creation example
 
@@ -15,6 +16,10 @@ https://github.com/Anko59/aiden-job-finder/assets/25617029/d2dc5398-e12a-43de-a1
 ### Job search example
 
 https://github.com/Anko59/aiden-job-finder/assets/25617029/6647b7f6-3b7d-4824-a495-1fcc443d2098
+
+### Apply to job offer example
+
+[Tab-1720711568300.webm](https://github.com/Anko59/aiden-job-finder/assets/25617029/d0ddc7aa-0b11-4d7c-96ed-20e108ca5040)
 
 ## Installation
 
