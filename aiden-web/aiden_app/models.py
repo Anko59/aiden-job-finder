@@ -1,13 +1,12 @@
-from django.db import models
-from django.core.validators import RegexValidator
-from django.core.exceptions import ValidationError
-from loguru import logger
-from django.utils.encoding import force_str
-from aiden_project.settings import MEDIA_ROOT
-
 import os
 import uuid
 
+from aiden_project.settings import MEDIA_ROOT
+from django.core.exceptions import ValidationError
+from django.core.validators import RegexValidator
+from django.db import models
+from django.utils.encoding import force_str
+from loguru import logger
 from pydantic import BaseModel as PydanticBaseModel
 
 
@@ -152,7 +151,7 @@ class Education(BaseModel):
 class Project(BaseModel):
     name = models.CharField(max_length=100, help_text="The name of the project")
     description = models.TextField(help_text="A description of the project")
-    url = models.URLField(help_text="The URL of the project repository or website")
+    url = models.URLField(help_text="The URL of the project repository or website", blank=True, null=True)
 
 
 class Skill(BaseModel):
