@@ -1,3 +1,4 @@
+from typing import Optional
 from django.db import models
 from django.core.validators import RegexValidator
 from django.core.exceptions import ValidationError
@@ -19,6 +20,19 @@ def remove_special_characters(value):
         # Remove special characters
         return "".join(char for char in force_str(value) if char.isalnum() or char.isspace())
     return value
+
+
+class AssistantMesssage(PydanticBaseModel):
+    title: str
+    content: str
+    container_id: Optional[str] = None
+
+
+class ToolMessage(PydanticBaseModel):
+    function_nane: str
+    agent_message: Optional[dict] = None
+    user_message: str
+    container_id: Optional[str] = None
 
 
 class QuestionRequest(PydanticBaseModel):

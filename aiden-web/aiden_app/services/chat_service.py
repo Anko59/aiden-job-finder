@@ -1,6 +1,5 @@
 import os
 from uuid import uuid4
-import markdown2
 import httpx
 import json
 
@@ -11,7 +10,7 @@ from rest_framework import status
 
 from aiden_app import USER_COLLECTION, qdrant_client
 from aiden_app.forms import UserProfileForm
-from aiden_app.models import ProfileInfo, UserProfile
+from aiden_app.models import ProfileInfo, UserProfile, AssistantMesssage, ToolMessage
 from aiden_app.services.agents.mistral_agent import MistralAgent
 from aiden_app.services.agents.agent import Agent
 from aiden_app.services.tools.utils.cv_editor import CVEditor
@@ -40,36 +39,16 @@ class ChatService:
     @classmethod
     def chat_wrapper(cls, agent: Agent, question):
         def generate_responses():
-            yield render_to_string("langui/message.html", {"role": "user", "content": question})
+            yield AssistantMesssage(
+                title="User", content=render_to_string("langui/message.html", {"role": "user", "content": question})
+            ).model_dump_json()
             for message in agent.chat(question):
-                message = message.model_dump()
-                role = message["role"]
-                content = message["content"]
-                if role == "assistant":
-                    content = markdown2.markdown(content)
-                elif role == "tool":
-                    content = json.loads(content)
-                    try:
-                        content["result"] = json.loads(content["result"])
-                        for i in range(len(content["result"])):
-                            try:
-                                content["result"][i]["profile"] = markdown2.markdown(content["result"][i]["profile"])
-                            except Exception:
-                                pass
-                        for i in range(len(content["result"])):
-                            try:
-                                content["result"][i]["organization"]["description"] = markdown2.markdown(
-                                    content["result"][i]["organization"]["description"]
-                                )
-                            except Exception:
-                                pass
-                    except Exception:
-                        pass
-                response = {
-                    "role": role,
-                    "content": content,
-                }
-                yield render_to_string("langui/message.html", response)
+                message: ToolMessage = message
+                yield AssistantMesssage(
+                    title=message.function_nane,
+                    content=message.user_message,
+                    container_id=message.container_id,
+                ).model_dump_json()
 
         return StreamingHttpResponse(generate_responses())
 

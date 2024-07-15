@@ -1,3 +1,4 @@
+from typing import Iterable
 from chompjs import parse_js_object
 import json
 import os
@@ -6,8 +7,10 @@ from uuid import uuid4
 from mistralai.client import MistralClient
 from mistralai.models.chat_completion import ChatMessage, FunctionCall, ToolCall
 from mistralai.models.embeddings import EmbeddingResponse
+from django.template.loader import render_to_string
 
 from aiden_app.services.tools.talk_tool import TalkTool
+from aiden_app.models import ToolMessage
 
 from .agent import Agent
 
@@ -68,56 +71,24 @@ class MistralAgent(Agent):
     def embed(self, message: str) -> EmbeddingResponse:
         return self.client.embeddings(model="mistral-embed", input=message)
 
-    def _parse_tool_call(self, tool_call: ToolCall) -> tuple[ChatMessage, bool]:
-        try:
-            (
-                function_result,
-                agent_speaks_next,
-            ) = self.tool_aggregator.names_to_functions()[tool_call.function.name](args_json=tool_call.function.arguments)
-            if tool_call.function.name == "talk":
-                message = ChatMessage(role="assistant", content=json.loads(function_result)["result"])
-            else:
-                message = ChatMessage(
-                    role="tool",
-                    name=tool_call.function.name,
-                    content=function_result,
-                )
-        except Exception as e:
-            message = ChatMessage(
-                role="tool",
-                name=tool_call.function.name,
-                content=json.dumps({"error": str(e)}),
-            )
-            agent_speaks_next = False
+    def format_no_tool_call_message(self, message: ChatMessage) -> ToolMessage:
+        return ToolMessage(
+            function_nane="talk",
+            agent_message=message.model_dump(),
+            user_message=render_to_string("langui/message.html", message.model_dump()),
+        )
 
-        if tool_call.function.name == "search_jobs":
-            content = json.loads(message.content)
-            if "error" not in content:
-                try:
-                    result = json.loads(content["result"])
-                    short_message = ChatMessage(
-                        role="tool", name=tool_call.function.name, content=json.dumps({"result": [job["metadata_repr"] for job in result]})
-                    )
-                    self.messages.append(short_message)
-                    return message, agent_speaks_next
-                except Exception:
-                    pass
-
-        self.messages.append(message)
-        return message, agent_speaks_next
-
-    def chat(self, user_input: str):
+    def chat(self, user_input: str) -> Iterable[ToolMessage]:
         self.messages.append(ChatMessage(role="user", content=user_input))
         message = self._message_model()
-        tool_calls = 0
+        if len(message.tool_calls) == 0:
+            yield self.format_no_tool_call_message(message)
 
-        while len(message.tool_calls) > 0 and tool_calls < self.max_tool_calls:
-            for tool_call in message.tool_calls:
-                tool_message, agent_speaks_next = self._parse_tool_call(tool_call)
-                tool_calls += 1
+        for tool_call in message.tool_calls:
+            func = self.tool_aggregator.names_to_functions()[tool_call.function.name]
+            args = json.loads(tool_call.function.arguments)
+            for tool_message in func(**args):
+                tool_message: ToolMessage = tool_message
+                if tool_message.agent_message is not None:
+                    self.messages.append(ChatMessage(**tool_message.agent_message))
                 yield tool_message
-            if agent_speaks_next:
-                message = self._message_model()
-            else:
-                return
-        yield message

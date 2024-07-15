@@ -38,7 +38,9 @@ class WelcomeToTheJungleScraper(AbstractScraper):
             yield []
             return
         pos = geocode["items"][0]["position"]
-        params = self._get_algolia_params(search_query=meta["search_query"], pos=pos, num_results=meta["num_results"])
+        params = self._get_algolia_params(
+            search_query=meta["search_query"], pos=pos, num_results=meta["num_results"], start_index=meta["start_index"]
+        )
         yield self.get_zyte_request(
             f"https://{self.algolia_app_id.lower()}-dsn.algolia.net/1/indexes/*/queries?x-algolia-agent=Algolia%20for%20JavaScript%20(4.20.0)%3B%20Browser&search_origin=job_search_client",  # noqa
             callback=self.parse_algolia_resuts,
@@ -46,12 +48,14 @@ class WelcomeToTheJungleScraper(AbstractScraper):
             meta=meta,
         )
 
-    def get_start_requests(self, search_query: str, location: str, num_results: int):
+    def get_start_requests(self, search_query: str, location: str, num_results: int, start_index: int):
         address = quote_plus(location)
         self.geocode_params["q"] = address
         url = f"{self.geocode_url}?{urlencode(self.geocode_params)}"
         yield self.get_zyte_request(
-            url=url, callback=self.parse_geocoding_results, meta={"search_query": search_query, "num_results": num_results}
+            url=url,
+            callback=self.parse_geocoding_results,
+            meta={"search_query": search_query, "num_results": num_results, "start_index": start_index},
         )
 
     def __init__(self, *args, **kwargs):
@@ -71,9 +75,13 @@ class WelcomeToTheJungleScraper(AbstractScraper):
             "lang": "fr",
         }
 
-    def _get_algolia_params(self, search_query: str, pos: dict, num_results: int) -> str:
+    def _get_algolia_params(self, search_query: str, pos: dict, num_results: int, start_index: int) -> str:
+        if start_index > 0:
+            page = start_index // num_results
+        else:
+            page = 0
         latlng = f"{pos['lat']},{pos['lng']}"
-        params = {"hitsPerPage": num_results, "query": search_query, "aroundLatLng": latlng, "aroundRadius": 2000000}
+        params = {"hitsPerPage": num_results, "query": search_query, "aroundLatLng": latlng, "aroundRadius": 2000000, "page": page}
         return json.dumps({"requests": [{"indexName": "wttj_jobs_production_fr", "params": urlencode(params)}]})
 
     @cache(retention_period=timedelta(hours=12), model=StartParams, source="wtj_start_params")
