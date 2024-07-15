@@ -293,8 +293,12 @@ export async function sendQuestion(question) {
         const { value, done: resultDone } = await reader.read();
         done = resultDone;
         if (value) {
-            const text = new TextDecoder('utf-8').decode(value);
-            document.getElementById('message-container').innerHTML += text;
+            const json = JSON.parse(new TextDecoder('utf-8').decode(value));
+            if (json.container_id) {
+                document.getElementById(json.container_id).innerHTML += json.content;
+            } else {
+                document.getElementById('message-container').innerHTML += json.content;
+            }
             initializeMessageEvents();
         }
     }

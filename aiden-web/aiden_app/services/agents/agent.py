@@ -7,7 +7,6 @@ from aiden_project.settings import MEDIA_ROOT
 from django.core.serializers.json import DjangoJSONEncoder
 
 from aiden_app.models import UserProfile
-from aiden_app.services.tools.cv_editor_tool import CVEditorTool
 from aiden_app.services.tools.scraper_tool import ScraperTool
 from aiden_app.services.tools.tool_aggregator import ToolAggregator
 
@@ -72,7 +71,6 @@ class Agent(ABC):
     def from_profile(cls, user_profile: UserProfile, *args, **kwargs) -> "Agent":
         self = cls(*args, **kwargs)
         self.profile = user_profile
-        self.tool_aggregator.tools.append(CVEditorTool(profile=user_profile))
         self.tool_aggregator.tools.append(ScraperTool(profile_embedding_id=user_profile.profile_info.embeddings_id))
         profile_dict = user_profile.profile_info.to_json()
         start_messages = [

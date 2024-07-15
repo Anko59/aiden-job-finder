@@ -1,8 +1,15 @@
 from __future__ import annotations
+from enum import Enum
 from typing import Optional
 from datetime import datetime
 
 from pydantic import BaseModel
+
+
+class ScrapeStatus(Enum):
+    IN_PROGRESS = "in_progress"
+    FINISHED = "finished"
+    NOT_FOUND = "not_found"
 
 
 class Coordinates(BaseModel):
