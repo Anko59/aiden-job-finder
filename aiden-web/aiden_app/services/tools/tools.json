@@ -58,10 +58,6 @@
                     "location": {
                         "type": "string",
                         "description": "The location where the jobs should be located. Example: Paris (75)"
-                    },
-                    "num_results": {
-                        "type": "string",
-                        "description": "Number of results that the query should return. Default to 15 (one request)"
                     }
                 },
                 "required": [

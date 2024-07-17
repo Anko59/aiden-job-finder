@@ -1,4 +1,5 @@
 import os
+from typing import Iterable
 from uuid import uuid4
 import httpx
 import json
@@ -12,8 +13,8 @@ from aiden_app import USER_COLLECTION, qdrant_client
 from aiden_app.forms import UserProfileForm
 from aiden_app.models import ProfileInfo, UserProfile, AssistantMesssage, ToolMessage
 from aiden_app.services.agents.mistral_agent import MistralAgent
-from aiden_app.services.agents.agent import Agent
 from aiden_app.services.tools.utils.cv_editor import CVEditor
+from aiden_app.services.tools.scraper_tool import ScraperTool
 
 from aiden_shared.constants import JOB_COLLECTION
 from aiden_shared.models import JobOffer
@@ -37,7 +38,9 @@ class ChatService:
         return profile
 
     @classmethod
-    def chat_wrapper(cls, agent: Agent, question):
+    def chat_wrapper(cls, request, question):
+        agent = cls.get_agent_from_session(request.session)
+
         def generate_responses():
             yield AssistantMesssage(
                 title="User", content=render_to_string("langui/message.html", {"role": "user", "content": question})
@@ -49,6 +52,8 @@ class ChatService:
                     content=message.user_message,
                     container_id=message.container_id,
                 ).model_dump_json()
+            request.session["agent"] = agent.to_json()
+            request.session.save()
 
         return StreamingHttpResponse(generate_responses())
 
@@ -172,3 +177,19 @@ class ChatService:
             filled_fields = agent.fill_form(fields, job_offer.model_dump(), base_profile.profile_info.to_json())
             filled_fields = [{"title": k, "value": v} for k, v in filled_fields.items()]
             yield render_to_string("langui/filled-form-display.html", {"fields": filled_fields})
+
+    @classmethod
+    def load_next_page(cls, request, page: int, container_id: str) -> Iterable[str]:
+        agent = cls.get_agent_from_session(request.session)
+        scraper_tool: ScraperTool = agent.tool_aggregator.get_tool("ScraperTool")
+        for message in scraper_tool.get_next_page_jobs(container_id, page):
+            message: ToolMessage = message
+            if message.agent_message is not None:
+                agent.messages.append(agent.message_class(**message.agent_message))
+            yield AssistantMesssage(
+                title=message.function_nane,
+                content=message.user_message,
+                container_id=message.container_id,
+            ).model_dump_json()
+        request.session["agent"] = agent.to_json()
+        request.session.save()

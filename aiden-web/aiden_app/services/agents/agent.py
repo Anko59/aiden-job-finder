@@ -54,6 +54,7 @@ class Agent(ABC):
         del state["message_class"]
         state["profile_id"] = self.profile.id
         del state["profile"]
+        state["tool_data"] = self.tool_aggregator.serialize_tools_data()
         return json.dumps(state)
 
     @classmethod
@@ -64,6 +65,8 @@ class Agent(ABC):
         self = cls.from_profile(profile)
         self.unserialize_messages(state["messages"])
         del state["messages"]
+        self.tool_aggregator.unserialize_tools_data(state["tool_data"])
+        del state["tool_data"]
         self.__dict__.update(state)
         return self
 

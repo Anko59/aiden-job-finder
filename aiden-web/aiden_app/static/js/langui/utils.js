@@ -99,7 +99,84 @@ function initializeDocumentEvents() {
     }
 }
 
-function initializeMessageEvents() {
+async function loadNextPage(gridContainer, nextIndex) {
+    hideChatForm();
+    const fetchOptions = {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': getCookie('csrftoken'),
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(
+            {
+                'container_id': gridContainer.getAttribute('id'),
+                'page': nextIndex
+            }
+        ),
+    };
+    const response = await fetch('api/load_next_page', fetchOptions);
+    const reader = response.body.getReader();
+    let done = false;
+    while (!done) {
+        const { value, done: resultDone } = await reader.read();
+        done = resultDone;
+        if (value) {
+            const json = JSON.parse(new TextDecoder('utf-8').decode(value));
+            document.getElementById(json.container_id).innerHTML += json.content;
+        }
+    }
+    await initializeMessageEvents();
+    showChatForm();
+}
+
+async function getNextPage(containerId) {
+    let gridContainer = document.getElementById(containerId);
+    let messageContainer = gridContainer.closest('.job-offers-message-container')
+    let grids = gridContainer.getElementsByClassName('job-offer-grid');
+    let displayedGrid = Array.from(grids).find(grid => !grid.classList.contains('hidden'));
+    if (!displayedGrid) {
+        return;
+    }
+    let currentIndex = parseInt(displayedGrid.getAttribute('page'));
+    let loadedPages = parseInt(messageContainer.getElementsByClassName('total-pages')[0].textContent);
+    let nextIndex = currentIndex + 1;
+    if (currentIndex < loadedPages) {
+        let nextGrid = Array.from(grids).find(grid => grid.getAttribute('page') === nextIndex.toString());
+        if (nextGrid) {
+            displayedGrid.classList.add('hidden');
+            nextGrid.classList.remove('hidden');
+        }
+    } else {
+        displayedGrid.classList.add('hidden');
+        await loadNextPage(gridContainer, nextIndex);
+        messageContainer.getElementsByClassName('total-pages')[0].textContent = loadedPages + 1;
+    }
+    messageContainer.getElementsByClassName('page-number')[0].textContent = nextIndex;
+}
+
+
+function getPreviousPage(containerId) {
+    let gridContainer = document.getElementById(containerId);
+    let messageContainer = gridContainer.closest('.job-offers-message-container')
+    let grids = gridContainer.getElementsByClassName('job-offer-grid');
+    let displayedGrid = Array.from(grids).find(grid => !grid.classList.contains('hidden'));
+    if (!displayedGrid) {
+        return;
+    }
+    let currentIndex = displayedGrid.getAttribute('page');
+    if (currentIndex > 1) {
+        let previousIndex = parseInt(currentIndex) - 1;
+        let previousGrid = Array.from(grids).find(grid => grid.getAttribute('page') === previousIndex.toString());
+        if (previousGrid) {
+            displayedGrid.classList.add('hidden');
+            previousGrid.classList.remove('hidden');
+            messageContainer.getElementsByClassName('page-number')[0].textContent = previousIndex;
+        }
+    }
+}
+
+
+async function initializeMessageEvents() {
     let jobOffers = document.getElementsByClassName('job-offer');
     for (let i = 0; i < jobOffers.length; i++) {
         jobOffers[i].addEventListener('click', function () {
@@ -115,7 +192,20 @@ function initializeMessageEvents() {
             getOfferFocus(reference);
         });
     }
-
+    let nextPageButtons = document.getElementsByClassName('next-page');
+    for (let i = 0; i < nextPageButtons.length; i++) {
+        nextPageButtons[i].addEventListener('click', async function () {
+            let containerId = nextPageButtons[i].closest('.job-offers-message-container').getAttribute('container_id');
+            await getNextPage(containerId);
+        });
+    }
+    let previousPageButtons = document.getElementsByClassName('previous-page');
+    for (let i = 0; i < previousPageButtons.length; i++) {
+        previousPageButtons[i].addEventListener('click', function () {
+            let containerId = previousPageButtons[i].closest('.job-offers-message-container').getAttribute('container_id');
+            getPreviousPage(containerId);
+        });
+    }
 }
 
 function toggleJobOffersInGrid(currentOffer) {
@@ -264,15 +354,15 @@ export function createProfile(formData) {
         });
 };
 
-function showChatForm(){
+function showChatForm() {
     document.getElementById('chat-form').classList.remove('hidden');
 }
 
-function hideChatForm(){
+function hideChatForm() {
     document.getElementById('chat-form').classList.add('hidden');
 }
 
-function emptyMessageContainer(){
+function emptyMessageContainer() {
     document.getElementById('message-container').innerHTML = '';
 }
 
@@ -299,7 +389,7 @@ export async function sendQuestion(question) {
             } else {
                 document.getElementById('message-container').innerHTML += json.content;
             }
-            initializeMessageEvents();
+            await initializeMessageEvents();
         }
     }
     showChatForm();
