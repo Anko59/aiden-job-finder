@@ -138,15 +138,19 @@ async function getNextPage(containerId) {
         return;
     }
     let currentIndex = parseInt(displayedGrid.getAttribute('page'));
+    console.log('Current index:', currentIndex);
     let loadedPages = parseInt(messageContainer.getElementsByClassName('total-pages')[0].textContent);
+    console.log('Loaded pages:', loadedPages);
     let nextIndex = currentIndex + 1;
     if (currentIndex < loadedPages) {
+        console.log('Switching to next page');
         let nextGrid = Array.from(grids).find(grid => grid.getAttribute('page') === nextIndex.toString());
         if (nextGrid) {
             displayedGrid.classList.add('hidden');
             nextGrid.classList.remove('hidden');
         }
     } else {
+        console.log('Loading next page');
         displayedGrid.classList.add('hidden');
         await loadNextPage(gridContainer, nextIndex);
         messageContainer.getElementsByClassName('total-pages')[0].textContent = loadedPages + 1;
@@ -164,8 +168,12 @@ function getPreviousPage(containerId) {
         return;
     }
     let currentIndex = displayedGrid.getAttribute('page');
+    console.log('currentIndex');
+    console.log(currentIndex);
     if (currentIndex > 1) {
         let previousIndex = parseInt(currentIndex) - 1;
+        console.log('previousIndex');
+        console.log(previousIndex);
         let previousGrid = Array.from(grids).find(grid => grid.getAttribute('page') === previousIndex.toString());
         if (previousGrid) {
             displayedGrid.classList.add('hidden');
@@ -177,31 +185,42 @@ function getPreviousPage(containerId) {
 
 
 async function initializeMessageEvents() {
+    function addEventListenerOnce(element, eventType, handler) {
+        if (!element.hasAttribute('listener-added')) {
+            element.addEventListener(eventType, handler);
+            element.setAttribute('listener-added', 'true');
+        }
+    }
+
     let jobOffers = document.getElementsByClassName('job-offer');
     for (let i = 0; i < jobOffers.length; i++) {
-        jobOffers[i].addEventListener('click', function () {
+        addEventListenerOnce(jobOffers[i], 'click', function () {
             let detailedView = jobOffers[i].querySelector('.detailed-view');
             toggleJobOffersInGrid(jobOffers[i]);
             detailedView.classList.toggle('hidden');
         });
     }
+
     let applyButtons = document.getElementsByClassName('offer-focus');
     for (let i = 0; i < applyButtons.length; i++) {
-        applyButtons[i].addEventListener('click', function () {
+        addEventListenerOnce(applyButtons[i], 'click', function () {
             let reference = applyButtons[i].getAttribute('reference');
             getOfferFocus(reference);
         });
     }
+
     let nextPageButtons = document.getElementsByClassName('next-page');
     for (let i = 0; i < nextPageButtons.length; i++) {
-        nextPageButtons[i].addEventListener('click', async function () {
+        addEventListenerOnce(nextPageButtons[i], 'click', async function () {
             let containerId = nextPageButtons[i].closest('.job-offers-message-container').getAttribute('container_id');
             await getNextPage(containerId);
         });
     }
+
     let previousPageButtons = document.getElementsByClassName('previous-page');
     for (let i = 0; i < previousPageButtons.length; i++) {
-        previousPageButtons[i].addEventListener('click', function () {
+        addEventListenerOnce(previousPageButtons[i], 'click', function () {
+            console.log('previous page button clicked');
             let containerId = previousPageButtons[i].closest('.job-offers-message-container').getAttribute('container_id');
             getPreviousPage(containerId);
         });
