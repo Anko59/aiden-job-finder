@@ -177,6 +177,8 @@ class ChatService:
             filled_fields = agent.fill_form(fields, job_offer.model_dump(), base_profile.profile_info.to_json())
             filled_fields = [{"title": k, "value": v} for k, v in filled_fields.items()]
             yield render_to_string("langui/filled-form-display.html", {"fields": filled_fields})
+        request.session["agent"] = agent.to_json()
+        request.session.save()
 
     @classmethod
     def load_next_page(cls, request, page: int, container_id: str) -> Iterable[str]:
@@ -186,10 +188,11 @@ class ChatService:
             message: ToolMessage = message
             if message.agent_message is not None:
                 agent.messages.append(agent.message_class(**message.agent_message))
-            yield AssistantMesssage(
-                title=message.function_nane,
-                content=message.user_message,
-                container_id=message.container_id,
-            ).model_dump_json()
+            if message.user_message is not None:
+                yield AssistantMesssage(
+                    title=message.function_nane,
+                    content=message.user_message,
+                    container_id=message.container_id,
+                ).model_dump_json()
         request.session["agent"] = agent.to_json()
         request.session.save()

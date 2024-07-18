@@ -138,10 +138,9 @@ async function getNextPage(containerId) {
         return;
     }
     let currentIndex = parseInt(displayedGrid.getAttribute('page'));
-    console.log('Current index:', currentIndex);
     let loadedPages = parseInt(messageContainer.getElementsByClassName('total-pages')[0].textContent);
-    console.log('Loaded pages:', loadedPages);
     let nextIndex = currentIndex + 1;
+    messageContainer.getElementsByClassName('page-number')[0].textContent = nextIndex;
     if (currentIndex < loadedPages) {
         console.log('Switching to next page');
         let nextGrid = Array.from(grids).find(grid => grid.getAttribute('page') === nextIndex.toString());
@@ -150,12 +149,10 @@ async function getNextPage(containerId) {
             nextGrid.classList.remove('hidden');
         }
     } else {
-        console.log('Loading next page');
+        messageContainer.getElementsByClassName('total-pages')[0].textContent = loadedPages + 1;
         displayedGrid.classList.add('hidden');
         await loadNextPage(gridContainer, nextIndex);
-        messageContainer.getElementsByClassName('total-pages')[0].textContent = loadedPages + 1;
     }
-    messageContainer.getElementsByClassName('page-number')[0].textContent = nextIndex;
 }
 
 
@@ -168,17 +165,13 @@ function getPreviousPage(containerId) {
         return;
     }
     let currentIndex = displayedGrid.getAttribute('page');
-    console.log('currentIndex');
-    console.log(currentIndex);
     if (currentIndex > 1) {
         let previousIndex = parseInt(currentIndex) - 1;
-        console.log('previousIndex');
-        console.log(previousIndex);
+        messageContainer.getElementsByClassName('page-number')[0].textContent = previousIndex;
         let previousGrid = Array.from(grids).find(grid => grid.getAttribute('page') === previousIndex.toString());
         if (previousGrid) {
             displayedGrid.classList.add('hidden');
             previousGrid.classList.remove('hidden');
-            messageContainer.getElementsByClassName('page-number')[0].textContent = previousIndex;
         }
     }
 }

@@ -31,7 +31,7 @@ class AssistantMesssage(PydanticBaseModel):
 class ToolMessage(PydanticBaseModel):
     function_nane: str
     agent_message: Optional[dict] = None
-    user_message: str
+    user_message: Optional[str] = None
     container_id: Optional[str] = None
 
 

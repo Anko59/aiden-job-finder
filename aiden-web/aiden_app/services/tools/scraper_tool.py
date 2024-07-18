@@ -71,15 +71,22 @@ class ScraperTool(Tool):
             job_offer.organization.description = markdown2.markdown(job_offer.organization.description)
         return render_to_string("langui/job-offer.html", {"job_offer": job_offer.model_dump()})
 
-    def pack_message(self, job_offer: JobOffer, container_id: str) -> ToolMessage:
+    def pack_message_user(self, job_offer: JobOffer, container_id: str) -> ToolMessage:
+        return ToolMessage(
+            function_nane="search_jobs",
+            agent_message=None,
+            user_message=self.format_user_message(job_offer),
+            container_id=container_id,
+        )
+
+    def pack_message_agent(self, job_offers: list[JobOffer]) -> ToolMessage:
         return ToolMessage(
             function_nane="search_jobs",
             agent_message={
                 "role": "tool",
-                "content": job_offer.metadata_repr(),
+                "content": "\n".join([job_offer.metadata_repr() for job_offer in job_offers]),
             },
-            user_message=self.format_user_message(job_offer),
-            container_id=container_id,
+            user_message=None,
         )
 
     def get_container_message(self, container_id: str, search_query: str, location: str) -> ToolMessage:
@@ -117,21 +124,25 @@ class ScraperTool(Tool):
         scrape_id = response.json()["scrape_id"]
         grid_id = uuid4().hex
         yield self.get_grid_message(grid_id, page_number, container_id)
+        jobs_found = []
         for i in range(self.num_offers_per_search):
             status = self.get_scrape_status(scrape_id)
             if status != ScrapeStatus.FINISHED:
                 next_job = self.get_next_job_recommendation(scrape_id, search_query, location)
                 if next_job is None:
                     break
-                yield self.pack_message(next_job, grid_id)
+                jobs_found.append(next_job)
+                yield self.pack_message_user(next_job, grid_id)
                 time.sleep(self.job_response_interval)
             else:
                 for _ in range(i, self.num_offers_per_search):
                     next_job = self.get_next_job_recommendation(scrape_id, search_query, location)
                     if next_job is None:
                         break
-                    yield self.pack_message(next_job, grid_id)
+                    jobs_found.append(next_job)
+                    yield self.pack_message_user(next_job, grid_id)
                 break
+        yield self.pack_message_agent(jobs_found)
         self.add_to_memory(search_query, location, container_id, self.num_offers_per_search)
 
     def search_jobs_agent_wrapper(self, search_query: str, location: str) -> Iterable[ToolMessage]:

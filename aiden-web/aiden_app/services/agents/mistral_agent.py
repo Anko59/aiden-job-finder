@@ -79,6 +79,7 @@ class MistralAgent(Agent):
         )
 
     def chat(self, user_input: str) -> Iterable[ToolMessage]:
+        print("Messages: ", self.messages)
         self.messages.append(ChatMessage(role="user", content=user_input))
         message = self._message_model()
         if len(message.tool_calls) == 0:
@@ -91,4 +92,8 @@ class MistralAgent(Agent):
                 tool_message: ToolMessage = tool_message
                 if tool_message.agent_message is not None:
                     self.messages.append(ChatMessage(**tool_message.agent_message))
-                yield tool_message
+                if tool_message.user_message is not None:
+                    yield tool_message
+        if self.messages[-1].role == "tool":
+            # Dirty fix for "Unexpected role 'user' after role 'tool'" error
+            self.messages.append(ChatMessage(role="assistant", content="I performed the tool call."))
