@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
 from base64 import b64decode
 from functools import partial
+from datetime import timedelta
 from typing import Any, Callable, Iterable
 
 from bs4 import BeautifulSoup
@@ -23,9 +24,10 @@ class AbstractScraper(ABC):
     parser: AbstractParser
     zyte_api_automap = {"httpResponseBody": True}
 
-    def __init__(self, results_multiplier: int = 1):
+    def __init__(self, results_multiplier: int = 1, retention_period=timedelta(days=1)):
         self.results_multiplier = results_multiplier
         self.job_offers_buffer = []
+        self.retention_period = retention_period
 
     @property
     def source(self) -> str:
@@ -82,19 +84,26 @@ class AbstractScraper(ABC):
         return MistralEmbeddingRequest(input=[job_offer], callback=callback)
 
     @abstractmethod
-    def get_start_requests(self, search_query: str, location: str, num_results: int) -> Iterable[Request]:
+    def get_start_requests(self, search_query: str, location: str, num_results: int, start_index: int) -> Iterable[Request]:
         return []
 
-    async def get_cached_start_requests(self, search_query: str, location: str, num_results: int):
+    async def get_cached_start_requests(self, search_query: str, location: str, num_results: int, start_index: int):
         offer_seen = await async_redis_client.exists(f"{self.source}-{search_query}-{location}")
-        if offer_seen >= num_results:
+        if offer_seen >= start_index + num_results:
             logger.info(f"{offer_seen} cache HIT: {search_query}, {location}, {num_results}")
             return
-        for request in self.get_start_requests(search_query, location, num_results):
+        for request in self.get_start_requests(search_query, location, num_results, offer_seen):
             yield request
 
     async def set_cache(self, search_query: str, location: str, num_results: int):
-        await async_redis_client.set(f"{self.source}-{search_query}-{location}", num_results)
+        cache_key = f"{self.source}-{search_query}-{location}"
+        current_value = await async_redis_client.get(cache_key)
+
+        if current_value is None:
+            await async_redis_client.setex(cache_key, self.retention_period, num_results)
+        else:
+            new_value = int(current_value) + num_results
+            await async_redis_client.setex(cache_key, self.retention_period, new_value)
 
     @abstractmethod
     def get_form(self, job_offer: JobOffer) -> dict[str, Any]:

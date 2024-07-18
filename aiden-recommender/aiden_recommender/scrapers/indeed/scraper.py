@@ -19,9 +19,15 @@ class IndeedScraper(AbstractScraper):
     results_per_page = 15
     search_url = base_url + "/jobs?q={search_query}&l={location}&from=searchOnHP&vjk=fa2409e45b11ca41&start={start}"
 
-    def get_start_requests(self, search_query: str, location: str, num_results: int):
-        meta = {"search_query": search_query, "location": location, "num_results": num_results, "current_results": 0}
-        url = self.search_url.format(start=0, **meta)
+    def get_start_requests(self, search_query: str, location: str, num_results: int, start_index: int):
+        meta = {
+            "search_query": search_query,
+            "location": location,
+            "num_results": num_results,
+            "current_results": 0,
+            "start_index": start_index,
+        }
+        url = self.search_url.format(start=start_index, **meta)
         yield self.get_zyte_request(url, meta=meta, callback=self.parse_overview)
 
     def parse_overview(self, soup, meta):
@@ -38,7 +44,9 @@ class IndeedScraper(AbstractScraper):
             next_meta["ov_item"] = result
             yield self.get_zyte_request(url, meta=next_meta, callback=self.parse_detail)
         if len(results) == 15 and current_results < meta["num_results"]:
-            yield self.get_zyte_request(url=self.search_url.format(start=current_results, **meta), meta=meta, callback=self.parse_overview)
+            yield self.get_zyte_request(
+                url=self.search_url.format(start=meta["start_index"] + current_results, **meta), meta=meta, callback=self.parse_overview
+            )
 
     def _extract_results(self, script: str) -> list[dict[str, Any]]:
         data = {}

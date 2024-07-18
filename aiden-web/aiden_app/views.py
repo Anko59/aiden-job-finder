@@ -26,7 +26,7 @@ def handle_question(request):
     if agent is None:
         return JsonResponse({"error": "Agent not initialized"}, status=status.HTTP_404_NOT_FOUND)
 
-    return ChatService.chat_wrapper(agent, question)
+    return ChatService.chat_wrapper(request, question)
 
 
 @csrf_protect
@@ -97,3 +97,13 @@ def handle_offer_focus(request):
     if not offer:
         return JsonResponse({"error": "Invalid offer_id parameter"}, status=status.HTTP_400_BAD_REQUEST)
     return StreamingHttpResponse(ChatService.get_offer_focus(request, offer))
+
+
+@csrf_protect
+@api_view(["POST"])
+def load_next_page(request):
+    page = request.data.get("page")
+    container_id = request.data.get("container_id")
+    if not page or not container_id:
+        return JsonResponse({"error": "Invalid parameters"}, status=status.HTTP_400_BAD_REQUEST)
+    return StreamingHttpResponse(ChatService.load_next_page(request, page, container_id))

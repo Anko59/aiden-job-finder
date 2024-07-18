@@ -7,7 +7,7 @@ from loguru import logger
 from mistralai.models.embeddings import EmbeddingObject
 
 from aiden_shared.constants import JOB_COLLECTION
-from aiden_shared.models import JobOffer
+from aiden_shared.models import JobOffer, ScrapeStatus
 from aiden_recommender.models import Request
 from aiden_recommender.scrapers.abstract_scraper import AbstractScraper
 from aiden_recommender.scrapers import france_travail_scraper, indeed_scraper, wtj_scraper
@@ -31,6 +31,7 @@ class ScraperAggregator:
         self.results_queue = asyncio.Queue()
         self.active_workers = asyncio.Semaphore(self.workers)
         self.condition = asyncio.Condition()
+        self.scrape_statuses = {}
 
     @cache(retention_period=timedelta(hours=12), model=EmbeddingObject, source="search_queries")
     def _get_search_query_vector(self, search_query: str) -> list[EmbeddingObject]:
@@ -102,6 +103,31 @@ class ScraperAggregator:
         )
         logger.warning(f"Found {len(search_result)} results")
         return [JobOffer(**result.payload) for result in search_result]  # type: ignore
+
+    async def scrape(self, scrape_id: UUID, search_query: str, location: str, num_results: int = 15, start_index: int = 0) -> None:
+        self.scrape_statuses[scrape_id] = ScrapeStatus.IN_PROGRESS
+        for scraper in self.scrapers:
+            async for request in scraper.get_cached_start_requests(
+                search_query, location, num_results * scraper.results_multiplier, start_index
+            ):
+                await self.request_queue.put(request)
+
+        logger.warning("Waiting for results")
+        try:
+            async with self.condition:
+                await asyncio.wait_for(
+                    self.condition.wait_for(lambda: self.request_queue.empty() and self.active_workers._value == self.workers),
+                    timeout=self.timeout,
+                )
+        except asyncio.TimeoutError:
+            logger.warning("Timeout reached")
+
+        self.scrape_statuses[scrape_id] = ScrapeStatus.FINISHED
+        for scraper in self.scrapers:
+            scraper.set_cache(search_query, location, num_results * scraper.results_multiplier)
+
+    def get_scrape_status(self, scrape_id: UUID) -> ScrapeStatus:
+        return self.scrape_statuses.get(scrape_id, ScrapeStatus.NOT_FOUND)
 
 
 scraper_aggregator = ScraperAggregator()

@@ -1,0 +1,29 @@
+{% load static %}
+<div class="flex flex-col px-4 py-8 sm:px-6 job-offers-message-container" container_id="{{ job_offers_container_id }}">
+    <img class="mr-2 flex h-8 w-8 rounded-full sm:mr-4" src="{% static 'images/tools.png' %}" />
+    <div class="flex flex-row">
+        <div class="container mx-auto p-4" id="{{ job_offers_container_id }}"
+            search_query="{{ search_query }}" location="{{ location }}">
+            <!--- Job Offers --->
+        </div>
+    </div>
+    <!-- Pagination -->
+    <div class="container mx-auto p-4">
+        <div class="mt-8 flex justify-center">
+            <nav class="inline-flex rounded-md shadow">
+                <button
+                    class="inline-flex items-center rounded-l-lg px-3 py-2 text-center text-sm font-semibold text-blue-600 ring-1 ring-inset ring-blue-600 hover:bg-blue-600 hover:text-blue-50 previous-page">
+                    Previous
+                </button>
+                <span
+                    class="items-center px-3 py-2 text-center text-sm font-semibold text-blue-600 ring-1 ring-inset ring-blue-600 current-page">
+                    Page <span class="page-number">1</span> of <span class="total-pages">1</span>
+                </span>
+                <button
+                    class="inline-flex items-center rounded-r-lg px-3 py-2 text-center text-sm font-semibold text-blue-600 ring-1 ring-inset ring-blue-600 hover:bg-blue-600 hover:text-blue-50 next-page">
+                    Next
+                </button>
+            </nav>
+        </div>
+    </div>
+</div>
