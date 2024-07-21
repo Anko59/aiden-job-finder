@@ -51,8 +51,10 @@ services:
       - postgres_data:/var/lib/postgresql/data/
     networks:
       - aiden_network
-    expose:
+    ports:
       - 5432:5432
+    expose:
+      - "5432"
     healthcheck:
       test:
         [

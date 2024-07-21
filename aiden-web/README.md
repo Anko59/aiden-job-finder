@@ -123,7 +123,7 @@ A list of profiles:
 **Description:** Create a new user profile from submitted form data.
 
 #### Expected Input (Multipart form data):
-Fields required by UserCreationForm.
+Fields required by UserProfileCreationForm.
 
 #### Expected Output (JSON):
 ```json

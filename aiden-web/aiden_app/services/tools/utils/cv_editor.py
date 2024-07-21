@@ -1,15 +1,16 @@
 import os
 import subprocess
-import latexcodec  # noqa: F401
-from urllib.parse import unquote
 from dataclasses import dataclass
 from typing import Any, List, Union
-from aiden_app.models import UserProfile, ProfileInfo
-from aiden_project.settings import MEDIA_ROOT
+from urllib.parse import unquote
 
 import fitz  # PyMuPDF
+import latexcodec  # noqa: F401
+from aiden_project.settings import MEDIA_ROOT
 from jinja2 import Environment, FileSystemLoader
 from PyPDF2 import PdfReader, PdfWriter
+
+from aiden_app.models import ProfileInfo, UserProfile
 
 
 @dataclass
@@ -133,13 +134,14 @@ class CVEditor:
                     element[edit.path[-1]] = edit.value
             except Exception as e:
                 errors.append({"error": str(e)})
-        profile_info = ProfileInfo.from_json(profile_info)
+        profile_info = ProfileInfo.from_json(profile_info, user=base_profile.user)
         new_profile = UserProfile.objects.create(
             first_name=base_profile.first_name,
             last_name=base_profile.last_name,
             profile_title=new_profile_name,
             profile_info=profile_info,
             photo=base_profile.photo,
+            user=base_profile.user,
         )
         new_profile.save()
 

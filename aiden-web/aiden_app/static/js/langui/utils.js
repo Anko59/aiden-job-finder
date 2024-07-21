@@ -143,7 +143,7 @@ async function getOfferFocus(reference) {
         },
         body: JSON.stringify({ 'offer_id': reference }),
     };
-    const response = await fetch('api/get_offer_focus', fetchOptions);
+    const response = await fetch('/api/get_offer_focus', fetchOptions);
     const reader = response.body.getReader();
     let done = false;
     while (!done) {
@@ -166,7 +166,7 @@ export function getProfiles() {
             'X-CSRFToken': getCookie('csrftoken'),
         },
     };
-    fetch('api/get_profiles', fetchOptions)
+    fetch('/api/get_profiles', fetchOptions)
         .then(response => response.text())
         .then(data => {
             document.getElementById('profile-container').innerHTML = data;
@@ -264,15 +264,15 @@ export function createProfile(formData) {
         });
 };
 
-function showChatForm(){
+function showChatForm() {
     document.getElementById('chat-form').classList.remove('hidden');
 }
 
-function hideChatForm(){
+function hideChatForm() {
     document.getElementById('chat-form').classList.add('hidden');
 }
 
-function emptyMessageContainer(){
+function emptyMessageContainer() {
     document.getElementById('message-container').innerHTML = '';
 }
 
@@ -286,7 +286,7 @@ export async function sendQuestion(question) {
         },
         body: JSON.stringify({ question: question }),
     };
-    const response = await fetch('api/question', fetchOptions);
+    const response = await fetch('/api/question', fetchOptions);
     const reader = response.body.getReader();
     let done = false;
     while (!done) {

@@ -1,13 +1,13 @@
-from django.http import JsonResponse, StreamingHttpResponse, HttpRequest
+from django.contrib.auth.decorators import login_required
+from django.http import HttpRequest, JsonResponse, StreamingHttpResponse
 from django.views.decorators.csrf import csrf_protect
+from pydantic import ValidationError
 from rest_framework import status
 from rest_framework.decorators import api_view
-from pydantic import ValidationError
 
 import aiden_app.services.chat_service_v2 as chat_service
-from aiden_app.models import UserProfile
-from aiden_app.forms import UserCreationForm
-from aiden_app.models import ErrorResponse, QuestionRequest, StartChatRequest
+from aiden_app.forms import UserProfileCreationForm
+from aiden_app.models import ErrorResponse, QuestionRequest, StartChatRequest, UserProfile
 
 
 @csrf_protect
@@ -52,6 +52,7 @@ def question(request: HttpRequest) -> JsonResponse:
 
 
 @csrf_protect
+@login_required
 def start_chat(request: HttpRequest) -> JsonResponse:
     """
     Start a chat session with a given profile.
@@ -103,12 +104,12 @@ def create_profile(request: HttpRequest) -> JsonResponse:
     Create a new user profile from submitted form data.
 
     Expected Input:
-    - Multipart form data with fields required by UserCreationForm
+    - Multipart form data with fields required by UserProfileCreationForm
 
     Expected Output (JSON):
     - Success or error message.
     """
-    form = UserCreationForm(request.POST, request.FILES)
+    form = UserProfileCreationForm(request.POST, request.FILES)
     if not form.is_valid():
         return JsonResponse(ErrorResponse(error="Invalid form data").model_dump(), status=status.HTTP_400_BAD_REQUEST)
 
