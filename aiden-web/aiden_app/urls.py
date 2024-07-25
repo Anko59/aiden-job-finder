@@ -13,6 +13,6 @@ urlpatterns = [
     path("api/get_offer_focus", views.handle_offer_focus, name="get_document"),
     re_path(r"^api/v2/(?P<endpoint>.+)/$", views_v2.api_dispatcher, name="api_dispatcher"),
     path("signup/", views.signup_view, name="signup"),
-    path("accounts /login/", views.login_view, name="login"),
+    path("login/", views.login_view, name="login"),
     path("", views.home_view, name="home"),
 ]
