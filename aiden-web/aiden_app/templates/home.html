@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Home</title>
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            var user = JSON.parse(document.getElementById('user-data').textContent);
+
+            if (user.is_authenticated) {
+                window.location.href = "/chat";
+            }
+        });
+    </script>
+</head>
+
+<body>
+    {% if user.is_authenticated %}
+    <h2>Welcome {{ user.username }}!</h2>
+    <p>You are now logged in.</p>
+    {% else %}
+    <h2>Welcome to Our Website!</h2>
+    <p>Please log in or sign up to continue.</p>
+    <button onclick="window.location.href='{% url 'login' %}'">Login</button>
+    <button onclick="window.location.href='{% url 'signup' %}'">Sign Up</button>
+    {% endif %}
+
+    <!-- Embed the user data as JSON in a script tag with type application/json -->
+    <script id="user-data" type="application/json">
+        {
+            "is_authenticated": {{ user.is_authenticated|yesno:"true,false" }},
+            "username": "{{ user.username }}"
+        }
+    </script>
+</body>
+
+</html>

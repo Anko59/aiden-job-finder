@@ -1,13 +1,13 @@
-from django.db import models
-from django.core.validators import RegexValidator
-from django.core.exceptions import ValidationError
-from loguru import logger
-from django.utils.encoding import force_str
-from aiden_project.settings import MEDIA_ROOT
-
 import os
 import uuid
 
+from aiden_project.settings import MEDIA_ROOT
+from django.contrib.auth.models import User
+from django.core.exceptions import ValidationError
+from django.core.validators import RegexValidator
+from django.db import models
+from django.utils.encoding import force_str
+from loguru import logger
 from pydantic import BaseModel as PydanticBaseModel
 
 
@@ -50,11 +50,13 @@ class ErrorResponse(PydanticBaseModel):
 
 
 class BaseModel(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+
     class Meta:
         abstract = True
 
     @classmethod
-    def from_json(cls, json_data: dict, *args, **kwargs) -> "BaseModel":
+    def from_json(cls, json_data: dict, user: User, *args, **kwargs) -> "BaseModel":
         # Handle ManyToManyField and OneToOneField
         m2m_fields = [
             field
@@ -65,9 +67,9 @@ class BaseModel(models.Model):
         for field in m2m_fields:
             data = json_data.get(field.name, [])
             if isinstance(field, models.OneToOneField):
-                related_objects[field.name] = field.related_model.from_json(data)
+                related_objects[field.name] = field.related_model.from_json(data, user=user)
             else:
-                related_objects[field.name] = [field.related_model.from_json(obj) for obj in data]
+                related_objects[field.name] = [field.related_model.from_json(obj, user=user) for obj in data]
             if field.name in json_data:
                 del json_data[field.name]
 
@@ -77,7 +79,6 @@ class BaseModel(models.Model):
                 del json_data[key]
             else:
                 field_object = cls._meta.get_field(key)
-                print(f"field: {key}, value: {value}")
                 for validator in field_object.validators:
                     try:
                         validation = validator(value)
@@ -90,6 +91,7 @@ class BaseModel(models.Model):
                 json_data[key] = value
 
         # Create the instance
+        json_data["user"] = user
         instance = cls.objects.create(**json_data)
 
         # Save ManyToManyField relationships
@@ -107,6 +109,8 @@ class BaseModel(models.Model):
                 json_data[field.name] = getattr(self, field.name).to_json()
             elif isinstance(field, models.UUIDField):
                 json_data[field.name] = str(getattr(self, field.name))
+            elif field.name == "user":
+                json_data[field.name] = self.user.username if self.user else None
             elif not isinstance(field, models.ImageField) and not field.is_relation and field.name != "id":
                 json_data[field.name] = getattr(self, field.name)
         return json_data
@@ -192,7 +196,7 @@ class UserProfile(BaseModel):
     profile_title = models.CharField(max_length=255)
     photo = models.ImageField(upload_to="profile/")
     profile_info = models.OneToOneField(
-        ProfileInfo, related_name="user", on_delete=models.CASCADE, help_text="A detailed schema for a profile JSON object"
+        ProfileInfo, related_name="profile", on_delete=models.CASCADE, help_text="A detailed schema for a profile JSON object"
     )
 
     @property

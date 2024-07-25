@@ -1,20 +1,25 @@
+from django.contrib.auth import authenticate, login
+from django.contrib.auth.decorators import login_required
+from django.contrib.auth.forms import AuthenticationForm
 from django.http import JsonResponse, StreamingHttpResponse
-from django.shortcuts import render
-from django.views import View
+from django.shortcuts import redirect, render
 from django.views.decorators.csrf import csrf_protect
 from rest_framework import status
 from rest_framework.decorators import api_view
 
-from aiden_app.forms import UserCreationForm
+from aiden_app.forms import UserProfileCreationForm
 from aiden_app.models import UserProfile
 from aiden_app.services.chat_service import ChatService
 
-
-class LanguiView(View):
-    def get(self, request):
-        return render(request, "chat.html")
+from .forms import SignUpForm
 
 
+@login_required
+def langui_view(request):
+    return render(request, "chat.html")
+
+
+@login_required
 @csrf_protect
 @api_view(["POST"])
 def handle_question(request):
@@ -29,6 +34,7 @@ def handle_question(request):
     return ChatService.chat_wrapper(agent, question)
 
 
+@login_required
 @csrf_protect
 @api_view(["POST"])
 def handle_start_chat(request):
@@ -45,6 +51,7 @@ def handle_start_chat(request):
     return render(request, "langui/message.html", response)
 
 
+@login_required
 @csrf_protect
 @api_view(["GET"])
 def handle_get_profiles(request):
@@ -56,18 +63,20 @@ def handle_get_profiles(request):
     return render(request, "langui/profile-icons.html", {"items": profiles})
 
 
+@login_required
 @csrf_protect
 @api_view(["GET"])
 def get_profile_creation_form(request):
     return render(request, "langui/create-profile.html")
 
 
+@login_required
 @csrf_protect
 @api_view(["POST"])
 def get_user_documents(request):
     profile = request.data
     profile = UserProfile.objects.get(
-        first_name=profile.get("first_name"), last_name=profile.get("last_name"), profile_title="default_profile"
+        user=request.user, first_name=profile.get("first_name"), last_name=profile.get("last_name"), profile_title="default_profile"
     )
     if not profile:
         return JsonResponse({"error": "Invalid profile parameter"}, status=status.HTTP_400_BAD_REQUEST)
@@ -75,10 +84,11 @@ def get_user_documents(request):
     return render(request, "langui/document-display.html", {"documents": documents})
 
 
+@login_required
 @csrf_protect
 @api_view(["POST"])
 def handle_create_profile(request):
-    form = UserCreationForm(request.POST, request.FILES)
+    form = UserProfileCreationForm(request.POST, request.FILES, user=request.user)
     if not form.is_valid():
         return JsonResponse({"error": "Invalid form data"}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -86,6 +96,7 @@ def handle_create_profile(request):
     return ChatService.create_profile(profile_data, form.cleaned_data, request)
 
 
+@login_required
 @csrf_protect
 @api_view(["POST"])
 def handle_offer_focus(request):
@@ -97,3 +108,37 @@ def handle_offer_focus(request):
     if not offer:
         return JsonResponse({"error": "Invalid offer_id parameter"}, status=status.HTTP_400_BAD_REQUEST)
     return StreamingHttpResponse(ChatService.get_offer_focus(request, offer))
+
+
+def signup_view(request):
+    if request.method == "POST":
+        form = SignUpForm(request.POST)
+        if form.is_valid():
+            form.save()
+            username = form.cleaned_data.get("username")
+            raw_password = form.cleaned_data.get("password1")
+            user = authenticate(username=username, password=raw_password)
+            login(request, user)
+            return redirect("home")
+    else:
+        form = SignUpForm()
+    return render(request, "signup.html", {"form": form})
+
+
+def login_view(request):
+    if request.method == "POST":
+        form = AuthenticationForm(request, data=request.POST)
+        if form.is_valid():
+            username = form.cleaned_data.get("username")
+            password = form.cleaned_data.get("password")
+            user = authenticate(username=username, password=password)
+            if user is not None:
+                login(request, user)
+                return redirect("home")
+    else:
+        form = AuthenticationForm()
+    return render(request, "login.html", {"form": form})
+
+
+def home_view(request):
+    return render(request, "home.html")

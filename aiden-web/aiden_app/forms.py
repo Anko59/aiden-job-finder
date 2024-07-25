@@ -1,22 +1,38 @@
+import json
+
 from django import forms
-from .models import UserProfile
+from django.contrib.auth.forms import UserCreationForm
+from django.contrib.auth.models import User
+
+from .models import ProfileInfo, UserProfile
+
+
+class SignUpForm(UserCreationForm):
+    email = forms.EmailField(max_length=254, required=True, help_text="Required. Enter a valid email address.")
+
+    class Meta:
+        model = User
+        fields = ("username", "email", "password1", "password2")
 
 
 class UserProfileForm(forms.ModelForm):
     class Meta:
         model = UserProfile
         fields = "__all__"
-        exclude = ["user"]
         widgets = {
             "photo": forms.FileInput(attrs={"class": "form-control"}),
         }
 
 
-class UserCreationForm(forms.Form):
+class UserProfileCreationForm(forms.Form):
     first_name = forms.CharField(max_length=100)
     last_name = forms.CharField(max_length=100)
     photo = forms.ImageField()
     profile_info = forms.CharField(max_length=10000)
+
+    def __init__(self, *args, **kwargs):
+        self.user = kwargs.pop("user", None)
+        super(UserProfileCreationForm, self).__init__(*args, **kwargs)
 
     def llm_input(self):
         return {
@@ -26,3 +42,15 @@ class UserCreationForm(forms.Form):
             "photo_url": "user_photo.png",
             "profile_title": "default_profile",
         }
+
+    def save(self):
+        profile_info_data = json.loads(self.cleaned_data["profile_info"])
+        profile_info = ProfileInfo.from_json(profile_info_data, user=self.user)
+        user_profile = UserProfile.objects.create(
+            user=self.user,
+            first_name=self.cleaned_data["first_name"],
+            last_name=self.cleaned_data["last_name"],
+            profile_info=profile_info,
+            photo=self.cleaned_data["photo"],
+        )
+        return user_profile

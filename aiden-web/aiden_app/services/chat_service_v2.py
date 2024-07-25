@@ -1,14 +1,14 @@
-from uuid import uuid4
 from typing import Any, Iterable
-from django.http import JsonResponse, HttpRequest
+from uuid import uuid4
+
+from django.http import HttpRequest, JsonResponse
 from mistralai.models.chat_completion import ChatMessage
+from qdrant_client.models import PointStruct
 from rest_framework import status
 
-from qdrant_client.models import PointStruct
-
 from aiden_app import USER_COLLECTION, qdrant_client
-from aiden_app.models import UserProfile, ProfileInfo, UserProfileResponse, DocumentResponse, CreateProfileResponse, ErrorResponse
 from aiden_app.forms import UserProfileForm
+from aiden_app.models import CreateProfileResponse, DocumentResponse, ErrorResponse, ProfileInfo, UserProfile, UserProfileResponse
 from aiden_app.services.agents.mistral_agent import MistralAgent
 from aiden_app.services.tools.utils.cv_editor import CVEditor
 
@@ -53,11 +53,11 @@ def create_profile(profile_data: dict[str, Any], form_data: dict[str, Any], requ
     )
 
     profile_info.update({"embeddings_id": profile_embeddings_uuid})
-    profile_info = ProfileInfo.from_json(profile_info)
+    profile_info = ProfileInfo.from_json(profile_info, user=request.user)  # type: ignore
     form_data["profile_info"] = profile_info
     form_data["profile_title"] = "default_profile"
 
-    profile_form = UserProfileForm(form_data, request.FILES)
+    profile_form = UserProfileForm(form_data, request.FILES, auto_id=True)
     if profile_form.is_valid():
         user_profile = profile_form.save()
         agent = MistralAgent.from_profile(user_profile)
