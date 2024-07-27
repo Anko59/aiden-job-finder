@@ -120,7 +120,7 @@ class SocialLink(BaseModel):
     icon = models.CharField(
         max_length=50, help_text="The name or icon representing the social media platform, from font-awesome, without the 'fa-' prefix"
     )
-    url = models.URLField(help_text="The URL of the individual's profile on the social media platform")
+    url = models.URLField(help_text="The URL of the individual's profile on the social media platform", blank=True, null=True)
     text = models.CharField(max_length=100, help_text="A shortened or display version of the URL")
 
 
