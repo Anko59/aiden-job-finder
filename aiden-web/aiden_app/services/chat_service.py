@@ -84,8 +84,8 @@ class ChatService:
         return agent, response
 
     @staticmethod
-    def get_available_profiles():
-        for profile in UserProfile.objects.filter(profile_title="default_profile"):
+    def get_available_profiles(user):
+        for profile in UserProfile.objects.filter(user=user):
             yield {
                 "first_name": profile.first_name,
                 "last_name": profile.last_name,
