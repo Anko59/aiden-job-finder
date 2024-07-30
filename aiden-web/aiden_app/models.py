@@ -9,6 +9,7 @@ from django.db import models
 from django.utils.encoding import force_str
 from loguru import logger
 from pydantic import BaseModel as PydanticBaseModel
+from aiden_app.storage import UUIDS3Boto3Storage
 
 
 def remove_special_characters(value):
@@ -169,7 +170,6 @@ class Skill(BaseModel):
 class ProfileInfo(BaseModel):
     first_name = models.CharField(max_length=100, help_text="The first name of the individual")
     last_name = models.CharField(max_length=100, help_text="The last name of the individual")
-    photo_url = models.CharField(help_text="The name of the profile picture")
     cv_title = models.CharField(
         max_length=255, help_text="The professional title or headline for the CV", validators=[remove_special_characters]
     )
@@ -190,11 +190,17 @@ class ProfileInfo(BaseModel):
     embeddings_id = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
 
 
+class Document(BaseModel):
+    name = models.CharField(max_length=255)
+    file = models.FileField(upload_to="documents/")
+
+
 class UserProfile(BaseModel):
     first_name = models.CharField(max_length=100)
     last_name = models.CharField(max_length=100)
     profile_title = models.CharField(max_length=255)
-    photo = models.ImageField(upload_to="profile/")
+    photo = models.ImageField(storage=UUIDS3Boto3Storage(), upload_to="documents/")
+
     profile_info = models.OneToOneField(
         ProfileInfo, related_name="profile", on_delete=models.CASCADE, help_text="A detailed schema for a profile JSON object"
     )

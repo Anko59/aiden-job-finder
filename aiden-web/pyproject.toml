@@ -28,7 +28,8 @@ latexcodec = "^3.0.0"
 aiden-shared = {path = "../aiden-shared"}
 loguru = "^0.7.2"
 django-storages = "^1.14.4"
-boto3 = "^1.34.149"
+minio = "^7.2.7"
+boto3 = "^1.34.151"
 
 [tool.poetry.group.dev.dependencies]
 ipython = "^8.24.0"

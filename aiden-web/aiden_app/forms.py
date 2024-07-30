@@ -27,7 +27,6 @@ class UserProfileForm(forms.ModelForm):
 class UserProfileCreationForm(forms.Form):
     first_name = forms.CharField(max_length=100)
     last_name = forms.CharField(max_length=100)
-    photo = forms.ImageField()
     profile_info = forms.CharField(max_length=10000)
 
     def __init__(self, *args, **kwargs):
@@ -39,7 +38,6 @@ class UserProfileCreationForm(forms.Form):
             "first_name": self.cleaned_data["first_name"],
             "last_name": self.cleaned_data["last_name"],
             "profile_info": self.cleaned_data["profile_info"],
-            "photo_url": "user_photo.png",
             "profile_title": "default_profile",
         }
 
@@ -51,6 +49,5 @@ class UserProfileCreationForm(forms.Form):
             first_name=self.cleaned_data["first_name"],
             last_name=self.cleaned_data["last_name"],
             profile_info=profile_info,
-            photo=self.cleaned_data["photo"],
         )
         return user_profile
