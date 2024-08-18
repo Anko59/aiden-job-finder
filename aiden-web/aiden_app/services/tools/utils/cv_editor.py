@@ -99,7 +99,7 @@ class CVEditor:
 
     def _extract_most_content_page(self, document_path: Path):
         """Extract the page with the most content from the PDF"""
-        infile = PdfReader(document_path.as_posix(), "rb")
+        infile = PdfReader(document_path.absolute().as_posix(), "rb")
         max_content_page = max(infile.pages, key=lambda page: len(page.extract_text()))
         output = PdfWriter()
         output.add_page(max_content_page)

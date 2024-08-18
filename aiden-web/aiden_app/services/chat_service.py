@@ -182,8 +182,8 @@ class ChatService:
             )
             new_profile.save()
             request.session["profile"] = new_profile.to_json()
-            CVEditor().generate_cv(new_profile)
-            resume = {"name": new_profile.cv_name, "path": "/media/cv/" + new_profile.cv_name.replace(".pdf", ".png")}
+            new_cv = CVEditor().generate_cv(new_profile)
+            resume = {"name": new_cv.name, "path": get_presigned_url(new_cv.name)}
             del fields["resume"]
             yield render_to_string("langui/edited-cv-display.html", {"resume": resume})
 

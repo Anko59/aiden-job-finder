@@ -156,7 +156,7 @@ class Education(BaseModel):
 class Project(BaseModel):
     name = models.CharField(max_length=100, help_text="The name of the project")
     description = models.TextField(help_text="A description of the project")
-    url = models.URLField(help_text="The URL of the project repository or website")
+    url = models.URLField(help_text="The URL of the project repository or website", blank=True, null=True)
 
 
 class Skill(BaseModel):
