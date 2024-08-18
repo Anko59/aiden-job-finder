@@ -140,4 +140,4 @@ aiden-web/media/profile/*
 .DS_Store
 .env
 .python_version
-.secrets
+.secret
