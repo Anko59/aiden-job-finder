@@ -4,6 +4,6 @@
         <h1 class="text-sm font-medium capitalize text-slate-700 dark:text-slate-200">
             {{ document.name }}
         </h1>
-        <img src="{{ document.path }}" class="h-7 w-7" fill="currentColor" stroke-width="1" viewBox="0 0 32 32">
+        <img src="{{ document.presigned_url }}" class="h-7 w-7" fill="currentColor" stroke-width="1" viewBox="0 0 32 32">
     </button>
 {% endfor %}

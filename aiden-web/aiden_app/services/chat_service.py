@@ -18,6 +18,7 @@ from aiden_app.models import ProfileInfo, UserProfile
 from aiden_app.services.agents.agent import Agent
 from aiden_app.services.agents.mistral_agent import MistralAgent
 from aiden_app.services.tools.utils.cv_editor import CVEditor
+from aiden_app.storage import get_presigned_url
 
 
 class ChatService:
@@ -89,7 +90,7 @@ class ChatService:
             yield {
                 "first_name": profile.first_name,
                 "last_name": profile.last_name,
-                "photo_url": profile.photo.url,
+                "photo_url": get_presigned_url(profile.photo.name),
             }
 
     @classmethod

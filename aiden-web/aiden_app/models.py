@@ -1,7 +1,6 @@
-import os
 import uuid
 
-from aiden_project.settings import MEDIA_ROOT
+
 from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
 from django.core.validators import RegexValidator
@@ -75,7 +74,7 @@ class BaseModel(models.Model):
                 del json_data[field.name]
 
         # Remove unusable fields and clean up data
-        for key, value in json_data.items():
+        for key, value in list(json_data.items()):
             if key not in [field.name for field in cls._meta.get_fields()]:
                 del json_data[key]
             else:
@@ -178,7 +177,7 @@ class ProfileInfo(BaseModel):
     phone_number = models.CharField(max_length=20, help_text="The phone number for contacting the individual")
     address = models.CharField(max_length=255, help_text="The address of the individual's residence")
     social_links = models.ManyToManyField(
-        SocialLink, related_name="profiles", help_text="A list of social media links associated with the individual"
+        SocialLink, related_name="profiles", help_text="A list of social media links ed with the individual"
     )
     interests = models.ManyToManyField(Interest, related_name="profiles", help_text="A list of the individual's interests or hobbies")
     experiences = models.ManyToManyField(
@@ -192,26 +191,19 @@ class ProfileInfo(BaseModel):
 
 class Document(BaseModel):
     name = models.CharField(max_length=255)
-    file = models.FileField(upload_to="documents/")
+    file = models.FileField(storage=UUIDS3Boto3Storage(object_folder="documents"))
+    profile = models.ForeignKey(ProfileInfo, on_delete=models.CASCADE)
 
 
 class UserProfile(BaseModel):
     first_name = models.CharField(max_length=100)
     last_name = models.CharField(max_length=100)
     profile_title = models.CharField(max_length=255)
-    photo = models.ImageField(storage=UUIDS3Boto3Storage(), upload_to="documents/")
+    photo = models.ImageField(storage=UUIDS3Boto3Storage(object_folder="photos"))
 
     profile_info = models.OneToOneField(
         ProfileInfo, related_name="profile", on_delete=models.CASCADE, help_text="A detailed schema for a profile JSON object"
     )
-
-    @property
-    def cv_name(self):
-        return f'CV_{self.first_name.lower()}_{self.last_name.lower()}_{self.profile_title.lower().replace(" ", "_")}.pdf'
-
-    @property
-    def cv_path(self):
-        return os.path.join(MEDIA_ROOT, "cv", self.cv_name)
 
     def __str__(self):
         return f"{self.first_name} {self.last_name}"

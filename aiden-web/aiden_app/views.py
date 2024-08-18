@@ -12,6 +12,7 @@ from aiden_app.models import Document, UserProfile
 from aiden_app.services.chat_service import ChatService
 from django.core.files.storage import default_storage
 from .forms import SignUpForm
+from aiden_app.storage import get_presigned_url
 
 
 @login_required
@@ -40,7 +41,7 @@ def handle_question(request):
 def handle_start_chat(request):
     profile = request.data
     profile = UserProfile.objects.get(
-        first_name=profile.get("first_name"), last_name=profile.get("last_name"), profile_title="default_profile"
+        first_name=profile.get("first_name"), last_name=profile.get("last_name"), profile_title="default_profile", user=request.user
     )
     if not profile:
         return JsonResponse({"error": "Invalid profile parameter"}, status=status.HTTP_400_BAD_REQUEST)
@@ -88,9 +89,10 @@ def get_user_documents(request):
         user=request.user,
         first_name=profile_data.get("first_name"),
         last_name=profile_data.get("last_name"),
-        profile_title="default_profile",
     )
-    documents = Document.objects.filter(user_profile=profile)
+    documents = Document.objects.filter(profile=profile.profile_info)
+    for document in documents:
+        document.presigned_url = get_presigned_url(document.file.name)
     return render(request, "langui/document-display.html", {"documents": documents})
 
 
