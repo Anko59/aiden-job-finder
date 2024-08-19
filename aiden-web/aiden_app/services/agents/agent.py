@@ -90,7 +90,6 @@ class Agent(ABC):
         example_profile = json.load(open(example_profile_path))
         base_first_name = profile_info["first_name"]
         base_last_name = profile_info["last_name"]
-        base_photo_url = profile_info["photo_url"]
         start_messages = [
             self.message_class(role="system", content=PROFILE_CREATION_SYSTEM_PROMPT),
             self.message_class(role="system", content=json.dumps(profile_schema)),
@@ -102,7 +101,6 @@ class Agent(ABC):
         profile_info = json.loads(message.content)
         profile_info["first_name"] = base_first_name
         profile_info["last_name"] = base_last_name
-        profile_info["photo_url"] = base_photo_url
         return profile_info
 
     def edit_profile(self, profile_info: dict[str, str], job_offer: dict[str, str]):
@@ -110,7 +108,6 @@ class Agent(ABC):
         profile_schema = json.load(open(profile_schema_path))
         base_first_name = profile_info["first_name"]
         base_last_name = profile_info["last_name"]
-        base_photo_url = profile_info["photo_url"]
         messages = [
             self.message_class(role="system", content=PROFILE_EDIT_SYSTEM_PROMPT),
             self.message_class(role="system", content=json.dumps(profile_schema)),
@@ -122,7 +119,6 @@ class Agent(ABC):
         profile_info = json.loads(message.content)
         profile_info["first_name"] = base_first_name
         profile_info["last_name"] = base_last_name
-        profile_info["photo_url"] = base_photo_url
         return profile_info
 
     def generate_cover_letter(self, job_offer: dict[str, str], profile_info: dict[str, str]):

@@ -1,8 +1,8 @@
 import os
+from pathlib import Path
 import subprocess
 from dataclasses import dataclass
 from typing import Any, List, Union
-from urllib.parse import unquote
 
 import fitz  # PyMuPDF
 import latexcodec  # noqa: F401
@@ -10,7 +10,10 @@ from aiden_project.settings import MEDIA_ROOT
 from jinja2 import Environment, FileSystemLoader
 from PyPDF2 import PdfReader, PdfWriter
 
-from aiden_app.models import ProfileInfo, UserProfile
+from aiden_app.models import Document, ProfileInfo, UserProfile
+from loguru import logger
+import tempfile
+from django.core.files.base import ContentFile
 
 
 @dataclass
@@ -31,35 +34,40 @@ class CVEditor:
             comment_end_string='"àé"()',
         )
 
-    def generate_cv(self, profile: UserProfile):
+    def generate_cv(self, profile: UserProfile) -> Document:
         template = self.jinja_env.get_template("cv_template.tex")
         info = profile.profile_info.to_json()
-        info["photo_url"] = "../profile/" + unquote(profile.photo.url.split("/")[-1])
 
+        logger.info(f"Generating CV for {profile.user.username}")
         output = self._render_template(template, info)
-        document_path = self._write_to_file(output, profile.cv_path.replace(".pdf", ".tex"))
-        self._compile_document(document_path)
-        self._extract_most_content_page(document_path)
-        self._clean_user_directory()
-        pdf_path = document_path.replace(".tex", ".pdf")
-        png_path = pdf_path.replace(".pdf", ".png")
-        self._generate_cv_png(pdf_path, png_path)
-        return pdf_path
+        logger.info(f"Writing CV as pdf to file for {profile.user.username}")
 
-    def _clean_user_directory(self):
-        for file in os.listdir(self.cv_images_path):
-            if file.endswith(".aux") or file.endswith(".log") or file.endswith(".tex") or file.endswith(".out"):
-                if file != "cv_template.tex":
-                    os.remove(os.path.join(self.cv_images_path, file))
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            tmp_dir = Path(tmp_dir)
+            document_path = tmp_dir / "cv.tex"
+            document_path.write_bytes(output.encode("utf-8"))
+            logger.info(f"Compiling CV for {profile.user.username}")
+            pdf_path = self._compile_document(document_path)
+            logger.info(f"Generating PDF for {profile.user.username}")
+            png_path = self._generate_cv_png(pdf_path, tmp_dir / "cv.png")
+            # saving cv to db and upload to s3
+            logger.info(f"Saving CV for {profile.user.username}")
+            # TODO: The pdf is not saved to the database nor in storage, but the png is
+            document = Document.objects.create(
+                user=profile.user, profile=profile.profile_info, file=ContentFile(png_path.read_bytes(), name="cv.png")
+            )
 
-    def _generate_cv_png(self, pdf_path: str, png_path: str):
-        doc = fitz.open(pdf_path)
+        return document
+
+    def _generate_cv_png(self, pdf_path: Path, png_path: Path):
+        doc = fitz.open(pdf_path.as_posix())
         page = doc[0]
         pix = page.get_pixmap()
         pix.save(png_path)
+        return png_path
 
     @classmethod
-    def _escape_latex_dict(cls, d: dict) -> dict:
+    def _escape_latex_dict(cls, d: dict | str | list | Any) -> dict:
         # Clean up the dictionary to escape LaTeX special characters
         if isinstance(d, dict):
             return {k: cls._escape_latex_dict(v) for k, v in d.items()}
@@ -75,31 +83,27 @@ class CVEditor:
         output = template.render(**info)
         return "\n".join([x.replace("{ ", "{").replace(" }", "}") for x in output.split("\n") if x])
 
-    def _write_to_file(self, content: str, document_path: str) -> str:
-        with open(document_path, "w") as f:
-            f.write(content)
-        return document_path
-
-    def _compile_document(self, document_path: str):
+    def _compile_document(self, document_path: Path) -> Path:
         subprocess.run(
             [
                 "pdflatex",
                 "-interaction=nonstopmode",
-                "-output-directory=" + os.path.dirname(document_path),
-                "-jobname=" + os.path.basename(document_path).replace(".tex", ""),
-                "\\input{" + document_path + "}",
+                "-output-directory=" + document_path.parent.absolute().as_posix(),
+                "-jobname=" + document_path.name.replace(".tex", ""),
+                "\\input{" + document_path.absolute().as_posix() + "}",
             ]
         )
-        for file in os.listdir(os.path.dirname(document_path)):
-            if file.endswith(".aux") or file.endswith(".log"):
-                os.remove(os.path.join(os.path.dirname(document_path), file))
+        # One aux file, one log and one pdf file should be generated
+        pdf = Path(document_path.as_posix().replace(".tex", ".pdf"))
+        return pdf
 
-    def _extract_most_content_page(self, document_path: str):
-        infile = PdfReader(document_path.replace(".tex", ".pdf"), "rb")
+    def _extract_most_content_page(self, document_path: Path):
+        """Extract the page with the most content from the PDF"""
+        infile = PdfReader(document_path.absolute().as_posix(), "rb")
         max_content_page = max(infile.pages, key=lambda page: len(page.extract_text()))
         output = PdfWriter()
         output.add_page(max_content_page)
-        with open(document_path.replace(".tex", ".pdf"), "wb") as f:
+        with document_path.open("wb") as f:
             output.write(f)
 
     def edit_profile(

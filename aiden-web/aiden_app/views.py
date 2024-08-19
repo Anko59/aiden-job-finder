@@ -2,16 +2,16 @@ from django.contrib.auth import authenticate, login
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import AuthenticationForm
 from django.http import JsonResponse, StreamingHttpResponse
-from django.shortcuts import redirect, render
+from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.csrf import csrf_protect
 from rest_framework import status
 from rest_framework.decorators import api_view
 
 from aiden_app.forms import UserProfileCreationForm
-from aiden_app.models import UserProfile
+from aiden_app.models import Document, UserProfile
 from aiden_app.services.chat_service import ChatService
-
 from .forms import SignUpForm
+from aiden_app.storage import get_presigned_url
 
 
 @login_required
@@ -40,7 +40,7 @@ def handle_question(request):
 def handle_start_chat(request):
     profile = request.data
     profile = UserProfile.objects.get(
-        first_name=profile.get("first_name"), last_name=profile.get("last_name"), profile_title="default_profile"
+        first_name=profile.get("first_name"), last_name=profile.get("last_name"), profile_title="default_profile", user=request.user
     )
     if not profile:
         return JsonResponse({"error": "Invalid profile parameter"}, status=status.HTTP_400_BAD_REQUEST)
@@ -55,7 +55,7 @@ def handle_start_chat(request):
 @csrf_protect
 @api_view(["GET"])
 def handle_get_profiles(request):
-    profiles = list(ChatService.get_available_profiles())
+    profiles = list(ChatService.get_available_profiles(request.user))
 
     if profiles is None:
         return JsonResponse({"error": "No profiles available"}, status=status.HTTP_404_NOT_FOUND)
@@ -74,13 +74,16 @@ def get_profile_creation_form(request):
 @csrf_protect
 @api_view(["POST"])
 def get_user_documents(request):
-    profile = request.data
-    profile = UserProfile.objects.get(
-        user=request.user, first_name=profile.get("first_name"), last_name=profile.get("last_name"), profile_title="default_profile"
+    profile_data = request.data
+    profile = get_object_or_404(
+        UserProfile,
+        user=request.user,
+        first_name=profile_data.get("first_name"),
+        last_name=profile_data.get("last_name"),
     )
-    if not profile:
-        return JsonResponse({"error": "Invalid profile parameter"}, status=status.HTTP_400_BAD_REQUEST)
-    documents = ChatService.get_documents(profile)
+    documents = Document.objects.filter(profile=profile.profile_info)
+    for document in documents:
+        document.presigned_url = get_presigned_url(document.file.name)
     return render(request, "langui/document-display.html", {"documents": documents})
 
 

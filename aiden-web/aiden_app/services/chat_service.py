@@ -18,6 +18,7 @@ from aiden_app.models import ProfileInfo, UserProfile
 from aiden_app.services.agents.agent import Agent
 from aiden_app.services.agents.mistral_agent import MistralAgent
 from aiden_app.services.tools.utils.cv_editor import CVEditor
+from aiden_app.storage import get_presigned_url
 
 
 class ChatService:
@@ -84,12 +85,12 @@ class ChatService:
         return agent, response
 
     @staticmethod
-    def get_available_profiles():
-        for profile in UserProfile.objects.filter(profile_title="default_profile"):
+    def get_available_profiles(user):
+        for profile in UserProfile.objects.filter(user=user):
             yield {
                 "first_name": profile.first_name,
                 "last_name": profile.last_name,
-                "photo_url": profile.photo.url,
+                "photo_url": get_presigned_url(profile.photo.name),
             }
 
     @classmethod
@@ -181,8 +182,8 @@ class ChatService:
             )
             new_profile.save()
             request.session["profile"] = new_profile.to_json()
-            CVEditor().generate_cv(new_profile)
-            resume = {"name": new_profile.cv_name, "path": "/media/cv/" + new_profile.cv_name.replace(".pdf", ".png")}
+            new_cv = CVEditor().generate_cv(new_profile)
+            resume = {"name": new_cv.name, "path": get_presigned_url(new_cv.name)}
             del fields["resume"]
             yield render_to_string("langui/edited-cv-display.html", {"resume": resume})
 
