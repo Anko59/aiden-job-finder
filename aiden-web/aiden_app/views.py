@@ -1,7 +1,7 @@
 from django.contrib.auth import authenticate, login
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import AuthenticationForm
-from django.http import HttpResponse, JsonResponse, StreamingHttpResponse
+from django.http import JsonResponse, StreamingHttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.csrf import csrf_protect
 from rest_framework import status
@@ -10,7 +10,6 @@ from rest_framework.decorators import api_view
 from aiden_app.forms import UserProfileCreationForm
 from aiden_app.models import Document, UserProfile
 from aiden_app.services.chat_service import ChatService
-from django.core.files.storage import default_storage
 from .forms import SignUpForm
 from aiden_app.storage import get_presigned_url
 
@@ -69,14 +68,6 @@ def handle_get_profiles(request):
 @api_view(["GET"])
 def get_profile_creation_form(request):
     return render(request, "langui/create-profile.html")
-
-
-@login_required
-def serve_document(request, document_id):
-    document = get_object_or_404(Document, id=document_id, user_profile__user=request.user)
-    response = HttpResponse(default_storage.open(document.file.name).read(), content_type="application/octet-stream")
-    response["Content-Disposition"] = f'attachment; filename="{document.name}"'
-    return response
 
 
 @login_required
