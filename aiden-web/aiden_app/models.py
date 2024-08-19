@@ -177,7 +177,7 @@ class ProfileInfo(BaseModel):
     phone_number = models.CharField(max_length=20, help_text="The phone number for contacting the individual")
     address = models.CharField(max_length=255, help_text="The address of the individual's residence")
     social_links = models.ManyToManyField(
-        SocialLink, related_name="profiles", help_text="A list of social media links ed with the individual"
+        SocialLink, related_name="profiles", help_text="A list of social media linked with the individual"
     )
     interests = models.ManyToManyField(Interest, related_name="profiles", help_text="A list of the individual's interests or hobbies")
     experiences = models.ManyToManyField(
