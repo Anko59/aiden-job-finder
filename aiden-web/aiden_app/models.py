@@ -91,7 +91,6 @@ class BaseModel(models.Model):
                 del json_data[key]
             else:
                 field_object = cls._meta.get_field(key)
-                print(f"field: {key}, value: {value}")
                 for validator in field_object.validators:
                     try:
                         validation = validator(value)

@@ -142,7 +142,6 @@ async function getNextPage(containerId) {
     let nextIndex = currentIndex + 1;
     messageContainer.getElementsByClassName('page-number')[0].textContent = nextIndex;
     if (currentIndex < loadedPages) {
-        console.log('Switching to next page');
         let nextGrid = Array.from(grids).find(grid => grid.getAttribute('page') === nextIndex.toString());
         if (nextGrid) {
             displayedGrid.classList.add('hidden');
@@ -187,7 +186,7 @@ async function initializeMessageEvents() {
 
     let jobOffers = document.getElementsByClassName('job-offer');
     for (let i = 0; i < jobOffers.length; i++) {
-        addEventListenerOnce(jobOffers[i], 'click', function () {
+        jobOffers[i].addEventListener('click', function () {
             let detailedView = jobOffers[i].querySelector('.detailed-view');
             toggleJobOffersInGrid(jobOffers[i]);
             detailedView.classList.toggle('hidden');
@@ -196,9 +195,9 @@ async function initializeMessageEvents() {
 
     let applyButtons = document.getElementsByClassName('offer-focus');
     for (let i = 0; i < applyButtons.length; i++) {
-        addEventListenerOnce(applyButtons[i], 'click', function () {
+        applyButtons[i].addEventListener('click', function () {
             let reference = applyButtons[i].getAttribute('reference');
-            getOfferFocus(reference);
+             getOfferFocus(reference);
         });
     }
 
@@ -213,7 +212,6 @@ async function initializeMessageEvents() {
     let previousPageButtons = document.getElementsByClassName('previous-page');
     for (let i = 0; i < previousPageButtons.length; i++) {
         addEventListenerOnce(previousPageButtons[i], 'click', function () {
-            console.log('previous page button clicked');
             let containerId = previousPageButtons[i].closest('.job-offers-message-container').getAttribute('container_id');
             getPreviousPage(containerId);
         });

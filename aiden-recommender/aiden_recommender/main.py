@@ -81,6 +81,5 @@ async def on_startup():
 
 @app.post("/get_form", response_model=Form)
 async def get_form_schema(form_request: Annotated[FormRequest, Body()]) -> Form:
-    print(type(form_request))
     form = get_form_cached(form_request.job_reference)
     return form

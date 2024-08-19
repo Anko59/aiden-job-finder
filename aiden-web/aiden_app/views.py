@@ -4,6 +4,7 @@ from django.views import View
 from django.views.decorators.csrf import csrf_protect
 from rest_framework import status
 from rest_framework.decorators import api_view
+from loguru import logger
 
 from aiden_app.forms import UserCreationForm
 from aiden_app.models import UserProfile
@@ -49,7 +50,6 @@ def handle_start_chat(request):
 @api_view(["GET"])
 def handle_get_profiles(request):
     profiles = list(ChatService.get_available_profiles())
-
     if profiles is None:
         return JsonResponse({"error": "No profiles available"}, status=status.HTTP_404_NOT_FOUND)
 
@@ -80,6 +80,10 @@ def get_user_documents(request):
 def handle_create_profile(request):
     form = UserCreationForm(request.POST, request.FILES)
     if not form.is_valid():
+        logger.error("An error occured")
+        logger.error(form.errors)
+        logger.error(form.non_field_errors())
+        logger.error(form.errors.as_data())
         return JsonResponse({"error": "Invalid form data"}, status=status.HTTP_400_BAD_REQUEST)
 
     profile_data = form.llm_input()

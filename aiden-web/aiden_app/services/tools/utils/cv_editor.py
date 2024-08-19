@@ -6,6 +6,7 @@ from dataclasses import dataclass
 from typing import Any, List, Union
 from aiden_app.models import UserProfile, ProfileInfo
 from aiden_project.settings import MEDIA_ROOT
+from loguru import logger
 
 import fitz  # PyMuPDF
 from jinja2 import Environment, FileSystemLoader
@@ -80,6 +81,7 @@ class CVEditor:
         return document_path
 
     def _compile_document(self, document_path: str):
+        logger.warning(f"Compiling document {document_path}")
         subprocess.run(
             [
                 "pdflatex",
@@ -89,9 +91,7 @@ class CVEditor:
                 "\\input{" + document_path + "}",
             ]
         )
-        for file in os.listdir(os.path.dirname(document_path)):
-            if file.endswith(".aux") or file.endswith(".log"):
-                os.remove(os.path.join(os.path.dirname(document_path), file))
+        logger.warning(f"Compiled document {document_path}")
 
     def _extract_most_content_page(self, document_path: str):
         infile = PdfReader(document_path.replace(".tex", ".pdf"), "rb")

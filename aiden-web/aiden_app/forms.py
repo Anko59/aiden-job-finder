@@ -16,7 +16,7 @@ class UserCreationForm(forms.Form):
     first_name = forms.CharField(max_length=100)
     last_name = forms.CharField(max_length=100)
     photo = forms.ImageField()
-    profile_info = forms.CharField(max_length=10000)
+    profile_info = forms.CharField(max_length=50000)
 
     def llm_input(self):
         return {

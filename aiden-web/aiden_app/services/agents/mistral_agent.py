@@ -79,7 +79,6 @@ class MistralAgent(Agent):
         )
 
     def chat(self, user_input: str) -> Iterable[ToolMessage]:
-        print("Messages: ", self.messages)
         self.messages.append(ChatMessage(role="user", content=user_input))
         message = self._message_model()
         if len(message.tool_calls) == 0:
