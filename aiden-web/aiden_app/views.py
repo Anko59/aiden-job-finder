@@ -127,6 +127,8 @@ def load_next_page(request):
     if not page or not container_id:
         return JsonResponse({"error": "Invalid parameters"}, status=status.HTTP_400_BAD_REQUEST)
     return StreamingHttpResponse(ChatService.load_next_page(request, page, container_id))
+
+
 def signup_view(request):
     if request.method == "POST":
         form = SignUpForm(request.POST)

@@ -4,18 +4,11 @@ from django.core.validators import RegexValidator
 from django.core.exceptions import ValidationError
 from loguru import logger
 from django.utils.encoding import force_str
-from aiden_project.settings import MEDIA_ROOT
 
-import os
 import uuid
 
 
 from django.contrib.auth.models import User
-from django.core.exceptions import ValidationError
-from django.core.validators import RegexValidator
-from django.db import models
-from django.utils.encoding import force_str
-from loguru import logger
 from pydantic import BaseModel as PydanticBaseModel
 from aiden_app.storage import UUIDS3Boto3Storage
 
