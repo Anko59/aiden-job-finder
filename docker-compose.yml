@@ -28,19 +28,6 @@ services:
       resources:
         limits:
           memory: 1g
-  media_server:
-    image: nginx:alpine
-    volumes:
-      - ./aiden-web/media:/usr/share/nginx/html
-      - ./nginx.conf:/etc/nginx/conf.d/default.conf
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.media.rule=Host(`aiden.dev.localhost`) && PathPrefix(`/media`)"
-      - "traefik.http.middlewares.media-stripprefix.stripprefix.prefixes=/media"
-      - "traefik.http.routers.media.middlewares=media-stripprefix"
-      - "traefik.http.services.media.loadbalancer.server.port=80"
-    networks:
-      - aiden_network
   db:
     image: postgres
     environment:
@@ -51,8 +38,10 @@ services:
       - postgres_data:/var/lib/postgresql/data/
     networks:
       - aiden_network
-    expose:
+    ports:
       - 5432:5432
+    expose:
+      - "5432"
     healthcheck:
       test:
         [
@@ -199,11 +188,44 @@ services:
       resources:
         limits:
           memory: 128M
+  minio:
+    image: minio/minio:latest
+    ports:
+      - 9000:9000
+      - 9001:9001
+    environment:
+      MINIO_ACCESS_KEY: ${AWS_ACCESS_KEY_ID}
+      MINIO_SECRET_KEY: ${AWS_SECRET_ACCESS_KEY}
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.minio.rule=Host(`minio.dev.localhost`)"
+      - "traefik.http.services.minio.loadbalancer.server.port=9001"
+    command: server /data --console-address ":9001"
+    volumes:
+      - minio_data:/data
+    networks:
+      - aiden_network
+
+  # Just to initialize an empty media bucket at the start of minio
+  minio-client:
+    image: minio/mc:latest
+    entrypoint: >
+      /bin/sh -c "
+      /usr/bin/mc config host add --api s3v4 local ${AWS_S3_ENDPOINT_URL} ${AWS_ACCESS_KEY_ID} ${AWS_SECRET_ACCESS_KEY};
+      /usr/bin/mc rb --force local/${AWS_STORAGE_BUCKET_NAME}/;
+      /usr/bin/mc mb local/${AWS_STORAGE_BUCKET_NAME}/;
+      /usr/bin/mc anonymous set public local/${AWS_STORAGE_BUCKET_NAME};
+      "
+    depends_on:
+      - minio
+    networks:
+      - aiden_network
+
 volumes:
   postgres_data:
   qdrant_data:
   redis_data:
-
+  minio_data:
 
 networks:
   aiden_network:

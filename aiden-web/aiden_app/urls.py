@@ -1,12 +1,9 @@
 from django.urls import path, re_path
 
-from . import views
-from . import views_v2
-
-langui_view = views.LanguiView.as_view()
+from . import views, views_v2
 
 urlpatterns = [
-    path("", langui_view, name="langui_view"),
+    path("chat/", views.langui_view, name="langui_view"),
     path("api/question", views.handle_question, name="question"),
     path("api/start_chat", views.handle_start_chat, name="start_chat"),
     path("api/get_profiles", views.handle_get_profiles, name="get_profiles"),
@@ -16,4 +13,7 @@ urlpatterns = [
     path("api/get_offer_focus", views.handle_offer_focus, name="get_document"),
     path("api/load_next_page", views.load_next_page, name="load_next_page"),
     re_path(r"^api/v2/(?P<endpoint>.+)/$", views_v2.api_dispatcher, name="api_dispatcher"),
+    path("signup/", views.signup_view, name="signup"),
+    path("login/", views.login_view, name="login"),
+    path("", views.home_view, name="home"),
 ]

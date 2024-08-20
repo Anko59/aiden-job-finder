@@ -9,7 +9,15 @@ from aiden_project.settings import MEDIA_ROOT
 import os
 import uuid
 
+
+from django.contrib.auth.models import User
+from django.core.exceptions import ValidationError
+from django.core.validators import RegexValidator
+from django.db import models
+from django.utils.encoding import force_str
+from loguru import logger
 from pydantic import BaseModel as PydanticBaseModel
+from aiden_app.storage import UUIDS3Boto3Storage
 
 
 def remove_special_characters(value):
@@ -64,11 +72,13 @@ class ErrorResponse(PydanticBaseModel):
 
 
 class BaseModel(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+
     class Meta:
         abstract = True
 
     @classmethod
-    def from_json(cls, json_data: dict, *args, **kwargs) -> "BaseModel":
+    def from_json(cls, json_data: dict, user: User, *args, **kwargs) -> "BaseModel":
         # Handle ManyToManyField and OneToOneField
         m2m_fields = [
             field
@@ -79,14 +89,14 @@ class BaseModel(models.Model):
         for field in m2m_fields:
             data = json_data.get(field.name, [])
             if isinstance(field, models.OneToOneField):
-                related_objects[field.name] = field.related_model.from_json(data)
+                related_objects[field.name] = field.related_model.from_json(data, user=user)
             else:
-                related_objects[field.name] = [field.related_model.from_json(obj) for obj in data]
+                related_objects[field.name] = [field.related_model.from_json(obj, user=user) for obj in data]
             if field.name in json_data:
                 del json_data[field.name]
 
         # Remove unusable fields and clean up data
-        for key, value in json_data.items():
+        for key, value in list(json_data.items()):
             if key not in [field.name for field in cls._meta.get_fields()]:
                 del json_data[key]
             else:
@@ -103,6 +113,7 @@ class BaseModel(models.Model):
                 json_data[key] = value
 
         # Create the instance
+        json_data["user"] = user
         instance = cls.objects.create(**json_data)
 
         # Save ManyToManyField relationships
@@ -120,6 +131,8 @@ class BaseModel(models.Model):
                 json_data[field.name] = getattr(self, field.name).to_json()
             elif isinstance(field, models.UUIDField):
                 json_data[field.name] = str(getattr(self, field.name))
+            elif field.name == "user":
+                json_data[field.name] = self.user.username if self.user else None
             elif not isinstance(field, models.ImageField) and not field.is_relation and field.name != "id":
                 json_data[field.name] = getattr(self, field.name)
         return json_data
@@ -129,7 +142,7 @@ class SocialLink(BaseModel):
     icon = models.CharField(
         max_length=50, help_text="The name or icon representing the social media platform, from font-awesome, without the 'fa-' prefix"
     )
-    url = models.URLField(help_text="The URL of the individual's profile on the social media platform")
+    url = models.URLField(help_text="The URL of the individual's profile on the social media platform", blank=True, null=True)
     text = models.CharField(max_length=100, help_text="A shortened or display version of the URL")
 
 
@@ -165,7 +178,7 @@ class Education(BaseModel):
 class Project(BaseModel):
     name = models.CharField(max_length=100, help_text="The name of the project")
     description = models.TextField(help_text="A description of the project")
-    url = models.URLField(help_text="The URL of the project repository or website")
+    url = models.URLField(help_text="The URL of the project repository or website", blank=True, null=True)
 
 
 class Skill(BaseModel):
@@ -178,7 +191,6 @@ class Skill(BaseModel):
 class ProfileInfo(BaseModel):
     first_name = models.CharField(max_length=100, help_text="The first name of the individual")
     last_name = models.CharField(max_length=100, help_text="The last name of the individual")
-    photo_url = models.CharField(help_text="The name of the profile picture")
     cv_title = models.CharField(
         max_length=255, help_text="The professional title or headline for the CV", validators=[remove_special_characters]
     )
@@ -187,7 +199,7 @@ class ProfileInfo(BaseModel):
     phone_number = models.CharField(max_length=20, help_text="The phone number for contacting the individual")
     address = models.CharField(max_length=255, help_text="The address of the individual's residence")
     social_links = models.ManyToManyField(
-        SocialLink, related_name="profiles", help_text="A list of social media links associated with the individual"
+        SocialLink, related_name="profiles", help_text="A list of social media linked with the individual"
     )
     interests = models.ManyToManyField(Interest, related_name="profiles", help_text="A list of the individual's interests or hobbies")
     experiences = models.ManyToManyField(
@@ -199,22 +211,21 @@ class ProfileInfo(BaseModel):
     embeddings_id = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
 
 
+class Document(BaseModel):
+    name = models.CharField(max_length=255)
+    file = models.FileField(storage=UUIDS3Boto3Storage(object_folder="documents"))
+    profile = models.ForeignKey(ProfileInfo, on_delete=models.CASCADE)
+
+
 class UserProfile(BaseModel):
     first_name = models.CharField(max_length=100)
     last_name = models.CharField(max_length=100)
     profile_title = models.CharField(max_length=255)
-    photo = models.ImageField(upload_to="profile/")
+    photo = models.ImageField(storage=UUIDS3Boto3Storage(object_folder="photos"))
+
     profile_info = models.OneToOneField(
-        ProfileInfo, related_name="user", on_delete=models.CASCADE, help_text="A detailed schema for a profile JSON object"
+        ProfileInfo, related_name="profile", on_delete=models.CASCADE, help_text="A detailed schema for a profile JSON object"
     )
-
-    @property
-    def cv_name(self):
-        return f'CV_{self.first_name.lower()}_{self.last_name.lower()}_{self.profile_title.lower().replace(" ", "_")}.pdf'
-
-    @property
-    def cv_path(self):
-        return os.path.join(MEDIA_ROOT, "cv", self.cv_name)
 
     def __str__(self):
         return f"{self.first_name} {self.last_name}"

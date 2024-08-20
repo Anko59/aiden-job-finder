@@ -1,9 +1,14 @@
+import json
 import os
 from typing import Iterable
 from uuid import uuid4
 import httpx
 import json
-
+import httpx
+import markdown2
+from aiden_shared.constants import JOB_COLLECTION
+from aiden_shared.models import JobOffer
+from aiden_shared.utils import reference_to_uuid
 from django.http import JsonResponse, StreamingHttpResponse
 from django.template.loader import render_to_string
 from qdrant_client.models import PointStruct
@@ -19,6 +24,11 @@ from aiden_app.services.tools.scraper_tool import ScraperTool
 from aiden_shared.constants import JOB_COLLECTION
 from aiden_shared.models import JobOffer
 from aiden_shared.utils import reference_to_uuid
+from aiden_app.models import ProfileInfo, UserProfile
+from aiden_app.services.agents.agent import Agent
+from aiden_app.services.agents.mistral_agent import MistralAgent
+from aiden_app.services.tools.utils.cv_editor import CVEditor
+from aiden_app.storage import get_presigned_url
 
 
 class ChatService:
@@ -69,12 +79,12 @@ class ChatService:
         return agent, response
 
     @staticmethod
-    def get_available_profiles():
-        for profile in UserProfile.objects.filter(profile_title="default_profile"):
+    def get_available_profiles(user):
+        for profile in UserProfile.objects.filter(user=user):
             yield {
                 "first_name": profile.first_name,
                 "last_name": profile.last_name,
-                "photo_url": profile.photo.url,
+                "photo_url": get_presigned_url(profile.photo.name),
             }
 
     @classmethod
@@ -90,9 +100,10 @@ class ChatService:
             points=[PointStruct(id=profile_embeddings_uuid, vector=embeddings_vector, payload={"profile_info": profile["profile_info"]})],
         )
         profile_info.update({"embeddings_id": profile_embeddings_uuid})
-        profile_info = ProfileInfo.from_json(profile_info)
+        profile_info = ProfileInfo.from_json(profile_info, user=request.user)
         profile["profile_info"] = profile_info
         profile["profile_title"] = "default_profile"
+        profile["user"] = request.user
         profile_form = UserProfileForm(profile, request.FILES)
         if profile_form.is_valid():
             user_profile = profile_form.save()
@@ -110,7 +121,7 @@ class ChatService:
         return [
             {
                 "name": profile.profile_title,
-                "path": "media/cv/" + profile.cv_name.replace(".pdf", ".png"),
+                "path": "/media/cv/" + profile.cv_name.replace(".pdf", ".png"),
             }
             for profile in UserProfile.objects.filter(first_name=profile.first_name, last_name=profile.last_name)
         ]
@@ -149,7 +160,7 @@ class ChatService:
                 points=[PointStruct(id=profile_embeddings_uuid, vector=embeddings_vector, payload={"profile_info": new_profile_info})],
             )
             new_profile_info.update({"embeddings_id": profile_embeddings_uuid})
-            profile_info = ProfileInfo.from_json(new_profile_info)
+            profile_info = ProfileInfo.from_json(new_profile_info, user=request.user)
             profile_title = profile_info.cv_title
             if UserProfile.objects.filter(
                 first_name=base_profile.first_name, last_name=base_profile.last_name, profile_title=profile_info.cv_title
@@ -161,11 +172,12 @@ class ChatService:
                 profile_title=profile_title,
                 profile_info=profile_info,
                 photo=base_profile.photo,
+                user=request.user,
             )
             new_profile.save()
             request.session["profile"] = new_profile.to_json()
-            CVEditor().generate_cv(new_profile)
-            resume = {"name": new_profile.cv_name, "path": "media/cv/" + new_profile.cv_name.replace(".pdf", ".png")}
+            new_cv = CVEditor().generate_cv(new_profile)
+            resume = {"name": new_cv.name, "path": get_presigned_url(new_cv.name)}
             del fields["resume"]
             yield render_to_string("langui/edited-cv-display.html", {"resume": resume})
 

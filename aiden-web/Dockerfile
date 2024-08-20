@@ -8,7 +8,7 @@ ENV POETRY_NO_INTERACTION=1 \
 
 WORKDIR /app
 
-# Install necessary packages for selenium and pdflatex
+# Install necessary packages for pdflatex
 RUN apt-get update && apt-get install -y \
     texlive-latex-base \
     texlive-fonts-recommended \

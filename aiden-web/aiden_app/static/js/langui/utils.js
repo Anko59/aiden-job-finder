@@ -243,7 +243,7 @@ async function getOfferFocus(reference) {
         },
         body: JSON.stringify({ 'offer_id': reference }),
     };
-    const response = await fetch('api/get_offer_focus', fetchOptions);
+    const response = await fetch('/api/get_offer_focus', fetchOptions);
     const reader = response.body.getReader();
     let done = false;
     while (!done) {
@@ -266,7 +266,7 @@ export function getProfiles() {
             'X-CSRFToken': getCookie('csrftoken'),
         },
     };
-    fetch('api/get_profiles', fetchOptions)
+    fetch('/api/get_profiles', fetchOptions)
         .then(response => response.text())
         .then(data => {
             document.getElementById('profile-container').innerHTML = data;
@@ -386,7 +386,7 @@ export async function sendQuestion(question) {
         },
         body: JSON.stringify({ question: question }),
     };
-    const response = await fetch('api/question', fetchOptions);
+    const response = await fetch('/api/question', fetchOptions);
     const reader = response.body.getReader();
     let done = false;
     while (!done) {
