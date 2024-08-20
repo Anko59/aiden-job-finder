@@ -43,6 +43,8 @@ class UserProfileCreationForm(forms.Form):
 
     def save(self):
         profile_info_data = json.loads(self.cleaned_data["profile_info"])
+        if profile_info_data["email"] is None:
+            profile_info_data["email"] = self.user.email
         profile_info = ProfileInfo.from_json(profile_info_data, user=self.user)
         user_profile = UserProfile.objects.create(
             user=self.user,

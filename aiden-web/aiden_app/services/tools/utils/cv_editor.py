@@ -3,18 +3,15 @@ from pathlib import Path
 import subprocess
 from dataclasses import dataclass
 from typing import Any, List, Union
-from aiden_app.models import UserProfile, ProfileInfo
 from aiden_project.settings import MEDIA_ROOT
 from loguru import logger
 
 import fitz  # PyMuPDF
 import latexcodec  # noqa: F401
-from aiden_project.settings import MEDIA_ROOT
 from jinja2 import Environment, FileSystemLoader
 from PyPDF2 import PdfReader, PdfWriter
 
 from aiden_app.models import Document, ProfileInfo, UserProfile
-from loguru import logger
 import tempfile
 from django.core.files.base import ContentFile
 
@@ -56,11 +53,11 @@ class CVEditor:
             # saving cv to db and upload to s3
             logger.info(f"Saving CV for {profile.user.username}")
             # TODO: The pdf is not saved to the database nor in storage, but the png is
-            document = Document.objects.create(
+            png_document = Document.objects.create(
                 user=profile.user, profile=profile.profile_info, file=ContentFile(png_path.read_bytes(), name="cv.png")
             )
 
-        return document
+        return png_document
 
     def _generate_cv_png(self, pdf_path: Path, png_path: Path):
         doc = fitz.open(pdf_path.as_posix())
@@ -91,9 +88,9 @@ class CVEditor:
             [
                 "pdflatex",
                 "-interaction=nonstopmode",
-                "-output-directory=" + document_path.parent.absolute().as_posix(),
+                "-output-directory=" + document_path.parent.expanduser().absolute().as_posix(),
                 "-jobname=" + document_path.name.replace(".tex", ""),
-                "\\input{" + document_path.absolute().as_posix() + "}",
+                "\\input{" + document_path.expanduser().absolute().as_posix() + "}",
             ]
         )
         # One aux file, one log and one pdf file should be generated
