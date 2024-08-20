@@ -61,7 +61,7 @@ class ChatService:
         agent = MistralAgent.from_profile(profile)
         response = {
             "role": "assistant",
-            "content": "Hello! How can I assist you today?",
+            "content": f"Hello! How can I assist you today {profile} ? ",
             "is_last": True,
             "tokens_used": 0,
         }
@@ -69,7 +69,7 @@ class ChatService:
 
     @staticmethod
     def get_available_profiles(user):
-        for profile in UserProfile.objects.filter(user=user):
+        for profile in UserProfile.objects.filter(user=user, profile_title="default_profile"):
             yield {
                 "first_name": profile.first_name,
                 "last_name": profile.last_name,
@@ -166,7 +166,7 @@ class ChatService:
             new_profile.save()
             request.session["profile"] = new_profile.to_json()
             new_cv = CVEditor().generate_cv(new_profile)
-            resume = {"name": new_cv.name, "path": get_presigned_url(new_cv.name)}
+            resume = {"name": new_cv.name, "path": get_presigned_url(new_cv.file.name)}
             del fields["resume"]
             yield render_to_string("langui/edited-cv-display.html", {"resume": resume})
 

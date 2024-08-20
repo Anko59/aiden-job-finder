@@ -81,11 +81,18 @@ def get_user_documents(request):
         user=request.user,
         first_name=profile_data.get("first_name"),
         last_name=profile_data.get("last_name"),
+        profile_title="default_profile",
     )
-    documents = Document.objects.filter(profile=profile.profile_info)
-    for document in documents:
-        document.presigned_url = get_presigned_url(document.file.name)
-    return render(request, "langui/document-display.html", {"documents": documents})
+    docs = []
+    profiles = UserProfile.objects.filter(
+        user=request.user, first_name=profile_data.get("first_name"), last_name=profile_data.get("last_name")
+    )
+    for profile in profiles:
+        documents = Document.objects.filter(profile=profile.profile_info)
+        for document in documents:
+            document.presigned_url = get_presigned_url(document.file.name)
+            docs.append(document)
+    return render(request, "langui/document-display.html", {"documents": docs})
 
 
 @login_required
