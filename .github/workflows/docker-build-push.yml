@@ -1,0 +1,35 @@
+name: Build and Push Docker Images
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    name: Build and Push Docker Images
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Log in to Amazon ECR
+      id: login-ecr
+      uses: aws-actions/amazon-ecr-login@v1
+      with:
+        region: us-west-2
+
+    - name: Build and Push Django Image
+      run: |
+        IMAGE_TAG=latest
+        IMAGE_URI=${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.us-west-2.amazonaws.com/aiden-app-django:${IMAGE_TAG}
+        docker build -t $IMAGE_URI -f aiden-web/Dockerfile .
+        docker push $IMAGE_URI
+
+    - name: Build and Push FastAPI Recommender Image
+      run: |
+        IMAGE_TAG=latest
+        IMAGE_URI=${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.us-west-2.amazonaws.com/aiden-app-recommender:${IMAGE_TAG}
+        docker build -t $IMAGE_URI -f aiden-recommender/Dockerfile .
+        docker push $IMAGE_URI

@@ -1,0 +1,32 @@
+name: Deploy Infrastructure
+
+on:
+  workflow_run:
+    workflows: ["Build and Push Docker Images"]
+    types:
+      - completed
+
+jobs:
+  terraform:
+    name: Terraform Apply
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Terraform
+      uses: hashicorp/setup-terraform@v1
+
+    - name: Terraform Init
+      run: terraform init
+
+    - name: Terraform Apply
+      env:
+        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        DB_USERNAME: ${{ secrets.DB_USERNAME }}
+        DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+        ECR_REPOSITORY_URL_DJANGO: ${{ secrets.ECR_REPOSITORY_URL_DJANGO }}
+        ECR_REPOSITORY_URL_RECOMMENDER: ${{ secrets.ECR_REPOSITORY_URL_RECOMMENDER }}
+      run: terraform apply -auto-approve -var "ecr_repository_url_django=${{ secrets.ECR_REPOSITORY_URL_DJANGO }}" -var "ecr_repository_url_recommender=${{ secrets.ECR_REPOSITORY_URL_RECOMMENDER }}"
