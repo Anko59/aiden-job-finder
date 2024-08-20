@@ -11,6 +11,7 @@ urlpatterns = [
     path("api/get_profile_creation_form", views.get_profile_creation_form, name="get_profile_creation_form"),
     path("api/get_documents", views.get_user_documents, name="get_documents"),
     path("api/get_offer_focus", views.handle_offer_focus, name="get_document"),
+    path("api/load_next_page", views.load_next_page, name="load_next_page"),
     re_path(r"^api/v2/(?P<endpoint>.+)/$", views_v2.api_dispatcher, name="api_dispatcher"),
     path("signup/", views.signup_view, name="signup"),
     path("login/", views.login_view, name="login"),

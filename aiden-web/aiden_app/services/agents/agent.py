@@ -7,7 +7,6 @@ from aiden_project.settings import MEDIA_ROOT
 from django.core.serializers.json import DjangoJSONEncoder
 
 from aiden_app.models import UserProfile
-from aiden_app.services.tools.cv_editor_tool import CVEditorTool
 from aiden_app.services.tools.scraper_tool import ScraperTool
 from aiden_app.services.tools.tool_aggregator import ToolAggregator
 
@@ -55,6 +54,7 @@ class Agent(ABC):
         del state["message_class"]
         state["profile_id"] = self.profile.id
         del state["profile"]
+        state["tool_data"] = self.tool_aggregator.serialize_tools_data()
         return json.dumps(state)
 
     @classmethod
@@ -65,6 +65,8 @@ class Agent(ABC):
         self = cls.from_profile(profile)
         self.unserialize_messages(state["messages"])
         del state["messages"]
+        self.tool_aggregator.unserialize_tools_data(state["tool_data"])
+        del state["tool_data"]
         self.__dict__.update(state)
         return self
 
@@ -72,7 +74,6 @@ class Agent(ABC):
     def from_profile(cls, user_profile: UserProfile, *args, **kwargs) -> "Agent":
         self = cls(*args, **kwargs)
         self.profile = user_profile
-        self.tool_aggregator.tools.append(CVEditorTool(profile=user_profile))
         self.tool_aggregator.tools.append(ScraperTool(profile_embedding_id=user_profile.profile_info.embeddings_id))
         profile_dict = user_profile.profile_info.to_json()
         start_messages = [

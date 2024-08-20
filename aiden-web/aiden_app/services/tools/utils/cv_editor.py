@@ -3,6 +3,9 @@ from pathlib import Path
 import subprocess
 from dataclasses import dataclass
 from typing import Any, List, Union
+from aiden_app.models import UserProfile, ProfileInfo
+from aiden_project.settings import MEDIA_ROOT
+from loguru import logger
 
 import fitz  # PyMuPDF
 import latexcodec  # noqa: F401

@@ -99,7 +99,91 @@ function initializeDocumentEvents() {
     }
 }
 
-function initializeMessageEvents() {
+async function loadNextPage(gridContainer, nextIndex) {
+    hideChatForm();
+    const fetchOptions = {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': getCookie('csrftoken'),
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(
+            {
+                'container_id': gridContainer.getAttribute('id'),
+                'page': nextIndex
+            }
+        ),
+    };
+    const response = await fetch('api/load_next_page', fetchOptions);
+    const reader = response.body.getReader();
+    let done = false;
+    while (!done) {
+        const { value, done: resultDone } = await reader.read();
+        done = resultDone;
+        if (value) {
+            const json = JSON.parse(new TextDecoder('utf-8').decode(value));
+            document.getElementById(json.container_id).innerHTML += json.content;
+        }
+    }
+    await initializeMessageEvents();
+    showChatForm();
+}
+
+async function getNextPage(containerId) {
+    let gridContainer = document.getElementById(containerId);
+    let messageContainer = gridContainer.closest('.job-offers-message-container')
+    let grids = gridContainer.getElementsByClassName('job-offer-grid');
+    let displayedGrid = Array.from(grids).find(grid => !grid.classList.contains('hidden'));
+    if (!displayedGrid) {
+        return;
+    }
+    let currentIndex = parseInt(displayedGrid.getAttribute('page'));
+    let loadedPages = parseInt(messageContainer.getElementsByClassName('total-pages')[0].textContent);
+    let nextIndex = currentIndex + 1;
+    messageContainer.getElementsByClassName('page-number')[0].textContent = nextIndex;
+    if (currentIndex < loadedPages) {
+        let nextGrid = Array.from(grids).find(grid => grid.getAttribute('page') === nextIndex.toString());
+        if (nextGrid) {
+            displayedGrid.classList.add('hidden');
+            nextGrid.classList.remove('hidden');
+        }
+    } else {
+        messageContainer.getElementsByClassName('total-pages')[0].textContent = loadedPages + 1;
+        displayedGrid.classList.add('hidden');
+        await loadNextPage(gridContainer, nextIndex);
+    }
+}
+
+
+function getPreviousPage(containerId) {
+    let gridContainer = document.getElementById(containerId);
+    let messageContainer = gridContainer.closest('.job-offers-message-container')
+    let grids = gridContainer.getElementsByClassName('job-offer-grid');
+    let displayedGrid = Array.from(grids).find(grid => !grid.classList.contains('hidden'));
+    if (!displayedGrid) {
+        return;
+    }
+    let currentIndex = displayedGrid.getAttribute('page');
+    if (currentIndex > 1) {
+        let previousIndex = parseInt(currentIndex) - 1;
+        messageContainer.getElementsByClassName('page-number')[0].textContent = previousIndex;
+        let previousGrid = Array.from(grids).find(grid => grid.getAttribute('page') === previousIndex.toString());
+        if (previousGrid) {
+            displayedGrid.classList.add('hidden');
+            previousGrid.classList.remove('hidden');
+        }
+    }
+}
+
+
+async function initializeMessageEvents() {
+    function addEventListenerOnce(element, eventType, handler) {
+        if (!element.hasAttribute('listener-added')) {
+            element.addEventListener(eventType, handler);
+            element.setAttribute('listener-added', 'true');
+        }
+    }
+
     let jobOffers = document.getElementsByClassName('job-offer');
     for (let i = 0; i < jobOffers.length; i++) {
         jobOffers[i].addEventListener('click', function () {
@@ -108,14 +192,30 @@ function initializeMessageEvents() {
             detailedView.classList.toggle('hidden');
         });
     }
+
     let applyButtons = document.getElementsByClassName('offer-focus');
     for (let i = 0; i < applyButtons.length; i++) {
         applyButtons[i].addEventListener('click', function () {
             let reference = applyButtons[i].getAttribute('reference');
-            getOfferFocus(reference);
+             getOfferFocus(reference);
         });
     }
 
+    let nextPageButtons = document.getElementsByClassName('next-page');
+    for (let i = 0; i < nextPageButtons.length; i++) {
+        addEventListenerOnce(nextPageButtons[i], 'click', async function () {
+            let containerId = nextPageButtons[i].closest('.job-offers-message-container').getAttribute('container_id');
+            await getNextPage(containerId);
+        });
+    }
+
+    let previousPageButtons = document.getElementsByClassName('previous-page');
+    for (let i = 0; i < previousPageButtons.length; i++) {
+        addEventListenerOnce(previousPageButtons[i], 'click', function () {
+            let containerId = previousPageButtons[i].closest('.job-offers-message-container').getAttribute('container_id');
+            getPreviousPage(containerId);
+        });
+    }
 }
 
 function toggleJobOffersInGrid(currentOffer) {
@@ -293,9 +393,13 @@ export async function sendQuestion(question) {
         const { value, done: resultDone } = await reader.read();
         done = resultDone;
         if (value) {
-            const text = new TextDecoder('utf-8').decode(value);
-            document.getElementById('message-container').innerHTML += text;
-            initializeMessageEvents();
+            const json = JSON.parse(new TextDecoder('utf-8').decode(value));
+            if (json.container_id) {
+                document.getElementById(json.container_id).innerHTML += json.content;
+            } else {
+                document.getElementById('message-container').innerHTML += json.content;
+            }
+            await initializeMessageEvents();
         }
     }
     showChatForm();
