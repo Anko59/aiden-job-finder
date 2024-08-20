@@ -3,9 +3,6 @@ import os
 from typing import Iterable
 from uuid import uuid4
 import httpx
-import json
-import httpx
-import markdown2
 from aiden_shared.constants import JOB_COLLECTION
 from aiden_shared.models import JobOffer
 from aiden_shared.utils import reference_to_uuid
@@ -20,14 +17,6 @@ from aiden_app.models import ProfileInfo, UserProfile, AssistantMesssage, ToolMe
 from aiden_app.services.agents.mistral_agent import MistralAgent
 from aiden_app.services.tools.utils.cv_editor import CVEditor
 from aiden_app.services.tools.scraper_tool import ScraperTool
-
-from aiden_shared.constants import JOB_COLLECTION
-from aiden_shared.models import JobOffer
-from aiden_shared.utils import reference_to_uuid
-from aiden_app.models import ProfileInfo, UserProfile
-from aiden_app.services.agents.agent import Agent
-from aiden_app.services.agents.mistral_agent import MistralAgent
-from aiden_app.services.tools.utils.cv_editor import CVEditor
 from aiden_app.storage import get_presigned_url
 
 

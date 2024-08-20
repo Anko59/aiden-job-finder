@@ -7,7 +7,6 @@ from django.utils.encoding import force_str
 
 import uuid
 
-
 from django.contrib.auth.models import User
 from pydantic import BaseModel as PydanticBaseModel
 from aiden_app.storage import UUIDS3Boto3Storage
