@@ -18,6 +18,17 @@ from aiden_app.services.agents.mistral_agent import MistralAgent
 from aiden_app.services.tools.utils.cv_editor import CVEditor
 from aiden_app.services.tools.scraper_tool import ScraperTool
 from aiden_app.storage import get_presigned_url
+from aiden_app.models import Conversation, Message
+
+
+def get_conversation_from_session(session, user) -> Conversation:
+    conversation_json = session.get("conversation")
+    if not conversation_json:
+        return None
+    from loguru import logger
+
+    logger.error(conversation_json)
+    return Conversation.objects.get(conversation_id=conversation_json.get("conversation_id"), user=user)
 
 
 def get_agent_from_session(session) -> MistralAgent:
@@ -38,15 +49,25 @@ def get_profile_from_session(request) -> UserProfile:
     return profile
 
 
-def chat_wrapper(request, question):
-    agent = get_agent_from_session(request.session)
-
+def chat_wrapper(request, question, agent, conversation):
     def generate_responses():
+        Message.objects.create(
+            conversation=conversation,
+            human=True,
+            content=question,
+            user=request.user,
+        )
         yield AssistantMesssage(
             title="User", content=render_to_string("langui/message.html", {"role": "user", "content": question})
         ).model_dump_json()
         for message in agent.chat(question):
             message: ToolMessage = message
+            Message.objects.create(
+                conversation=conversation,
+                human=False,
+                content=message.user_message,
+                user=request.user,
+            )
             yield AssistantMesssage(
                 title=message.function_nane,
                 content=message.user_message,
@@ -59,6 +80,7 @@ def chat_wrapper(request, question):
 
 
 def start_chat(profile):
+    conversation = Conversation.objects.create(user=profile.user)
     agent = MistralAgent.from_profile(profile)
     response = {
         "role": "assistant",
@@ -66,7 +88,8 @@ def start_chat(profile):
         "is_last": True,
         "tokens_used": 0,
     }
-    return agent, response
+    Message.objects.create(conversation=conversation, human=False, content=response["content"], user=profile.user)
+    return agent, response, conversation
 
 
 def get_available_profiles(user):

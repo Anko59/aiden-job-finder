@@ -18,6 +18,7 @@ from aiden_app.services.chat_service import (
     create_profile,
     job_offer_from_reference,
     get_offer_focus,
+    get_conversation_from_session,
 )
 from .forms import SignUpForm
 from aiden_app.storage import get_presigned_url
@@ -37,10 +38,11 @@ def handle_question(request):
         return JsonResponse({"error": "Invalid question parameter"}, status=status.HTTP_400_BAD_REQUEST)
 
     agent = get_agent_from_session(request.session)
+    conversation = get_conversation_from_session(request.session, request.user)
     if agent is None:
         return JsonResponse({"error": "Agent not initialized"}, status=status.HTTP_404_NOT_FOUND)
 
-    return chat_wrapper(request, question)
+    return chat_wrapper(request, question, agent, conversation)
 
 
 @login_required
@@ -54,9 +56,10 @@ def handle_start_chat(request):
     if not profile:
         return JsonResponse({"error": "Invalid profile parameter"}, status=status.HTTP_400_BAD_REQUEST)
 
-    agent, response = start_chat(profile)
+    agent, response, conversation = start_chat(profile)
     request.session["agent"] = agent.to_json()
     request.session["profile"] = profile.to_json()
+    request.session["conversation"] = conversation.to_json()
     return render(request, "langui/message.html", response)
 
 
