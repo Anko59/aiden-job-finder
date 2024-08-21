@@ -89,6 +89,7 @@ class ChatService:
             points=[PointStruct(id=profile_embeddings_uuid, vector=embeddings_vector, payload={"profile_info": profile["profile_info"]})],
         )
         profile_info.update({"embeddings_id": profile_embeddings_uuid})
+        profile_info["email"] = profile.get("email") or request.user.email
         profile_info = ProfileInfo.from_json(profile_info, user=request.user)
         profile["profile_info"] = profile_info
         profile["profile_title"] = "default_profile"
