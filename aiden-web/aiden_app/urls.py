@@ -10,6 +10,7 @@ urlpatterns = [
     path("api/create_profile", views.handle_create_profile, name="create_profile"),
     path("api/get_profile_creation_form", views.get_profile_creation_form, name="get_profile_creation_form"),
     path("api/get_documents", views.get_user_documents, name="get_documents"),
+    path("api/get_conversations", views.get_conversations, name="get_conversations"),
     path("api/get_offer_focus", views.handle_offer_focus, name="get_document"),
     path("api/load_next_page", views.load_next_page, name="load_next_page"),
     path("signup/", views.signup_view, name="signup"),

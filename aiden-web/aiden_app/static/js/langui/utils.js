@@ -310,6 +310,7 @@ export function startChat(profile) {
             emptyMessageContainer();
             document.getElementById('message-container').innerHTML += data;
             getDocuments(profile);
+            getConversations(profile);
             showChatForm();
         })
         .catch(error => {
@@ -330,6 +331,26 @@ export function getDocuments(profile) {
         .then(response => response.text())
         .then(data => {
             document.getElementById('documents-display').innerHTML = data;
+            initializeDocumentEvents();
+        })
+        .catch(error => {
+            console.error('Error:', error);
+        });
+}
+
+export function getConversations(profile) {
+    const fetchOptions = {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': getCookie('csrftoken'),
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(profile),
+    };
+    fetch('/api/get_conversations', fetchOptions)
+        .then(response => response.text())
+        .then(data => {
+            document.getElementById('conversations-display').innerHTML = data;
             initializeDocumentEvents();
         })
         .catch(error => {

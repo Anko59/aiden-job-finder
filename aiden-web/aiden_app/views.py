@@ -9,7 +9,7 @@ from rest_framework.decorators import api_view
 from loguru import logger
 
 from aiden_app.forms import UserProfileCreationForm
-from aiden_app.models import Document, UserProfile
+from aiden_app.models import Conversation, Document, UserProfile
 from aiden_app.services.chat_service import (
     get_agent_from_session,
     chat_wrapper,
@@ -38,7 +38,7 @@ def handle_question(request):
         return JsonResponse({"error": "Invalid question parameter"}, status=status.HTTP_400_BAD_REQUEST)
 
     agent = get_agent_from_session(request.session)
-    conversation = get_conversation_from_session(request.session, request.user)
+    conversation = get_conversation_from_session(request.session)
     if agent is None:
         return JsonResponse({"error": "Agent not initialized"}, status=status.HTTP_404_NOT_FOUND)
 
@@ -73,6 +73,22 @@ def handle_get_profiles(request):
         return JsonResponse({"error": "No profiles available"}, status=status.HTTP_404_NOT_FOUND)
 
     return render(request, "langui/profile-icons.html", {"items": profiles})
+
+
+@login_required
+@csrf_protect
+@api_view(["POST"])
+def get_conversations(request):
+    profile_data = request.data
+    profile = get_object_or_404(
+        UserProfile,
+        user=request.user,
+        first_name=profile_data.get("first_name"),
+        last_name=profile_data.get("last_name"),
+        profile_title="default_profile",
+    )
+    conversations = Conversation.objects.filter(user=request.user, user_profile=profile)
+    return render(request, "langui/conversation-display.html", {"conversations": conversations})
 
 
 @login_required

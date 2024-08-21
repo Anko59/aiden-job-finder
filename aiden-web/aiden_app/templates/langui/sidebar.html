@@ -9,17 +9,28 @@
     </div>
     <!-- Second Column -->
     <div class="h-screen w-52 overflow-y-auto bg-slate-50 py-8 dark:bg-slate-900 sm:w-60">
-        <div class="flex items-start">
-            <h2 class="inline px-5 text-lg font-medium text-slate-800 dark:text-slate-200">
-                Documents
-            </h2>
+        <!-- Documents Section -->
+        <div class="mb-8">
+            <div class="flex items-start">
+                <h2 class="inline px-5 text-lg font-medium text-slate-800 dark:text-slate-200">
+                    Documents
+                </h2>
+            </div>
+            <div class="mx-2 mt-4 space-y-4" id="documents-display">
+            </div>
         </div>
 
-        <div class="mx-2 mt-8 space-y-4" id="documents-display">
+        <div>
+            <div class="flex items-start">
+                <h2 class="inline px-5 text-lg font-medium text-slate-800 dark:text-slate-200">
+                    Conversations
+                </h2>
+            </div>
+            <div class="mx-2 mt-4 space-y-4" id="conversations-display">
+            </div>
         </div>
     </div>
 </aside>
-
 <script type="module">
     import { getProfiles } from "{% static 'js/langui/utils.js' %}";
     getProfiles();

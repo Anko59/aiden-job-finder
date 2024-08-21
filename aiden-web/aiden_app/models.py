@@ -227,6 +227,7 @@ class UserProfile(BaseModel):
 
 
 class Conversation(BaseModel):
+    user_profile = models.ForeignKey(UserProfile, on_delete=models.CASCADE)
     conversation_id = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
 
 
