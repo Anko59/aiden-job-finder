@@ -10,7 +10,15 @@ from loguru import logger
 
 from aiden_app.forms import UserProfileCreationForm
 from aiden_app.models import Document, UserProfile
-from aiden_app.services.chat_service import ChatService
+from aiden_app.services.chat_service import (
+    get_agent_from_session,
+    chat_wrapper,
+    start_chat,
+    get_available_profiles,
+    create_profile,
+    job_offer_from_reference,
+    get_offer_focus,
+)
 from .forms import SignUpForm
 from aiden_app.storage import get_presigned_url
 
@@ -28,11 +36,11 @@ def handle_question(request):
     if not question:
         return JsonResponse({"error": "Invalid question parameter"}, status=status.HTTP_400_BAD_REQUEST)
 
-    agent = ChatService.get_agent_from_session(request.session)
+    agent = get_agent_from_session(request.session)
     if agent is None:
         return JsonResponse({"error": "Agent not initialized"}, status=status.HTTP_404_NOT_FOUND)
 
-    return ChatService.chat_wrapper(request, question)
+    return chat_wrapper(request, question)
 
 
 @login_required
@@ -46,7 +54,7 @@ def handle_start_chat(request):
     if not profile:
         return JsonResponse({"error": "Invalid profile parameter"}, status=status.HTTP_400_BAD_REQUEST)
 
-    agent, response = ChatService.start_chat(profile)
+    agent, response = start_chat(profile)
     request.session["agent"] = agent.to_json()
     request.session["profile"] = profile.to_json()
     return render(request, "langui/message.html", response)
@@ -56,7 +64,7 @@ def handle_start_chat(request):
 @csrf_protect
 @api_view(["GET"])
 def handle_get_profiles(request):
-    profiles = list(ChatService.get_available_profiles(request.user))
+    profiles = list(get_available_profiles(request.user))
 
     if profiles is None:
         return JsonResponse({"error": "No profiles available"}, status=status.HTTP_404_NOT_FOUND)
@@ -108,7 +116,7 @@ def handle_create_profile(request):
         return JsonResponse({"error": "Invalid form data"}, status=status.HTTP_400_BAD_REQUEST)
 
     profile_data = form.llm_input()
-    return ChatService.create_profile(profile_data, form.cleaned_data, request)
+    return create_profile(profile_data, form.cleaned_data, request)
 
 
 @login_required
@@ -119,10 +127,10 @@ def handle_offer_focus(request):
     if not offer_id:
         return JsonResponse({"error": "Invalid offer_id parameter"}, status=status.HTTP_400_BAD_REQUEST)
 
-    offer = ChatService.job_offer_from_reference(offer_id)
+    offer = job_offer_from_reference(offer_id)
     if not offer:
         return JsonResponse({"error": "Invalid offer_id parameter"}, status=status.HTTP_400_BAD_REQUEST)
-    return StreamingHttpResponse(ChatService.get_offer_focus(request, offer))
+    return StreamingHttpResponse(get_offer_focus(request, offer))
 
 
 @csrf_protect
@@ -133,7 +141,7 @@ def load_next_page(request):
     container_id = request.data.get("container_id")
     if not page or not container_id:
         return JsonResponse({"error": "Invalid parameters"}, status=status.HTTP_400_BAD_REQUEST)
-    return StreamingHttpResponse(ChatService.load_next_page(request, page, container_id))
+    return StreamingHttpResponse(load_next_page(request, page, container_id))
 
 
 def signup_view(request):
