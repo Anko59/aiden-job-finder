@@ -4,7 +4,6 @@ import subprocess
 from dataclasses import dataclass
 from typing import Any, List, Union
 from aiden_project.settings import MEDIA_ROOT
-from loguru import logger
 
 import fitz  # PyMuPDF
 import latexcodec  # noqa: F401
@@ -14,6 +13,8 @@ from PyPDF2 import PdfReader, PdfWriter
 from aiden_app.models import Document, ProfileInfo, UserProfile
 import tempfile
 from django.core.files.base import ContentFile
+from aiden_app.storage import get_s3_client
+from aiden_project import settings
 
 
 @dataclass
@@ -36,23 +37,23 @@ class CVEditor:
 
     def generate_cv(self, profile: UserProfile) -> Document:
         template = self.jinja_env.get_template("cv_template.tex")
-        info = profile.profile_info.to_json()
-
-        logger.info(f"Generating CV for {profile.user.username}")
-        output = self._render_template(template, info)
-        logger.info(f"Writing CV as pdf to file for {profile.user.username}")
 
         with tempfile.TemporaryDirectory() as tmp_dir:
             tmp_dir = Path(tmp_dir)
+
+            # Downloading the photo to the temporary directory
+            info = profile.profile_info.to_json()
+            photopath = tmp_dir / "photo.png"
+            get_s3_client().download_file(settings.AWS_STORAGE_BUCKET_NAME, profile.photo.file.name, photopath.as_posix())
+            info["photo_url"] = photopath.as_posix()
+            # Rendering the template with the profile information
+            output = self._render_template(template, info)
             document_path = tmp_dir / "cv.tex"
             document_path.write_bytes(output.encode("utf-8"))
-            logger.info(f"Compiling CV for {profile.user.username}")
+            # Compiling the document to PDF
             pdf_path = self._compile_document(document_path)
-            logger.info(f"Generating PDF for {profile.user.username}")
             png_path = self._generate_cv_png(pdf_path, tmp_dir / "cv.png")
             # saving cv to db and upload to s3
-            logger.info(f"Saving CV for {profile.user.username}")
-            # TODO: The pdf is not saved to the database nor in storage, but the png is
             png_document = Document.objects.create(
                 user=profile.user, profile=profile.profile_info, file=ContentFile(png_path.read_bytes(), name="cv.png")
             )
