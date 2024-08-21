@@ -16,14 +16,18 @@ class UUIDS3Boto3Storage(S3Boto3Storage):
         return super().get_available_name(name, max_length)
 
 
-def get_presigned_url(file_key: str, expiration=500) -> str:
-    # create client for s3 given acces key and secret key
-    s3_client = boto3.client(
+def get_s3_client():
+    return boto3.client(
         service_name="s3",
         aws_access_key_id=settings.AWS_ACCESS_KEY_ID,
         aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY,
         endpoint_url=settings.AWS_S3_ENDPOINT_URL,
     )
+
+
+def get_presigned_url(file_key: str, expiration=500) -> str:
+    # create client for s3 given acces key and secret key
+    s3_client = get_s3_client()
     presigned_url = s3_client.generate_presigned_url(
         "get_object",
         Params={

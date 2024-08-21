@@ -7,7 +7,7 @@ from qdrant_client import AsyncQdrantClient, QdrantClient
 from qdrant_client.http.exceptions import UnexpectedResponse
 from qdrant_client.models import Distance, VectorParams
 from redis.asyncio import Redis
-from .constants import COMPANY_COLLECTION, JOB_COLLECTION
+from .constants import JOB_COLLECTION
 
 
 if (qdrant_url := os.getenv("QDRANT_URL")) is None:
@@ -18,10 +18,6 @@ async_qdrant_client = AsyncQdrantClient(url=qdrant_url)
 try:
     qdrant_client.create_collection(
         collection_name=JOB_COLLECTION,
-        vectors_config=VectorParams(size=1024, distance=Distance.COSINE),
-    )
-    qdrant_client.create_collection(
-        collection_name=COMPANY_COLLECTION,
         vectors_config=VectorParams(size=1024, distance=Distance.COSINE),
     )
 except UnexpectedResponse:
