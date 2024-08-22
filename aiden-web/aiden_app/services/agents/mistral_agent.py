@@ -53,7 +53,7 @@ class MistralAgent(Agent):
             message.tool_calls = []
         return message
 
-    def _parse_talk_tool_call(self, message: ChatMessage) -> ToolMessage:
+    def _parse_talk_tool_call(self, message: ChatMessage) -> ChatMessage:
         if message.tool_calls[0].function.name == "talk":
             content = json.loads(message.tool_calls[0].function.arguments)["message"]
             return ChatMessage(role="assistant", content=content, tool_calls=[])
