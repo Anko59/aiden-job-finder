@@ -53,6 +53,12 @@ class MistralAgent(Agent):
             message.tool_calls = []
         return message
 
+    def _parse_talk_tool_call(self, message: ChatMessage) -> ChatMessage:
+        if message.tool_calls[0].function.name == "talk":
+            content = json.loads(message.tool_calls[0].function.arguments)["message"]
+            return ChatMessage(role="assistant", content=content, tool_calls=[])
+        return message
+
     def _message_model(self, **kwargs) -> ChatMessage:
         kwargs.setdefault("model", self.model)
         kwargs.setdefault("messages", self.messages)
@@ -63,6 +69,7 @@ class MistralAgent(Agent):
         message = response.choices[0].message
         message = ChatMessage(**message.model_dump())
         message = self._additional_message_parsing(message)
+        message = self._parse_talk_tool_call(message)
         self.messages.append(message)
         self.tokens_used += response.usage.total_tokens
 
