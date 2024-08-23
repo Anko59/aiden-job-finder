@@ -8,11 +8,16 @@ from .models import ProfileInfo, UserProfile
 
 
 class SignUpForm(UserCreationForm):
-    email = forms.EmailField(max_length=254, required=True, help_text="Required. Enter a valid email address.")
+    email = forms.EmailField(max_length=254, help_text="Required. Inform a valid email address.")
 
     class Meta:
         model = User
         fields = ("username", "email", "password1", "password2")
+
+    def clean(self):
+        cleaned_data = super().clean()
+        cleaned_data["usable_password"] = True
+        return cleaned_data
 
 
 class UserProfileForm(forms.ModelForm):
