@@ -1,8 +1,11 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Home</title>
+    <script src="https://cdn.tailwindcss.com"></script>
     <script>
         document.addEventListener("DOMContentLoaded", function () {
             var user = JSON.parse(document.getElementById('user-data').textContent);
@@ -14,16 +17,26 @@
     </script>
 </head>
 
-<body>
-    {% if user.is_authenticated %}
-    <h2>Welcome {{ user.username }}!</h2>
-    <p>You are now logged in.</p>
-    {% else %}
-    <h2>Welcome to Our Website!</h2>
-    <p>Please log in or sign up to continue.</p>
-    <button onclick="window.location.href='{% url 'login' %}'">Login</button>
-    <button onclick="window.location.href='{% url 'signup' %}'">Sign Up</button>
-    {% endif %}
+<body class="bg-slate-100 dark:bg-slate-900 min-h-screen flex items-center justify-center">
+    <div class="bg-white dark:bg-slate-800 rounded-lg shadow-sm p-8 max-w-md w-full">
+        {% if user.is_authenticated %}
+        <h2 class="text-2xl font-bold mb-4 text-slate-800 dark:text-slate-200">Welcome {{ user.username }}!</h2>
+        <p class="text-slate-600 dark:text-slate-400 mb-4">You are now logged in.</p>
+        {% else %}
+        <h2 class="text-2xl font-bold mb-4 text-slate-800 dark:text-slate-200">Welcome to Aiden!</h2>
+        <p class="text-slate-600 dark:text-slate-400 mb-6">Please log in or sign up to continue.</p>
+        <div class="flex space-x-4">
+            <button onclick="window.location.href='{% url 'login' %}'"
+                class="flex-1 inline-flex justify-center rounded-lg px-4 py-2.5 text-sm font-semibold text-blue-600 ring-1 ring-inset ring-blue-600 hover:bg-blue-600 hover:text-blue-50 transition duration-200">
+                Login
+            </button>
+            <button onclick="window.location.href='{% url 'signup' %}'"
+                class="flex-1 inline-flex justify-center rounded-lg px-4 py-2.5 text-sm font-semibold bg-blue-600 text-white hover:bg-blue-700 transition duration-200">
+                Sign Up
+            </button>
+        </div>
+        {% endif %}
+    </div>
 
     <!-- Embed the user data as JSON in a script tag with type application/json -->
     <script id="user-data" type="application/json">
