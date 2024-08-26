@@ -10,6 +10,7 @@ from django.http import JsonResponse, StreamingHttpResponse
 from django.template.loader import render_to_string
 from qdrant_client.models import PointStruct
 from rest_framework import status
+from mistralai.models.chat_completion import FunctionCall, ToolCall
 
 from aiden_app import USER_COLLECTION, qdrant_client
 from aiden_app.forms import UserProfileForm
@@ -204,7 +205,20 @@ def load_next_page(request, page: int, container_id: str) -> Iterable[str]:
     for message in scraper_tool.get_next_page_jobs(container_id, page):
         message: ToolMessage = message
         if message.agent_message is not None:
+            agent.messages.append(
+                agent.message_class(
+                    role="assistant",
+                    content="",
+                    tool_calls=[ToolCall(id=uuid4().hex[0:9], function=FunctionCall(name="search_jobs", arguments=""))],
+                )
+            )
             agent.messages.append(agent.message_class(**message.agent_message))
+            agent.messages.append(
+                agent.message_class(
+                    role="assistant",
+                    content="I performed a job search.",
+                )
+            )
         if message.user_message is not None:
             yield AssistantMesssage(
                 title=message.function_nane,

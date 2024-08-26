@@ -114,7 +114,7 @@ async function loadNextPage(gridContainer, nextIndex) {
             }
         ),
     };
-    const response = await fetch('api/load_next_page', fetchOptions);
+    const response = await fetch('/api/load_next_page', fetchOptions);
     const reader = response.body.getReader();
     let done = false;
     while (!done) {

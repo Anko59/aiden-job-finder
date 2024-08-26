@@ -212,9 +212,12 @@ services:
     entrypoint: >
       /bin/sh -c "
       /usr/bin/mc config host add --api s3v4 local ${AWS_S3_ENDPOINT_URL} ${AWS_ACCESS_KEY_ID} ${AWS_SECRET_ACCESS_KEY};
-      /usr/bin/mc rb --force local/${AWS_STORAGE_BUCKET_NAME}/;
-      /usr/bin/mc mb local/${AWS_STORAGE_BUCKET_NAME}/;
+      if ! /usr/bin/mc ls local/${AWS_STORAGE_BUCKET_NAME} >/dev/null 2>&1; then
+        /usr/bin/mc mb local/${AWS_STORAGE_BUCKET_NAME};
       /usr/bin/mc anonymous set public local/${AWS_STORAGE_BUCKET_NAME};
+      else
+        echo 'Bucket already exists. Skipping creation.';
+      fi;
       "
     depends_on:
       - minio

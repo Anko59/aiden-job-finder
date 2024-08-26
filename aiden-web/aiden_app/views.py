@@ -19,6 +19,7 @@ from aiden_app.services.chat_service import (
     job_offer_from_reference,
     get_offer_focus,
     get_conversation_from_session,
+    load_next_page,
 )
 from .forms import SignUpForm
 from aiden_app.storage import get_presigned_url
@@ -155,7 +156,7 @@ def handle_offer_focus(request):
 @csrf_protect
 @login_required
 @api_view(["POST"])
-def load_next_page(request):
+def load_next_page_api(request):
     page = request.data.get("page")
     container_id = request.data.get("container_id")
     if not page or not container_id:
