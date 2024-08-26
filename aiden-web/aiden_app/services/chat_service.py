@@ -19,6 +19,18 @@ from aiden_app.services.agents.mistral_agent import MistralAgent
 from aiden_app.services.tools.utils.cv_editor import CVEditor
 from aiden_app.services.tools.scraper_tool import ScraperTool
 from aiden_app.storage import get_presigned_url
+from aiden_app.models import Conversation, Message
+from aiden_app.services.agents.agent import Agent
+
+
+def get_conversation_from_session(session) -> Conversation:
+    conversation_json = session.get("conversation")
+    if not conversation_json:
+        return None
+    from loguru import logger
+
+    logger.error(conversation_json)
+    return Conversation.objects.get(conversation_id=conversation_json.get("conversation_id"))
 
 
 def get_agent_from_session(session) -> MistralAgent:
@@ -39,15 +51,25 @@ def get_profile_from_session(request) -> UserProfile:
     return profile
 
 
-def chat_wrapper(request, question):
-    agent = get_agent_from_session(request.session)
-
+def chat_wrapper(request, question: str, agent: Agent, conversation: Conversation):
     def generate_responses():
+        Message.objects.create(
+            conversation=conversation,
+            human=True,
+            content=question,
+            user=request.user,
+        )
         yield AssistantMesssage(
             title="User", content=render_to_string("langui/message.html", {"role": "user", "content": question})
         ).model_dump_json()
         for message in agent.chat(question):
             message: ToolMessage = message
+            Message.objects.create(
+                conversation=conversation,
+                human=False,
+                content=message.user_message,
+                user=request.user,
+            )
             yield AssistantMesssage(
                 title=message.function_nane,
                 content=message.user_message,
@@ -60,6 +82,7 @@ def chat_wrapper(request, question):
 
 
 def start_chat(profile):
+    conversation = Conversation.objects.create(user=profile.user, user_profile=profile)
     agent = MistralAgent.from_profile(profile)
     response = {
         "role": "assistant",
@@ -67,7 +90,8 @@ def start_chat(profile):
         "is_last": True,
         "tokens_used": 0,
     }
-    return agent, response
+    Message.objects.create(conversation=conversation, human=False, content=response["content"], user=profile.user)
+    return agent, response, conversation
 
 
 def get_available_profiles(user):
@@ -107,16 +131,6 @@ def create_profile(profile_data: dict, form_data: dict, request):
     request.session["agent"] = agent.to_json()
     CVEditor().generate_cv(user_profile)
     return JsonResponse({"success": "Profile created successfully"})
-
-
-def get_documents(profile):
-    return [
-        {
-            "name": profile.profile_title,
-            "path": "/media/cv/" + profile.cv_name.replace(".pdf", ".png"),
-        }
-        for profile in UserProfile.objects.filter(first_name=profile.first_name, last_name=profile.last_name)
-    ]
 
 
 def job_offer_from_reference(reference):

@@ -224,3 +224,18 @@ class UserProfile(BaseModel):
 
     class Meta:
         unique_together = [["first_name", "last_name", "profile_title"]]
+
+
+class Conversation(BaseModel):
+    user_profile = models.ForeignKey(UserProfile, on_delete=models.CASCADE)
+    conversation_id = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
+
+
+class Message(BaseModel):
+    conversation = models.ForeignKey(Conversation, on_delete=models.CASCADE)
+    content = models.TextField()
+    human = models.BooleanField(default=False)
+    timestamp = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.sender}: {self.content}"
