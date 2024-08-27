@@ -100,6 +100,7 @@ function initializeDocumentEvents() {
 }
 
 async function loadNextPage(gridContainer, nextIndex) {
+    const language = window.CURRENT_LANGUAGE || 'en';
     hideChatForm();
     const fetchOptions = {
         method: 'POST',
@@ -114,7 +115,7 @@ async function loadNextPage(gridContainer, nextIndex) {
             }
         ),
     };
-    const response = await fetch('/api/load_next_page', fetchOptions);
+    const response = await fetch(`/${language}/api/load_next_page`, fetchOptions);
     const reader = response.body.getReader();
     let done = false;
     while (!done) {
@@ -233,6 +234,7 @@ function initializeOfferFocusEvents() {
 }
 
 async function getOfferFocus(reference) {
+    const language = window.CURRENT_LANGUAGE || 'en';
     hideChatForm();
     emptyMessageContainer();
     const fetchOptions = {
@@ -243,7 +245,7 @@ async function getOfferFocus(reference) {
         },
         body: JSON.stringify({ 'offer_id': reference }),
     };
-    const response = await fetch('/api/get_offer_focus', fetchOptions);
+    const response = await fetch(`/${language}/api/get_offer_focus`, fetchOptions);
     const reader = response.body.getReader();
     let done = false;
     while (!done) {
@@ -260,13 +262,14 @@ async function getOfferFocus(reference) {
 }
 
 export function getProfiles() {
+    const language = window.CURRENT_LANGUAGE || 'en';
     const fetchOptions = {
         method: 'GET',
         headers: {
             'X-CSRFToken': getCookie('csrftoken'),
         },
     };
-    fetch('/api/get_profiles', fetchOptions)
+    fetch(`/${language}/api/get_profiles`, fetchOptions)
         .then(response => response.text())
         .then(data => {
             document.getElementById('profile-container').innerHTML = data;
@@ -278,13 +281,14 @@ export function getProfiles() {
 };
 
 export function getProfileCreationForm() {
+    const language = window.CURRENT_LANGUAGE || 'en';
     const fetchOptions = {
         method: 'GET',
         headers: {
             'X-CSRFToken': getCookie('csrftoken'),
         },
     };
-    fetch('/api/get_profile_creation_form', fetchOptions)
+    fetch(`/${language}/api/get_profile_creation_form`, fetchOptions)
         .then(response => response.text())
         .then(result => {
             document.getElementById('message-container').innerHTML += result;
@@ -296,6 +300,7 @@ export function getProfileCreationForm() {
 };
 
 export function startChat(profile) {
+    const language = window.CURRENT_LANGUAGE || 'en';
     const fetchOptions = {
         method: 'POST',
         headers: {
@@ -304,7 +309,7 @@ export function startChat(profile) {
         },
         body: JSON.stringify(profile),
     };
-    fetch('/api/start_chat', fetchOptions)
+    fetch(`/${language}/api/start_chat`, fetchOptions)
         .then(response => response.text())
         .then(data => {
             emptyMessageContainer();
@@ -318,6 +323,7 @@ export function startChat(profile) {
 };
 
 export function getDocuments(profile) {
+    const language = window.CURRENT_LANGUAGE || 'en';
     const fetchOptions = {
         method: 'POST',
         headers: {
@@ -326,7 +332,7 @@ export function getDocuments(profile) {
         },
         body: JSON.stringify(profile),
     };
-    fetch('/api/get_documents', fetchOptions)
+    fetch(`/${language}/api/get_documents`, fetchOptions)
         .then(response => response.text())
         .then(data => {
             document.getElementById('documents-display').innerHTML = data;
@@ -339,6 +345,7 @@ export function getDocuments(profile) {
 
 
 export function createProfile(formData) {
+    const language = window.CURRENT_LANGUAGE || 'en';
     const fetchOptions = {
         method: 'POST',
         headers: {
@@ -346,7 +353,7 @@ export function createProfile(formData) {
         },
         body: formData,
     };
-    fetch('/api/create_profile', fetchOptions)
+    fetch(`/${language}/api/create_profile`, fetchOptions)
         .then(response => response.text())
         .then(data => {
             getProfiles();
@@ -377,6 +384,7 @@ function emptyMessageContainer() {
 }
 
 export async function sendQuestion(question) {
+    const language = window.CURRENT_LANGUAGE || 'en'; // Get current language
     hideChatForm();
     const fetchOptions = {
         method: 'POST',
@@ -386,7 +394,7 @@ export async function sendQuestion(question) {
         },
         body: JSON.stringify({ question: question }),
     };
-    const response = await fetch('/api/question', fetchOptions);
+    const response = await fetch(`/${language}/api/question`, fetchOptions);
     const reader = response.body.getReader();
     let done = false;
     while (!done) {

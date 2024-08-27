@@ -1,11 +1,10 @@
 <!DOCTYPE html>
 <html lang="en">
+{% load i18n %}
 
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    {% include 'base-headers.html' %}
     <title>Home</title>
-    <script src="https://cdn.tailwindcss.com"></script>
     <script>
         document.addEventListener("DOMContentLoaded", function () {
             var user = JSON.parse(document.getElementById('user-data').textContent);
@@ -20,19 +19,19 @@
 <body class="bg-slate-100 dark:bg-slate-900 min-h-screen flex items-center justify-center">
     <div class="bg-white dark:bg-slate-800 rounded-lg shadow-sm p-8 max-w-md w-full">
         {% if user.is_authenticated %}
-        <h2 class="text-2xl font-bold mb-4 text-slate-800 dark:text-slate-200">Welcome {{ user.username }}!</h2>
-        <p class="text-slate-600 dark:text-slate-400 mb-4">You are now logged in.</p>
+        <h2 class="text-2xl font-bold mb-4 text-slate-800 dark:text-slate-200">{% trans "Welcome " %}{{ user.username }}!</h2>
+        <p class="text-slate-600 dark:text-slate-400 mb-4">{% trans "You are now logged in." %}</p>
         {% else %}
-        <h2 class="text-2xl font-bold mb-4 text-slate-800 dark:text-slate-200">Welcome to Aiden!</h2>
-        <p class="text-slate-600 dark:text-slate-400 mb-6">Please log in or sign up to continue.</p>
+        <h2 class="text-2xl font-bold mb-4 text-slate-800 dark:text-slate-200">{% trans "Welcome to Aiden!" %}</h2>
+        <p class="text-slate-600 dark:text-slate-400 mb-6">{% trans "Please log in or sign up to continue." %}</p>
         <div class="flex space-x-4">
             <button onclick="window.location.href='{% url 'login' %}'"
                 class="flex-1 inline-flex justify-center rounded-lg px-4 py-2.5 text-sm font-semibold text-blue-600 ring-1 ring-inset ring-blue-600 hover:bg-blue-600 hover:text-blue-50 transition duration-200">
-                Login
+                {% trans "Login" %}
             </button>
             <button onclick="window.location.href='{% url 'signup' %}'"
                 class="flex-1 inline-flex justify-center rounded-lg px-4 py-2.5 text-sm font-semibold bg-blue-600 text-white hover:bg-blue-700 transition duration-200">
-                Sign Up
+                {% trans "Sign Up" %}
             </button>
         </div>
         {% endif %}

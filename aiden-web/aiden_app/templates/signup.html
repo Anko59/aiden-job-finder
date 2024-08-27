@@ -1,11 +1,10 @@
 <!DOCTYPE html>
 <html lang="en">
+{% load i18n %}
 
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sign Up</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    {% include 'base-headers.html' %}
+    <title>{% trans "Sign Up" %}</title>
     <style>
         .password-help {
             display: none;
@@ -15,7 +14,7 @@
 
 <body class="bg-slate-100 dark:bg-slate-900 min-h-screen flex items-center justify-center">
     <div class="bg-white dark:bg-slate-800 rounded-lg shadow-sm p-8 max-w-md w-full">
-        <h2 class="text-2xl font-bold mb-6 text-slate-800 dark:text-slate-200">Sign Up</h2>
+        <h2 class="text-2xl font-bold mb-6 text-slate-800 dark:text-slate-200">{% trans "Sign Up" %}</h2>
         <form method="post" class="space-y-4">
             {% csrf_token %}
             {% for field in form %}
@@ -46,7 +45,7 @@
             <div>
                 <button type="submit"
                     class="w-full inline-flex justify-center rounded-md px-4 py-2 text-sm font-semibold bg-blue-600 text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition duration-200">
-                    Sign Up
+                    {% trans "Sign Up" %}
                 </button>
             </div>
         </form>

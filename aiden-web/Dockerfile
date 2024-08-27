@@ -16,6 +16,9 @@ RUN apt-get update && apt-get install -y \
     texlive-latex-extra \
     && rm -rf /var/lib/apt/lists/*
 
+# Install gettext for translation
+RUN apt-get update && apt-get install -y gettext
+
 COPY ./aiden-web/pyproject.toml ./aiden-web/poetry.lock ./
 COPY ./aiden-web/aiden_app ./
 COPY ./aiden-web/aiden_project ./

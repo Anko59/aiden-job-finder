@@ -8,6 +8,7 @@ from mistralai.client import MistralClient
 from mistralai.models.chat_completion import ChatMessage, FunctionCall, ToolCall
 from mistralai.models.embeddings import EmbeddingResponse
 from django.template.loader import render_to_string
+from django.utils.translation import gettext as _
 
 from aiden_app.services.tools.talk_tool import TalkTool
 from aiden_app.models import ToolMessage
@@ -104,4 +105,4 @@ class MistralAgent(Agent):
                     yield tool_message
         if self.messages[-1].role == "tool":
             # Dirty fix for "Unexpected role 'user' after role 'tool'" error
-            self.messages.append(ChatMessage(role="assistant", content="I performed the tool call."))
+            self.messages.append(ChatMessage(role="assistant", content=_("I performed the tool call.")))
