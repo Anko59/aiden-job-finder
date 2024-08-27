@@ -1,11 +1,12 @@
 
+{% load i18n %}
 <div class="job-offer bg-slate-100 dark:bg-slate-900 rounded-lg shadow-sm p-4 mb-4">
     <div class="compact-view">
         <h1 class="text-xl font-bold mb-2">{{ job_offer.name|safe }}</h1>
-        <p class="text-slate-700 dark:text-slate-300 mb-1"><strong>Organization:</strong> {{ job_offer.organization.name|safe }}</p>
+        <p class="text-slate-700 dark:text-slate-300 mb-1"><strong>{% trans "Organization:" %}</strong> {{ job_offer.organization.name|safe }}</p>
         {% for office in job_offer.offices %}
             {% if office.local_city and office.country %}
-                <p class="text-slate dark:text-slate-300 mb-1"><strong>Location:</strong> {{ office.local_city|safe }}, {{ office.country|safe }}</p>
+                <p class="text-slate dark:text-slate-300 mb-1"><strong>{% trans "Location:" %}</strong> {{ office.local_city|safe }}, {{ office.country|safe }}</p>
             {% endif %}
         {% endfor %}
         {% if job_offer.organization.logo.url %}
@@ -24,23 +25,23 @@
         <div class="text-slate-600 dark:text-slate-400 mb-1">{{ job_offer.organization.description|safe }}</div>
         {% endif %}
         {% if job_offer.profile %}
-        <h2 class="text-lg font-semibold mb-1">Job Description</h2>
+        <h2 class="text-lg font-semibold mb-1">{% trans "Job Description" %}</h2>
         <div class="text-slate-600 dark:text-slate-400 mb-1">{{ job_offer.profile|safe }}</div>
         {% endif %}
         {% if job_offer.organization.nb_employees %}
-        <p class="text-slate-700 dark:text-slate-300 mb-1"><strong>Number of Employees:</strong> {{ job_offer.organization.nb_employees|safe }}</p>
+        <p class="text-slate-700 dark:text-slate-300 mb-1"><strong>{% trans "Number of Employees:" %}</strong> {{ job_offer.organization.nb_employees|safe }}</p>
         {% endif %}
         {% if job_offer.salary_minimum and job_offer.salary_maximum %}
-        <p class="text-slate-700 dark:text-slate-300 mb-1"><strong>Salary:</strong> {{ job_offer.salary_minimum|safe }} - {{ job_offer.salary_maximum|safe }}</p>
+        <p class="text-slate-700 dark:text-slate-300 mb-1"><strong>{% trans "Salary:" %}</strong> {{ job_offer.salary_minimum|safe }} - {{ job_offer.salary_maximum|safe }}</p>
         {% endif %}
         {% if job_offer.contract_type %}
-        <p class="text-slate-700 dark:text-slate-300 mb-1"><strong>Contract Type:</strong> {{ job_offer.contract_type|safe }}</p>
+        <p class="text-slate-700 dark:text-slate-300 mb-1"><strong>{% trans "Contract Type:" %}</strong> {{ job_offer.contract_type|safe }}</p>
         {% endif %}
 
 
         {% if job_offer.benefits %}
         <div class="my-2">
-            <h2 class="text-lg font-semibold mb-1">Benefits</h2>
+            <h2 class="text-lg font-semibold mb-1">{% trans "Benefits" %}</h2>
             <ul class="list-disc list-inside">
                 {% for benefit in job_offer.benefits %}
                 <li class="text-slate-700 dark:text-slate-300">{{ benefit|safe }}</li>
@@ -49,10 +50,10 @@
         </div>
         {% endif %}
 
-        <p class="text-slate-500 dark:text-slate-400 text-xs mt-2"><strong>Published at: </strong> {{ job_offer.published_at|safe }}</p>
-        <p class="text-slate-500 dark:text-slate-400 text-xs mt-2"><strong>Source: </strong> {{ job_offer.source|safe }}</p>
+        <p class="text-slate-500 dark:text-slate-400 text-xs mt-2"><strong>{% trans "Published at: " %}</strong> {{ job_offer.published_at|safe }}</p>
+        <p class="text-slate-500 dark:text-slate-400 text-xs mt-2"><strong>{% trans "Source: " %}</strong> {{ job_offer.source|safe }}</p>
         <button class="offer-focus inline-flex rounded-lg px-3.5 py-2.5 text-center text-sm font-semibold text-blue-600 ring-1 ring-inset ring-blue-600 hover:bg-blue-600 hover:text-blue-50" reference="{{ job_offer.reference|safe }}">
-        Apply
+        {% trans "Apply" %}
         </button>
     </div>
 </div>

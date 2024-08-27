@@ -1,0 +1,498 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2024-08-27 15:31+0200\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+#: aiden_app/forms.py:12
+msgid "Required. Inform a valid email address."
+msgstr ""
+
+#: aiden_app/models.py:137
+msgid ""
+"The name or icon representing the social media platform, from font-awesome, "
+"without the 'fa-' prefix"
+msgstr ""
+
+#: aiden_app/models.py:139
+msgid "The URL of the individual's profile on the social media platform"
+msgstr ""
+
+#: aiden_app/models.py:140
+msgid "A shortened or display version of the URL"
+msgstr ""
+
+#: aiden_app/models.py:144
+msgid ""
+"An icon representing the interest, from font-awesome, without the 'fa-' "
+"prefix"
+msgstr ""
+
+#: aiden_app/models.py:145
+msgid "A description of the interest"
+msgstr ""
+
+#: aiden_app/models.py:149
+msgid "A responsibility or achievement during the experience"
+msgstr ""
+
+#: aiden_app/models.py:153
+msgid "The job title for the experience"
+msgstr ""
+
+#: aiden_app/models.py:155
+msgid ""
+"The name and location of the company, in the formant Company Name (City, "
+"Country Code)"
+msgstr ""
+
+#: aiden_app/models.py:157
+msgid "The duration of the experience in the format YYYY.MM--YYYY.MM"
+msgstr ""
+
+#: aiden_app/models.py:159
+msgid "A list of responsibilities or achievements during the experience"
+msgstr ""
+
+#: aiden_app/models.py:164
+msgid "The degree obtained"
+msgstr ""
+
+#: aiden_app/models.py:165
+msgid "The specialization or major of the degree"
+msgstr ""
+
+#: aiden_app/models.py:167
+msgid ""
+"The name and location of the school, in the format School Name (City, "
+"Country Code)"
+msgstr ""
+
+#: aiden_app/models.py:169
+msgid "The duration of the education in the format YYYY--YYYY"
+msgstr ""
+
+#: aiden_app/models.py:173
+msgid "The name of the project"
+msgstr ""
+
+#: aiden_app/models.py:174
+msgid "A description of the project"
+msgstr ""
+
+#: aiden_app/models.py:175
+msgid "The URL of the project repository or website"
+msgstr ""
+
+#: aiden_app/models.py:179
+msgid "The name of the skill"
+msgstr ""
+
+#: aiden_app/models.py:180
+msgid "A color code associated with the skill"
+msgstr ""
+
+#: aiden_app/models.py:181
+msgid "The proficiency level in the skill"
+msgstr ""
+
+#: aiden_app/models.py:182
+msgid ""
+"Additional details or sub-skills related to the main skill, example cyan!48!"
+"black"
+msgstr ""
+
+#: aiden_app/models.py:186
+msgid "The first name of the individual"
+msgstr ""
+
+#: aiden_app/models.py:187
+msgid "The last name of the individual"
+msgstr ""
+
+#: aiden_app/models.py:189
+msgid "The professional title or headline for the CV"
+msgstr ""
+
+#: aiden_app/models.py:191
+msgid "A summary of the individual's professional background and objectives"
+msgstr ""
+
+#: aiden_app/models.py:192
+msgid "The email address for contacting the individual"
+msgstr ""
+
+#: aiden_app/models.py:193
+msgid "The phone number for contacting the individual"
+msgstr ""
+
+#: aiden_app/models.py:194
+msgid "The address of the individual's residence"
+msgstr ""
+
+#: aiden_app/models.py:196
+msgid "A list of social media linked with the individual"
+msgstr ""
+
+#: aiden_app/models.py:198
+msgid "A list of the individual's interests or hobbies"
+msgstr ""
+
+#: aiden_app/models.py:200
+msgid "A list of the individual's professional experiences"
+msgstr ""
+
+#: aiden_app/models.py:202
+msgid "A list of the individual's educational background"
+msgstr ""
+
+#: aiden_app/models.py:203
+msgid "A list of projects the individual has worked on"
+msgstr ""
+
+#: aiden_app/models.py:204
+msgid "A list of the individual's skills"
+msgstr ""
+
+#: aiden_app/models.py:221
+msgid "A detailed schema for a profile JSON object"
+msgstr ""
+
+#: aiden_app/services/agents/mistral_agent.py:108
+msgid "I performed the tool call."
+msgstr ""
+
+#: aiden_app/services/agents/prompts.py:3
+msgid ""
+"Hello, Aiden (AI-Driven Employment Navigator)! As an AI job assistant, your "
+"duties include:\n"
+"1. Job Search: Find job openings on Indeed based on user preferences.\n"
+"2. Recommandations based on profiles. Read the user profile to recommend the "
+"best jobs to him.\n"
+"3. Profile Editing: Optimize users' profiles to generate CVs for potential "
+"employers.\n"
+"Use Markdown to format your response text. The user is already informed "
+"about the results of your functions. Repeating the output is a waste of "
+"tokens.\n"
+"The user should NEVER be informed about the functions and the arguments of "
+"the function. You need to figure out the parameters yourself.\n"
+"For example, if the user asks for jobs matching his profile, you should read "
+"the user profile, then search for jobs based on the profile.\n"
+"Your communication should be succinct and professional. Guide users "
+"throughout their job search and answer their queries. Your goal is to aid "
+"users in securing the best job opportunities. Prioritize executing "
+"functions. No text should be returned until all necessary information is "
+"collected. Good luck!\n"
+"To interact with the user, you can use the `talk` function. It allows you to "
+"send messages to the user. Make sure to use it appropriately to provide "
+"necessary information and gather any additional details needed for executing "
+"functions.\n"
+"Remember, your communication should be concise and professional. Focus on "
+"guiding the user and answering their queries effectively. Good luck with "
+"your interactions!\n"
+"The first message informs you about the profile of the user. The Schema of "
+"the profile does not change.\n"
+msgstr ""
+
+#: aiden_app/services/agents/prompts.py:16
+msgid "Hello! I'm Aiden, your AI job assistant. How can I help you today?"
+msgstr ""
+
+#: aiden_app/services/agents/prompts.py:18
+msgid ""
+"You are required to create a JSON document representing a user's "
+"professional profile. This document includes all pertinent professional "
+"details and is utilized for CV generation.\n"
+"You will be given a specific JSON schema to adhere to. An example document "
+"and information about the new user will also be provided.\n"
+"Ensure that the document you create matches the format specified in the "
+"schema. Use the provided example as a guide."
+msgstr ""
+
+#: aiden_app/services/agents/prompts.py:22
+msgid ""
+"You are required to edit a JSON document representing a user's professional "
+"profile. This document includes all pertinent professional details and is "
+"utilized for CV generation.\n"
+"You will be given a specific JSON schema to adhere to. Information about the "
+"user's profile and a job offer will also be provided.\n"
+"Ensure that the document you edit matches the format specified in the "
+"schema. Use the provided information as a guide.\n"
+"Adapt the user's profile to match the requirements of the job offer. Make "
+"sure to include all necessary details and qualifications.\n"
+"Do not under any circumstances invent information or make assumptions about "
+"the user's profile. Only use the information provided to make the necessary "
+"adjustments."
+msgstr ""
+
+#: aiden_app/services/agents/prompts.py:28
+msgid ""
+"You are required to generate a cover letter for a job application based on a "
+"user's professional profile and a specific job offer.\n"
+"You will be provided with the job offer details and the user's profile. Use "
+"this information to create a compelling cover letter that highlights the "
+"user's qualifications and experience.\n"
+"Tailor the cover letter to match the requirements of the job offer. Ensure "
+"that the cover letter is well-written, professional, and showcases the "
+"user's skills effectively.\n"
+"Do not invent information or make assumptions about the user's profile. Use "
+"the provided details to craft a personalized cover letter that aligns with "
+"the job requirements."
+msgstr ""
+
+#: aiden_app/services/agents/prompts.py:33
+msgid ""
+"You are required to generate a JSON document that fills in the necessary "
+"fields for a job application based on a user's professional profile and a "
+"specific\n"
+"job offer. You will be provided with the job offer details, the user's "
+"profile, and a JSON schema for the application form. Use this information to "
+"create a JSON document that matches the schema.\n"
+"Ensure that the document includes all required information and accurately "
+"reflects the user's qualifications and experience."
+msgstr ""
+
+#: aiden_app/services/chat_service.py:67
+msgid "Hello! How can I assist you today "
+msgstr ""
+
+#: aiden_app/services/chat_service.py:137
+msgid ""
+"I will now search for the information required to apply for this job offer."
+msgstr ""
+
+#: aiden_app/services/chat_service.py:210
+msgid "I performed a job search."
+msgstr ""
+
+#: aiden_app/templates/home.html:22
+msgid "Welcome "
+msgstr ""
+
+#: aiden_app/templates/home.html:23
+msgid "You are now logged in."
+msgstr ""
+
+#: aiden_app/templates/home.html:25
+msgid "Welcome to Aiden!"
+msgstr ""
+
+#: aiden_app/templates/home.html:26
+msgid "Please log in or sign up to continue."
+msgstr ""
+
+#: aiden_app/templates/home.html:30 aiden_app/templates/login.html:13
+msgid "Login"
+msgstr ""
+
+#: aiden_app/templates/home.html:34 aiden_app/templates/signup.html:7
+#: aiden_app/templates/signup.html:17 aiden_app/templates/signup.html:48
+msgid "Sign Up"
+msgstr ""
+
+#: aiden_app/templates/langui/cover-letter-display.html:8
+msgid ""
+"I generated a cover letter fitting your resume and the job description. Here "
+"is the cover letter:"
+msgstr ""
+
+#: aiden_app/templates/langui/create-profile.html:5
+msgid "Loading..."
+msgstr ""
+
+#: aiden_app/templates/langui/create-profile.html:7
+msgid "Creating Profile..."
+msgstr ""
+
+#: aiden_app/templates/langui/create-profile.html:35
+msgid "User photo"
+msgstr ""
+
+#: aiden_app/templates/langui/create-profile.html:38
+msgid "Click to browse"
+msgstr ""
+
+#: aiden_app/templates/langui/create-profile.html:41
+msgid "JPG or PNG only. Max size: 25 MB"
+msgstr ""
+
+#: aiden_app/templates/langui/create-profile.html:60
+msgid "Create Profile"
+msgstr ""
+
+#: aiden_app/templates/langui/edited-cv-display.html:8
+msgid ""
+"I generated a new CV for you to improve your chances of getting hired. Here "
+"is the updated CV:"
+msgstr ""
+
+#: aiden_app/templates/langui/filled-form-display.html:8
+msgid ""
+"I found the following questions are asked by the employer. I generated some "
+"answers to ease your application process. Here are the answers:"
+msgstr ""
+
+#: aiden_app/templates/langui/job-offer-grid-container.html:17
+msgid "Previous"
+msgstr ""
+
+#: aiden_app/templates/langui/job-offer-grid-container.html:21
+msgid "Page"
+msgstr ""
+
+#: aiden_app/templates/langui/job-offer-grid-container.html:21
+msgid "of"
+msgstr ""
+
+#: aiden_app/templates/langui/job-offer-grid-container.html:25
+msgid "Next"
+msgstr ""
+
+#: aiden_app/templates/langui/job-offer.html:6
+msgid "Organization:"
+msgstr ""
+
+#: aiden_app/templates/langui/job-offer.html:9
+msgid "Location:"
+msgstr ""
+
+#: aiden_app/templates/langui/job-offer.html:28
+msgid "Job Description"
+msgstr ""
+
+#: aiden_app/templates/langui/job-offer.html:32
+#: aiden_app/templates/langui/offer-focus.html:14
+msgid "Number of Employees:"
+msgstr ""
+
+#: aiden_app/templates/langui/job-offer.html:35
+msgid "Salary:"
+msgstr ""
+
+#: aiden_app/templates/langui/job-offer.html:38
+#: aiden_app/templates/langui/offer-focus.html:27
+msgid "Contract Type:"
+msgstr ""
+
+#: aiden_app/templates/langui/job-offer.html:44
+#: aiden_app/templates/langui/offer-focus.html:60
+msgid "Benefits"
+msgstr ""
+
+#: aiden_app/templates/langui/job-offer.html:53
+msgid "Published at: "
+msgstr ""
+
+#: aiden_app/templates/langui/job-offer.html:54
+msgid "Source: "
+msgstr ""
+
+#: aiden_app/templates/langui/job-offer.html:56
+msgid "Apply"
+msgstr ""
+
+#: aiden_app/templates/langui/offer-focus.html:8
+msgid "Company Information"
+msgstr ""
+
+#: aiden_app/templates/langui/offer-focus.html:11
+msgid "Description:"
+msgstr ""
+
+#: aiden_app/templates/langui/offer-focus.html:24
+msgid "Job Details"
+msgstr ""
+
+#: aiden_app/templates/langui/offer-focus.html:25
+msgid "Category:"
+msgstr ""
+
+#: aiden_app/templates/langui/offer-focus.html:26
+msgid "Sub-Category"
+msgstr ""
+
+#: aiden_app/templates/langui/offer-focus.html:29
+msgid "Contract Duration:"
+msgstr ""
+
+#: aiden_app/templates/langui/offer-focus.html:30
+msgid " months"
+msgstr ""
+
+#: aiden_app/templates/langui/offer-focus.html:33
+msgid "Education Level:"
+msgstr ""
+
+#: aiden_app/templates/langui/offer-focus.html:36
+msgid "Minimum Experience Level:"
+msgstr ""
+
+#: aiden_app/templates/langui/offer-focus.html:38
+msgid "Language:"
+msgstr ""
+
+#: aiden_app/templates/langui/offer-focus.html:40
+msgid "Salary Range:"
+msgstr ""
+
+#: aiden_app/templates/langui/offer-focus.html:44
+msgid "Remote Work:"
+msgstr ""
+
+#: aiden_app/templates/langui/offer-focus.html:48
+msgid "Location"
+msgstr ""
+
+#: aiden_app/templates/langui/offer-focus.html:50
+msgid "Country:"
+msgstr ""
+
+#: aiden_app/templates/langui/offer-focus.html:52
+msgid "City:"
+msgstr ""
+
+#: aiden_app/templates/langui/offer-focus.html:55
+msgid "State:"
+msgstr ""
+
+#: aiden_app/templates/langui/offer-focus.html:68
+msgid "Additional Information"
+msgstr ""
+
+#: aiden_app/templates/langui/offer-focus.html:70
+msgid "Profile:"
+msgstr ""
+
+#: aiden_app/templates/langui/offer-focus.html:72
+msgid "Published At:"
+msgstr ""
+
+#: aiden_app/templates/langui/offer-focus.html:74
+msgid "Job URL:"
+msgstr ""
+
+#: aiden_app/templates/langui/sidebar.html:14
+msgid "Documents"
+msgstr ""
+
+#: aiden_project/settings.py:102
+msgid "English"
+msgstr ""
+
+#: aiden_project/settings.py:103
+msgid "French"
+msgstr ""

@@ -1,4 +1,5 @@
 {% load static %}
+{% load i18n %}
 <div class="flex flex-col px-4 py-8 sm:px-6 job-offers-message-container" container_id="{{ job_offers_container_id }}">
     <img class="mr-2 flex h-8 w-8 rounded-full sm:mr-4" src="{% static 'images/tools.png' %}" />
     <div class="flex flex-row">
@@ -13,15 +14,15 @@
             <nav class="inline-flex rounded-md shadow">
                 <button
                     class="inline-flex items-center rounded-l-lg px-3 py-2 text-center text-sm font-semibold text-blue-600 ring-1 ring-inset ring-blue-600 hover:bg-blue-600 hover:text-blue-50 previous-page">
-                    Previous
+                    {% trans "Previous" %}
                 </button>
                 <span
                     class="items-center px-3 py-2 text-center text-sm font-semibold text-blue-600 ring-1 ring-inset ring-blue-600 current-page">
-                    Page <span class="page-number">1</span> of <span class="total-pages">1</span>
+                    {% trans "Page" %} <span class="page-number">1</span> {% trans "of" %} <span class="total-pages">1</span>
                 </span>
                 <button
                     class="inline-flex items-center rounded-r-lg px-3 py-2 text-center text-sm font-semibold text-blue-600 ring-1 ring-inset ring-blue-600 hover:bg-blue-600 hover:text-blue-50 next-page">
-                    Next
+                    {% trans "Next" %}
                 </button>
             </nav>
         </div>

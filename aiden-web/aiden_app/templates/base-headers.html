@@ -1,0 +1,45 @@
+{% load i18n %}
+{% load static %}
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="icon" type="image/png" href="{% static 'images/dog.png' %}">
+
+<style>
+    .language-flags {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        z-index: 1000;
+    }
+    .language-flags img {
+        width: 30px;
+        height: 20px;
+        margin-left: 5px;
+        cursor: pointer;
+    }
+</style>
+
+<script>
+    {% get_current_language as LANGUAGE_CODE %}
+    window.CURRENT_LANGUAGE = "{{ LANGUAGE_CODE }}";
+</script>
+
+<div class="language-flags">
+    <form action="{% url 'set_language' %}" method="post">
+        {% csrf_token %}
+        <input name="next" type="hidden" value="{{ redirect_to }}">
+        <input type="hidden" name="language" id="language-input">
+
+        {% get_current_language as LANGUAGE_CODE %}
+        <img src="{% static 'images/flag-en.png' %}" alt="English" onclick="changeLanguage('en')" {% if LANGUAGE_CODE == 'en' %}style="opacity: 0.5;"{% endif %}>
+        <img src="{% static 'images/flag-fr.png' %}" alt="Français" onclick="changeLanguage('fr')" {% if LANGUAGE_CODE == 'fr' %}style="opacity: 0.5;"{% endif %}>
+    </form>
+</div>
+
+<script>
+    function changeLanguage(lang) {
+        document.getElementById('language-input').value = lang;
+        document.querySelector('.language-flags form').submit();
+    }
+</script>

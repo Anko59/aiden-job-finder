@@ -2,9 +2,7 @@
 <html lang="en">
 
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <script src="https://cdn.tailwindcss.com"></script>
+    {% include 'base-headers.html' %}
     <!-- Include Markdown-it for rendering markdown -->
     <script src="https://cdn.jsdelivr.net/npm/markdown-it/dist/markdown-it.min.js"></script>
 
@@ -13,8 +11,6 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/json-formatter-js/2.3.3/json-formatter.min.js"></script>
 
     <title>Aiden</title>
-    {% load static %}
-    <link rel="icon" type="image/png" href="{% static 'images/dog.png' %}">
 </head>
 
 <body class="bg-gray-100">

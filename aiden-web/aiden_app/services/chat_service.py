@@ -8,6 +8,8 @@ from aiden_shared.models import JobOffer
 from aiden_shared.utils import reference_to_uuid
 from django.http import JsonResponse, StreamingHttpResponse
 from django.template.loader import render_to_string
+from django.utils.translation import gettext as _
+from django.utils import translation
 from qdrant_client.models import PointStruct
 from rest_framework import status
 from mistralai.models.chat_completion import FunctionCall, ToolCall
@@ -60,10 +62,13 @@ def chat_wrapper(request, question):
 
 
 def start_chat(profile):
+    print(f"Current language: {translation.get_language()}")
     agent = MistralAgent.from_profile(profile)
+    content = _("Hello! How can I assist you today ") + f"{profile} ?"
+    print(content)
     response = {
         "role": "assistant",
-        "content": f"Hello! How can I assist you today {profile} ? ",
+        "content": content,
         "is_last": True,
         "tokens_used": 0,
     }
@@ -129,7 +134,7 @@ def get_offer_focus(request, job_offer: JobOffer):
     yield render_to_string("langui/offer-focus.html", {"offer": job_offer})
     yield render_to_string(
         "langui/message.html",
-        {"role": "assistant", "content": "I will now search for the information required to apply for this job offer."},
+        {"role": "assistant", "content": _("I will now search for the information required to apply for this job offer.")},
     )
     url = f"{os.environ.get('RECOMMENDER_API_URL')}/get_form"
     payload = {
@@ -202,7 +207,7 @@ def load_next_page(request, page: int, container_id: str) -> Iterable[str]:
             agent.messages.append(
                 agent.message_class(
                     role="assistant",
-                    content="I performed a job search.",
+                    content=_("I performed a job search."),
                 )
             )
         if message.user_message is not None:

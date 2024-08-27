@@ -4,6 +4,8 @@ from django.core.validators import RegexValidator
 from django.core.exceptions import ValidationError
 from loguru import logger
 from django.utils.encoding import force_str
+from django.utils.translation import gettext_lazy as _
+
 
 import uuid
 
@@ -132,74 +134,76 @@ class BaseModel(models.Model):
 
 class SocialLink(BaseModel):
     icon = models.CharField(
-        max_length=50, help_text="The name or icon representing the social media platform, from font-awesome, without the 'fa-' prefix"
+        max_length=50, help_text=_("The name or icon representing the social media platform, from font-awesome, without the 'fa-' prefix")
     )
-    url = models.URLField(help_text="The URL of the individual's profile on the social media platform", blank=True, null=True)
-    text = models.CharField(max_length=100, help_text="A shortened or display version of the URL")
+    url = models.URLField(help_text=_("The URL of the individual's profile on the social media platform"), blank=True, null=True)
+    text = models.CharField(max_length=100, help_text=_("A shortened or display version of the URL"))
 
 
 class Interest(BaseModel):
-    icon = models.CharField(max_length=50, help_text="An icon representing the interest, from font-awesome, without the 'fa-' prefix")
-    text = models.CharField(max_length=100, help_text="A description of the interest")
+    icon = models.CharField(max_length=50, help_text=_("An icon representing the interest, from font-awesome, without the 'fa-' prefix"))
+    text = models.CharField(max_length=100, help_text=_("A description of the interest"))
 
 
 class ExperienceDetail(BaseModel):
-    description = models.TextField(help_text="A responsibility or achievement during the experience")
+    description = models.TextField(help_text=_("A responsibility or achievement during the experience"))
 
 
 class Experience(BaseModel):
-    title = models.CharField(max_length=100, help_text="The job title for the experience")
+    title = models.CharField(max_length=100, help_text=_("The job title for the experience"))
     company = models.CharField(
-        max_length=100, help_text="The name and location of the company, in the formant Company Name (City, Country Code)"
+        max_length=100, help_text=_("The name and location of the company, in the formant Company Name (City, Country Code)")
     )
-    duration = models.CharField(max_length=50, help_text="The duration of the experience in the format YYYY.MM--YYYY.MM")
+    duration = models.CharField(max_length=50, help_text=_("The duration of the experience in the format YYYY.MM--YYYY.MM"))
     details = models.ManyToManyField(
-        ExperienceDetail, related_name="experience", help_text="A list of responsibilities or achievements during the experience"
+        ExperienceDetail, related_name="experience", help_text=_("A list of responsibilities or achievements during the experience")
     )
 
 
 class Education(BaseModel):
-    degree = models.CharField(max_length=100, help_text="The degree obtained")
-    specialization = models.CharField(max_length=100, help_text="The specialization or major of the degree")
+    degree = models.CharField(max_length=100, help_text=_("The degree obtained"))
+    specialization = models.CharField(max_length=100, help_text=_("The specialization or major of the degree"))
     school = models.CharField(
-        max_length=100, help_text="The name and location of the school, in the format School Name (City, Country Code)"
+        max_length=100, help_text=_("The name and location of the school, in the format School Name (City, Country Code)")
     )
-    duration = models.CharField(max_length=50, help_text="The duration of the education in the format YYYY--YYYY")
+    duration = models.CharField(max_length=50, help_text=_("The duration of the education in the format YYYY--YYYY"))
 
 
 class Project(BaseModel):
-    name = models.CharField(max_length=100, help_text="The name of the project")
-    description = models.TextField(help_text="A description of the project")
-    url = models.URLField(help_text="The URL of the project repository or website", blank=True, null=True)
+    name = models.CharField(max_length=100, help_text=_("The name of the project"))
+    description = models.TextField(help_text=_("A description of the project"))
+    url = models.URLField(help_text=_("The URL of the project repository or website"), blank=True, null=True)
 
 
 class Skill(BaseModel):
-    name = models.CharField(max_length=100, help_text="The name of the skill")
-    color = models.CharField(max_length=20, help_text="A color code associated with the skill")
-    level = models.CharField(max_length=50, help_text="The proficiency level in the skill")
-    details = models.TextField(help_text="Additional details or sub-skills related to the main skill, example cyan!48!black")
+    name = models.CharField(max_length=100, help_text=_("The name of the skill"))
+    color = models.CharField(max_length=20, help_text=_("A color code associated with the skill"))
+    level = models.CharField(max_length=50, help_text=_("The proficiency level in the skill"))
+    details = models.TextField(help_text=_("Additional details or sub-skills related to the main skill, example cyan!48!black"))
 
 
 class ProfileInfo(BaseModel):
-    first_name = models.CharField(max_length=100, help_text="The first name of the individual")
-    last_name = models.CharField(max_length=100, help_text="The last name of the individual")
+    first_name = models.CharField(max_length=100, help_text=_("The first name of the individual"))
+    last_name = models.CharField(max_length=100, help_text=_("The last name of the individual"))
     cv_title = models.CharField(
-        max_length=255, help_text="The professional title or headline for the CV", validators=[remove_special_characters]
+        max_length=255, help_text=_("The professional title or headline for the CV"), validators=[remove_special_characters]
     )
-    profile_description = models.TextField(help_text="A summary of the individual's professional background and objectives")
-    email = models.EmailField(help_text="The email address for contacting the individual")
-    phone_number = models.CharField(max_length=20, help_text="The phone number for contacting the individual")
-    address = models.CharField(max_length=255, help_text="The address of the individual's residence")
+    profile_description = models.TextField(help_text=_("A summary of the individual's professional background and objectives"))
+    email = models.EmailField(help_text=_("The email address for contacting the individual"))
+    phone_number = models.CharField(max_length=20, help_text=_("The phone number for contacting the individual"))
+    address = models.CharField(max_length=255, help_text=_("The address of the individual's residence"))
     social_links = models.ManyToManyField(
-        SocialLink, related_name="profiles", help_text="A list of social media linked with the individual"
+        SocialLink, related_name="profiles", help_text=_("A list of social media linked with the individual")
     )
-    interests = models.ManyToManyField(Interest, related_name="profiles", help_text="A list of the individual's interests or hobbies")
+    interests = models.ManyToManyField(Interest, related_name="profiles", help_text=_("A list of the individual's interests or hobbies"))
     experiences = models.ManyToManyField(
-        Experience, related_name="profiles", help_text="A list of the individual's professional experiences"
+        Experience, related_name="profiles", help_text=_("A list of the individual's professional experiences")
     )
-    educations = models.ManyToManyField(Education, related_name="profiles", help_text="A list of the individual's educational background")
-    projects = models.ManyToManyField(Project, related_name="profiles", help_text="A list of projects the individual has worked on")
-    skills = models.ManyToManyField(Skill, related_name="profiles", help_text="A list of the individual's skills")
+    educations = models.ManyToManyField(
+        Education, related_name="profiles", help_text=_("A list of the individual's educational background")
+    )
+    projects = models.ManyToManyField(Project, related_name="profiles", help_text=_("A list of projects the individual has worked on"))
+    skills = models.ManyToManyField(Skill, related_name="profiles", help_text=_("A list of the individual's skills"))
     embeddings_id = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
 
 
@@ -216,7 +220,7 @@ class UserProfile(BaseModel):
     photo = models.ImageField(storage=UUIDS3Boto3Storage(object_folder="photos"))
 
     profile_info = models.OneToOneField(
-        ProfileInfo, related_name="profile", on_delete=models.CASCADE, help_text="A detailed schema for a profile JSON object"
+        ProfileInfo, related_name="profile", on_delete=models.CASCADE, help_text=_("A detailed schema for a profile JSON object")
     )
 
     def __str__(self):
